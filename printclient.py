@@ -1,15 +1,20 @@
 from caproto.threading.client import Context
-from flatbufferhelpers import create_f142_message
+from kafkahelpers import create_producer, publish_f142_message
 from time import sleep
+import sys
 
+# EPICS
 ctx = Context()
 x, = ctx.get_pvs('incrementing_ioc:x')
 sub = x.subscribe()
 
+# Kafka
+producer = create_producer()
+
 
 def monitor_callback(response):
     print(response.data[0])
-    create_f142_message()
+    publish_f142_message(producer, "python_forwarder_topic", int(response.data[0]))
 
 
 token = sub.add_callback(monitor_callback)
