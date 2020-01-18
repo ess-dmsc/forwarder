@@ -10,6 +10,9 @@ sub = x.subscribe()
 # Kafka
 producer = create_producer()
 
+# Metrics
+# can modify https://github.com/claws/aioprometheus for graphite?
+
 
 def monitor_callback(response):
     print(response.data[0])
