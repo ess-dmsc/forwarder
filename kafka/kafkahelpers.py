@@ -2,6 +2,8 @@ from confluent_kafka import Consumer
 from .aioproducer import AIOProducer
 from flatbufferhelpers import create_f142_message
 import uuid
+import numpy as np
+from caproto import ChannelType
 
 
 def create_producer() -> AIOProducer:
@@ -22,11 +24,12 @@ def create_consumer() -> Consumer:
     )
 
 
-def publish_f142_message(producer: AIOProducer, topic: str, value: int, kafka_timestamp: int = None):
+def publish_f142_message(producer: AIOProducer, topic: str, data: np.array, data_size: int, data_type: ChannelType,
+                         kafka_timestamp: int = None):
     """
     Publish an f142 message to a given topic.
     :param topic: Name of topic to publish to
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     """
-    f142_message = create_f142_message(value, kafka_timestamp)
+    f142_message = create_f142_message(data, kafka_timestamp)
     producer.produce(topic, f142_message)

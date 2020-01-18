@@ -8,12 +8,12 @@ def _millseconds_to_nanoseconds(time_ms):
     return int(time_ms * 1000000)
 
 
-def create_f142_message(value=42, timestamp_unix_ms=0):
+def create_f142_message(data, timestamp_unix_ms=0):
     file_identifier = b"f142"
     builder = flatbuffers.Builder(1024)
     source = builder.CreateString("Forwarder-Python")
     IntStart(builder)
-    IntAddValue(builder, value)
+    IntAddValue(builder, int(data[0]))
     int_position = IntEnd(builder)
 
     # Build the actual buffer
@@ -21,7 +21,7 @@ def create_f142_message(value=42, timestamp_unix_ms=0):
     LogData.LogDataAddSourceName(builder, source)
     LogData.LogDataAddValue(builder, int_position)
     LogData.LogDataAddValueType(builder, Value.Int)
-    #LogData.LogDataAddTimestamp(builder, _millseconds_to_nanoseconds(timestamp_unix_ms))
+    # LogData.LogDataAddTimestamp(builder, _millseconds_to_nanoseconds(timestamp_unix_ms))
     log_msg = LogData.LogDataEnd(builder)
     builder.Finish(log_msg)
 
