@@ -15,7 +15,7 @@ class AIOProducer:
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
-        self.logger = setup_logger(__name__)
+        self.logger = setup_logger()
 
     def _poll_loop(self):
         while not self._cancelled:

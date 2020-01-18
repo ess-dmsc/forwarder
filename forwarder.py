@@ -10,7 +10,7 @@ def monitor_callback(response):
 
 
 if __name__ == "__main__":
-    logger = setup_logger(__name__)
+    logger = setup_logger()
     logger.info("Forwarder")
 
     # EPICS
