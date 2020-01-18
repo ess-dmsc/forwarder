@@ -1,6 +1,5 @@
 import asyncio
 import confluent_kafka
-from confluent_kafka import KafkaException
 from threading import Thread
 
 
@@ -24,15 +23,13 @@ class AIOProducer:
         self._poll_thread.join()
 
     def produce(self, topic, value):
-        """
-        An awaitable produce method.
-        """
-        result = self._loop.create_future()
 
         def ack(err, msg):
             if err:
-                self._loop.call_soon_threadsafe(result.set_exception, KafkaException(err))
+                print(f'%% Message failed delivery: {err}')
             else:
-                self._loop.call_soon_threadsafe(result.set_result, msg)
+                print('%% Message delivered to %s [%d] @ %d\n' %
+                      (msg.topic(), msg.partition(), msg.offset()))
+
         self._producer.produce(topic, value, on_delivery=ack)
-        return result
+        self._producer.poll(0)

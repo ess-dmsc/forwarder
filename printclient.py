@@ -1,5 +1,5 @@
 from caproto.threading.client import Context
-from kafkahelpers import create_producer, publish_f142_message
+from kafka.kafkahelpers import create_producer, publish_f142_message
 from time import sleep
 
 # EPICS

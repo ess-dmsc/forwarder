@@ -1,4 +1,5 @@
-from confluent_kafka import Producer, Consumer
+from confluent_kafka import Consumer
+from .aioproducer import AIOProducer
 from flatbufferhelpers import create_f142_message
 import uuid
 
@@ -9,7 +10,7 @@ def create_producer():
         "message.max.bytes": "20000000",
     }
 
-    return Producer(**producer_config)
+    return AIOProducer(**producer_config)
 
 
 def create_consumer():
