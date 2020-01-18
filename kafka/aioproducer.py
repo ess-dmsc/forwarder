@@ -7,7 +7,7 @@ class AIOProducer:
     """
     From https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio.py
     """
-    def __init__(self, configs, loop=None):
+    def __init__(self, configs: dict, loop=None):
         self._loop = loop or asyncio.get_event_loop()
         self._producer = confluent_kafka.Producer(configs)
         self._cancelled = False
@@ -22,7 +22,7 @@ class AIOProducer:
         self._cancelled = True
         self._poll_thread.join()
 
-    def produce(self, topic, value):
+    def produce(self, topic: str, payload: bytes):
 
         def ack(err, msg):
             if err:
@@ -31,5 +31,5 @@ class AIOProducer:
                 print('%% Message delivered to %s [%d] @ %d\n' %
                       (msg.topic(), msg.partition(), msg.offset()))
 
-        self._producer.produce(topic, value, on_delivery=ack)
+        self._producer.produce(topic, payload, on_delivery=ack)
         self._producer.poll(0)

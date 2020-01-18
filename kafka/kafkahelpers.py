@@ -4,7 +4,7 @@ from flatbufferhelpers import create_f142_message
 import uuid
 
 
-def create_producer():
+def create_producer() -> AIOProducer:
     producer_config = {
         "bootstrap.servers": "localhost:9092",
         "message.max.bytes": "20000000",
@@ -12,7 +12,7 @@ def create_producer():
     return AIOProducer(producer_config)
 
 
-def create_consumer():
+def create_consumer() -> Consumer:
     return Consumer(
         {
             "bootstrap.servers": "localhost:9092",
@@ -22,10 +22,9 @@ def create_consumer():
     )
 
 
-def publish_f142_message(producer, topic, value, kafka_timestamp=None):
+def publish_f142_message(producer: AIOProducer, topic: str, value: int, kafka_timestamp: int = None):
     """
     Publish an f142 message to a given topic.
-    Optionally set the timestamp in the kafka header to allow, for example, fake "historical" data.
     :param topic: Name of topic to publish to
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     """
