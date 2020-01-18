@@ -19,4 +19,4 @@ def monitor_callback(response):
 token = sub.add_callback(monitor_callback)
 
 while True:
-    sleep(10)
+    sleep(2)
