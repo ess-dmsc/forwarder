@@ -1,22 +1,23 @@
 #!/usr/bin/env python3
 from caproto.server import pvproperty, PVGroup, ioc_arg_parser, run
+from caproto import ChannelType
 
 
 class IncrementingIOC(PVGroup):
     dt = pvproperty(value=1.0)  # seconds
-    x = pvproperty(value=0.0)
+    x_int = pvproperty(value=0, dtype=ChannelType.INT)
 
-    @x.startup
-    async def x(self, instance, async_lib):
+    @x_int.startup
+    async def x_int(self, instance, async_lib):
         """
         Periodically update the value
         """
         while True:
             # compute next value
-            x = self.x.value + 1
+            x_int = self.x_int.value + 1
 
             # update the ChannelData instance and notify any subscribers
-            await instance.write(value=x)
+            await instance.write(value=x_int)
 
             # Let the async library wait for the next iteration
             await async_lib.library.sleep(self.dt.value)

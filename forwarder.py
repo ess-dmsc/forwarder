@@ -16,8 +16,8 @@ if __name__ == "__main__":
 
     # EPICS
     ctx = Context()
-    x, = ctx.get_pvs('incrementing_ioc:x')
-    sub = x.subscribe()
+    x_int, = ctx.get_pvs('incrementing_ioc:x_int')
+    sub = x_int.subscribe()
 
     # Kafka
     producer = create_producer()
