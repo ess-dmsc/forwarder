@@ -3,7 +3,7 @@ from caproto.server import pvproperty, PVGroup, ioc_arg_parser, run
 
 
 class IncrementingIOC(PVGroup):
-    dt = pvproperty(value=0.5)  # seconds
+    dt = pvproperty(value=1.0)  # seconds
     x = pvproperty(value=0.0)
 
     @x.startup
