@@ -8,11 +8,31 @@ def monitor_callback(response: ReadNotifyResponse):
     logger.debug(f"Received PV update {response.header}")
     publish_f142_message(
         producer,
-        "python_forwarder_topic",
+        "forwarder-output",
         response.data,
         response.data_count,
         response.data_type,
     )
+
+
+def subscribe_to_pv(name: str):
+    if name in pvs_forwarding.keys():
+        logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
+        return
+    (x_int,) = ctx.get_pvs(name)
+    sub = x_int.subscribe()
+    sub.add_callback(monitor_callback)
+    pvs_forwarding[name] = x_int
+
+
+def unsubscribe_from_pv(name: str):
+    try:
+        pvs_forwarding[name].unsubscribe_all()
+        del pvs_forwarding[name]
+    except KeyError:
+        logger.warning(
+            "Forwarder asked to unsubscribe from a PV it is not subscribed to"
+        )
 
 
 if __name__ == "__main__":
@@ -21,20 +41,19 @@ if __name__ == "__main__":
 
     # EPICS
     ctx = Context()
-    (x_int,) = ctx.get_pvs("incrementing_ioc:x_int")
-    sub = x_int.subscribe()
+    pvs_forwarding = dict()
+
+    subscribe_to_pv("incrementing_ioc:x_int")
 
     # Kafka
     producer = create_producer()
     consumer = create_consumer()
-    consumer.subscribe(["python-forwarder-config"])
+    consumer.subscribe(["forwarder-config"])
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
     # can modify https://github.com/claws/aioprometheus for graphite?
     # https://julien.danjou.info/atomic-lock-free-counters-in-python/
-
-    token = sub.add_callback(monitor_callback)
 
     try:
         while True:
@@ -44,13 +63,11 @@ if __name__ == "__main__":
             if msg.error():
                 logger.error(msg.error())
             else:
-                # Proper message
                 logger.info(f"Received config message:\n{msg.value()}")
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
 
     finally:
-        # Close down consumer to commit final offsets.
         consumer.close()
         producer.close()
