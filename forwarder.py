@@ -53,3 +53,4 @@ if __name__ == "__main__":
     finally:
         # Close down consumer to commit final offsets.
         consumer.close()
+        producer.close()
