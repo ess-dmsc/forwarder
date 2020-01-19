@@ -1,6 +1,6 @@
 from confluent_kafka import Consumer
 from .aioproducer import AIOProducer
-from flatbufferhelpers import create_f142_message
+from serialisation import serialise_f142
 import uuid
 import numpy as np
 from caproto import ChannelType
@@ -37,5 +37,5 @@ def publish_f142_message(
     :param topic: Name of topic to publish to
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     """
-    f142_message = create_f142_message(data, kafka_timestamp)
+    f142_message = serialise_f142(data, data_size, data_type, kafka_timestamp)
     producer.produce(topic, f142_message)

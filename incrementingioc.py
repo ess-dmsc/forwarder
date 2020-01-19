@@ -4,7 +4,7 @@ from caproto import ChannelType
 
 
 class IncrementingIOC(PVGroup):
-    dt = pvproperty(value=1.0)  # seconds
+    dt = pvproperty(value=2.0)  # seconds
     x_int = pvproperty(value=0, dtype=ChannelType.INT)
 
     @x_int.startup
@@ -23,9 +23,10 @@ class IncrementingIOC(PVGroup):
             await async_lib.library.sleep(self.dt.value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     ioc_options, run_options = ioc_arg_parser(
-        default_prefix='incrementing_ioc:',
-        desc='Run an IOC with an incrementing value.')
+        default_prefix="incrementing_ioc:",
+        desc="Run an IOC with an incrementing value.",
+    )
     ioc = IncrementingIOC(**ioc_options)
     run(ioc.pvdb, **run_options)
