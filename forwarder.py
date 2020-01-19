@@ -1,13 +1,18 @@
 from caproto.threading.client import Context
 from caproto import ReadNotifyResponse
-from kafka.kafkahelpers import create_producer, publish_f142_message
-from time import sleep
+from kafka.kafkahelpers import create_producer, create_consumer, publish_f142_message
 from applicationlogger import setup_logger
 
 
 def monitor_callback(response: ReadNotifyResponse):
     logger.debug(f"Received PV update {response.header}")
-    publish_f142_message(producer, "python_forwarder_topic", response.data, response.data_count, response.data_type)
+    publish_f142_message(
+        producer,
+        "python_forwarder_topic",
+        response.data,
+        response.data_count,
+        response.data_type,
+    )
 
 
 if __name__ == "__main__":
@@ -16,11 +21,12 @@ if __name__ == "__main__":
 
     # EPICS
     ctx = Context()
-    x_int, = ctx.get_pvs('incrementing_ioc:x_int')
+    (x_int,) = ctx.get_pvs("incrementing_ioc:x_int")
     sub = x_int.subscribe()
 
     # Kafka
     producer = create_producer()
+    consumer = create_consumer()
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
@@ -29,5 +35,20 @@ if __name__ == "__main__":
 
     token = sub.add_callback(monitor_callback)
 
-    while True:
-        sleep(2)
+    try:
+        while True:
+            msg = consumer.poll(timeout=0.5)
+            if msg is None:
+                continue
+            if msg.error():
+                logger.error(msg.error())
+            else:
+                # Proper message
+                logger.info(f"Received config message:\n{msg.value()}")
+
+    except KeyboardInterrupt:
+        logger.info("%% Aborted by user")
+
+    finally:
+        # Close down consumer to commit final offsets.
+        consumer.close()

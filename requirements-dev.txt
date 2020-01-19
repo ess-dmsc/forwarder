@@ -1,0 +1,5 @@
+# Development requirements
+
+-r requirements.txt
+black
+pre-commit
