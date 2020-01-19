@@ -3,8 +3,7 @@
 
 ## Installing dependencies
 
-This project is developed for Python 3.6, so an install of 3.6 or higher
-is required. https://www.python.org/downloads/
+Python 3.6 or higher is required. https://www.python.org/downloads/
 
 Runtime Python dependencies are listed in requirements.txt at the root of the
 repository. They can be installed from a terminal by running
