@@ -1,5 +1,5 @@
 
-# Python Forwarder
+# Forwarder
 
 ## Installing dependencies
 
