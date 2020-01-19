@@ -24,8 +24,14 @@ def create_consumer() -> Consumer:
     )
 
 
-def publish_f142_message(producer: AIOProducer, topic: str, data: np.array, data_size: int, data_type: ChannelType,
-                         kafka_timestamp: int = None):
+def publish_f142_message(
+    producer: AIOProducer,
+    topic: str,
+    data: np.array,
+    data_size: int,
+    data_type: ChannelType,
+    kafka_timestamp: int = None,
+):
     """
     Publish an f142 message to a given topic.
     :param topic: Name of topic to publish to

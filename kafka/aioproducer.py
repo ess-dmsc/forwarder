@@ -26,12 +26,13 @@ class AIOProducer:
         self._poll_thread.join()
 
     def produce(self, topic: str, payload: bytes):
-
         def ack(err, msg):
             if err:
-                self.logger.error(f'Message failed delivery: {err}')
+                self.logger.error(f"Message failed delivery: {err}")
             else:
-                self.logger.debug(f'Message delivered to {msg.topic()} {msg.partition()} @ {msg.offset()}')
+                self.logger.debug(
+                    f"Message delivered to {msg.topic()} {msg.partition()} @ {msg.offset()}"
+                )
 
         self._producer.produce(topic, payload, on_delivery=ack)
         self._producer.poll(0)
