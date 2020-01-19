@@ -27,6 +27,7 @@ if __name__ == "__main__":
     # Kafka
     producer = create_producer()
     consumer = create_consumer()
+    consumer.subscribe(["python-forwarder-config"])
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
