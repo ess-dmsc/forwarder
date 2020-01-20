@@ -2,6 +2,8 @@ import flatbuffers
 from f142_logdata import LogData
 from f142_logdata.Value import Value
 from f142_logdata.Int import IntStart, IntAddValue, IntEnd
+from f142_logdata.Long import LongStart, LongAddValue, LongEnd
+from f142_logdata.Float import FloatStart, FloatAddValue, FloatEnd
 from f142_logdata.Double import DoubleStart, DoubleAddValue, DoubleEnd
 from caproto import ChannelType
 import numpy as np
@@ -43,6 +45,10 @@ def serialise_f142(
 
     if data_type == ChannelType.INT:
         _serialise_int(builder, data, source)
+    elif data_type == ChannelType.LONG:
+        _serialise_long(builder, data, source)
+    elif data_type == ChannelType.FLOAT:
+        _serialise_float(builder, data, source)
     elif data_type == ChannelType.DOUBLE:
         _serialise_double(builder, data, source)
     else:
@@ -63,6 +69,26 @@ def _serialise_int(builder, data, source):
     LogData.LogDataAddValueType(builder, Value.Int)
 
 
+def _serialise_long(builder, data, source):
+    LongStart(builder)
+    LongAddValue(builder, data.astype(np.int64)[0])
+    value_position = LongEnd(builder)
+    LogData.LogDataStart(builder)
+    LogData.LogDataAddSourceName(builder, source)
+    LogData.LogDataAddValue(builder, value_position)
+    LogData.LogDataAddValueType(builder, Value.Long)
+
+
+def _serialise_float(builder, data, source):
+    FloatStart(builder)
+    FloatAddValue(builder, data.astype(np.float64)[0])
+    value_position = FloatEnd(builder)
+    LogData.LogDataStart(builder)
+    LogData.LogDataAddSourceName(builder, source)
+    LogData.LogDataAddValue(builder, value_position)
+    LogData.LogDataAddValueType(builder, Value.Float)
+
+
 def _serialise_double(builder, data, source):
     DoubleStart(builder)
     DoubleAddValue(builder, data.astype(np.float64)[0])
@@ -71,3 +97,13 @@ def _serialise_double(builder, data, source):
     LogData.LogDataAddSourceName(builder, source)
     LogData.LogDataAddValue(builder, value_position)
     LogData.LogDataAddValueType(builder, Value.Double)
+
+
+# TODO ChannelTypes:
+#   STRING = 0
+#   INT = 1 DONE
+#   FLOAT = 2 DONE
+#   ENUM = 3
+#   CHAR = 4
+#   LONG = 5 DONE
+#   DOUBLE = 6 DONE
