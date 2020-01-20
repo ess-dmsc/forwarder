@@ -5,6 +5,7 @@ from f142_logdata.Int import IntStart, IntAddValue, IntEnd
 from f142_logdata.Long import LongStart, LongAddValue, LongEnd
 from f142_logdata.Float import FloatStart, FloatAddValue, FloatEnd
 from f142_logdata.Double import DoubleStart, DoubleAddValue, DoubleEnd
+from f142_logdata.String import StringStart, StringAddValue, StringEnd
 from caproto import ChannelType
 import numpy as np
 from applicationlogger import get_logger
@@ -51,6 +52,8 @@ def serialise_f142(
         _serialise_float(builder, data, source)
     elif data_type == ChannelType.DOUBLE:
         _serialise_double(builder, data, source)
+    elif data_type == ChannelType.STRING:
+        _serialise_string(builder, data, source)
     else:
         _logger.error(
             f"Forwarder does not know how to serialise EPICS type {data_type} as an f142 message"
@@ -99,8 +102,18 @@ def _serialise_double(builder, data, source):
     LogData.LogDataAddValueType(builder, Value.Double)
 
 
+def _serialise_string(builder, data, source):
+    StringStart(builder)
+    StringAddValue(builder, data.astype(np.unicode_)[0])
+    value_position = StringEnd(builder)
+    LogData.LogDataStart(builder)
+    LogData.LogDataAddSourceName(builder, source)
+    LogData.LogDataAddValue(builder, value_position)
+    LogData.LogDataAddValueType(builder, Value.String)
+
+
 # TODO ChannelTypes:
-#   STRING = 0
+#   STRING = 0 DONE
 #   INT = 1 DONE
 #   FLOAT = 2 DONE
 #   ENUM = 3
