@@ -2,6 +2,7 @@ from caproto.threading.client import Context
 from caproto import ReadNotifyResponse
 from kafka.kafkahelpers import create_producer, create_consumer, publish_f142_message
 from applicationlogger import setup_logger
+from parseconfigupdate import parse_config_update
 
 
 def monitor_callback(response: ReadNotifyResponse):
@@ -23,6 +24,7 @@ def subscribe_to_pv(name: str):
     sub = x_int.subscribe()
     sub.add_callback(monitor_callback)
     pvs_forwarding[name] = x_int
+    logger.debug(f"Subscribed to PV {name}")
 
 
 def unsubscribe_from_pv(name: str):
@@ -33,6 +35,7 @@ def unsubscribe_from_pv(name: str):
         logger.warning(
             "Forwarder asked to unsubscribe from a PV it is not subscribed to"
         )
+    logger.debug(f"Unsubscribed from PV {name}")
 
 
 if __name__ == "__main__":
@@ -42,8 +45,6 @@ if __name__ == "__main__":
     # EPICS
     ctx = Context()
     pvs_forwarding = dict()
-
-    subscribe_to_pv("incrementing_ioc:x_int")
 
     # Kafka
     producer = create_producer()
@@ -64,6 +65,9 @@ if __name__ == "__main__":
                 logger.error(msg.error())
             else:
                 logger.info(f"Received config message:\n{msg.value()}")
+                config_change = parse_config_update(msg.value())
+                for channel_name in config_change.channel_names:
+                    subscribe_to_pv(channel_name)
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

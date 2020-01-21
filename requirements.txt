@@ -3,3 +3,4 @@ confluent_kafka
 flatbuffers
 graypy
 numpy
+attrs
