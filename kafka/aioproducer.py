@@ -19,7 +19,7 @@ class AIOProducer:
 
     def _poll_loop(self):
         while not self._cancelled:
-            self._producer.poll(0.1)
+            self._producer.poll(0.5)
 
     def close(self):
         self._cancelled = True
