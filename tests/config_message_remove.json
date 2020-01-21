@@ -1,0 +1,12 @@
+{
+  "cmd": "remove",
+  "streams": [
+    {
+      "channel": "incrementing_ioc:x_int",
+      "converter": {
+        "schema": "f142",
+        "topic": "localhost:9092/some_topic"
+      }
+    }
+  ]
+}

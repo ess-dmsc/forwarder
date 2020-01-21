@@ -2,7 +2,7 @@ from caproto.threading.client import Context
 from caproto import ReadNotifyResponse
 from kafka.kafkahelpers import create_producer, create_consumer, publish_f142_message
 from applicationlogger import setup_logger
-from parseconfigupdate import parse_config_update
+from parseconfigupdate import parse_config_update, CommandTypes
 
 
 def monitor_callback(response: ReadNotifyResponse):
@@ -64,10 +64,13 @@ if __name__ == "__main__":
             if msg.error():
                 logger.error(msg.error())
             else:
-                logger.info(f"Received config message:\n{msg.value()}")
+                logger.info(f"Received config message")
                 config_change = parse_config_update(msg.value())
                 for channel_name in config_change.channel_names:
-                    subscribe_to_pv(channel_name)
+                    if config_change.command_type == CommandTypes.ADD.value:
+                        subscribe_to_pv(channel_name)
+                    elif config_change.command_type == CommandTypes.REMOVE.value:
+                        unsubscribe_from_pv(channel_name)
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
