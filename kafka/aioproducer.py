@@ -6,7 +6,7 @@ from applicationlogger import setup_logger
 
 class AIOProducer:
     """
-    From https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio.py
+    Based on https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio.py
     """
 
     def __init__(self, configs: dict, loop=None):
