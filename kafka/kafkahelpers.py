@@ -5,10 +5,12 @@ import uuid
 import numpy as np
 from caproto import ChannelType
 
+BROKER_ADDRESS = "localhost:9092"
+
 
 def create_producer() -> AIOProducer:
     producer_config = {
-        "bootstrap.servers": "localhost:9092",
+        "bootstrap.servers": BROKER_ADDRESS,
         "message.max.bytes": "20000000",
     }
     return AIOProducer(producer_config)
@@ -17,7 +19,7 @@ def create_producer() -> AIOProducer:
 def create_consumer() -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": "localhost:9092",
+            "bootstrap.servers": BROKER_ADDRESS,
             "group.id": uuid.uuid4(),
             "default.topic.config": {"auto.offset.reset": "latest"},
         }
