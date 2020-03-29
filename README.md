@@ -13,7 +13,7 @@ pip install -r requirements.txt
 
 ### Development dependencies
 
-Development dependencies (including all runtime dependencies) can be installed by using the following command: 
+Development dependencies (including all runtime dependencies) can be installed by using the following command 
 
 ```
 pip install -r requirements-dev.txt
@@ -25,6 +25,11 @@ You need to once run
 pre-commit install
 ```
 to activate the pre-commit check.
+To test the hooks run
+```
+pre-commit run --all-files
+```
+This command can also be used to run the hooks manually.
 
 ## Running the application
 
