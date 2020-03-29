@@ -1,6 +1,6 @@
 caproto
 confluent_kafka
-flatbuffers
+flatbuffers == 1.11
 graypy
 numpy
 attrs
