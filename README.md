@@ -3,7 +3,7 @@
 
 ## Installing dependencies
 
-Python 3.6 or higher is required. https://www.python.org/downloads/
+Python 3.7 or higher is required. https://www.python.org/downloads/
 
 Runtime Python dependencies are listed in requirements.txt at the root of the
 repository. They can be installed from a terminal by running
