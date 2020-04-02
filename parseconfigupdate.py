@@ -41,7 +41,7 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
             str(update["channel"])
             if "channel" in update.keys()
             else logger.warning(
-                '"channel" field not found in "stream" entry in received config command'
+                f'"channel" field not found in "stream" entry in received "{command_type}" command'
             )
             for update in streams
         )
