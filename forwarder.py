@@ -8,11 +8,7 @@ from parseconfigupdate import parse_config_update, CommandTypes
 def monitor_callback(response: ReadNotifyResponse):
     logger.debug(f"Received PV update {response.header}")
     publish_f142_message(
-        producer,
-        "forwarder-output",
-        response.data,
-        response.data_count,
-        response.data_type,
+        producer, "forwarder-output", response.data,
     )
 
 
