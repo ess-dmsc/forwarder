@@ -34,7 +34,9 @@ def publish_f142_message(
 ):
     """
     Publish an f142 message to a given topic.
+    :param producer:
     :param topic: Name of topic to publish to
+    :param data:
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     """
     f142_message = serialise_f142(
