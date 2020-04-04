@@ -47,7 +47,9 @@ class UpdateHandler:
                     f"Don't know what numpy dtype to use for channel type {response.data_type}"
                 )
         self.message_publisher(
-            self.producer, "forwarder-output", response.data.astype(self.output_type),
+            self.producer,
+            "forwarder-output",
+            np.squeeze(response.data).astype(self.output_type),
         )
         self.cached_update = response.data
 
