@@ -3,6 +3,7 @@ from .aioproducer import AIOProducer
 from streaming_data_types.logdata_f142 import serialise_f142
 import uuid
 import numpy as np
+import time
 
 BROKER_ADDRESS = "localhost:9092"
 
@@ -39,7 +40,12 @@ def publish_f142_message(
     :param data:
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     """
+    # TODO get timestamp from EPICS and don't allow None to this method
+    if kafka_timestamp is None:
+        kafka_timestamp = int(time.time() * 1000)
     f142_message = serialise_f142(
-        data, "Forwarder-Python", _millseconds_to_nanoseconds(kafka_timestamp)
+        value=data,
+        source_name="Forwarder-Python",
+        timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
     )
     producer.produce(topic, f142_message)
