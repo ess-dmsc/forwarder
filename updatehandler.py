@@ -83,7 +83,6 @@ class UpdateHandler:
             while not self._cancelled:
                 await asyncio.sleep(self._periodic_update_s)
                 await self._publish_cached_update()
-                self._is_first_call = False
         except Exception as ex:
             print(ex)
 
