@@ -1,32 +1,23 @@
 from caproto.threading.client import Context
-from caproto import ReadNotifyResponse
-from kafka.kafkahelpers import create_producer, create_consumer, publish_f142_message
+from kafka.kafkahelpers import create_producer, create_consumer
 from applicationlogger import setup_logger
 from parseconfigupdate import parse_config_update, CommandTypes
-
-
-def monitor_callback(response: ReadNotifyResponse):
-    logger.debug(f"Received PV update {response.header}")
-    publish_f142_message(
-        producer, "forwarder-output", response.data,
-    )
+from updatehandler import UpdateHandler
 
 
 def subscribe_to_pv(name: str):
-    if name in pvs_forwarding.keys():
+    if name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
     (pv,) = ctx.get_pvs(name)
-    sub = pv.subscribe()
-    sub.add_callback(monitor_callback)
-    pvs_forwarding[name] = pv
+    update_handlers[name] = UpdateHandler(producer, pv)
     logger.debug(f"Subscribed to PV {name}")
 
 
 def unsubscribe_from_pv(name: str):
     try:
-        pvs_forwarding[name].unsubscribe_all()
-        del pvs_forwarding[name]
+        update_handlers[name].pv.unsubscribe_all()
+        del update_handlers[name]
     except KeyError:
         logger.warning(
             "Forwarder asked to unsubscribe from a PV it is not subscribed to"
@@ -40,7 +31,7 @@ if __name__ == "__main__":
 
     # EPICS
     ctx = Context()
-    pvs_forwarding = dict()
+    update_handlers = dict()
 
     # Kafka
     producer = create_producer()

@@ -10,6 +10,8 @@ class UpdateHandler:
         self.logger = get_logger()
         self.producer = producer
         self.pv = pv
+        sub = self.pv.subscribe()
+        sub.add_callback(self.monitor_callback)
         self.cached_update = None
 
     def monitor_callback(self, response: ReadNotifyResponse):
