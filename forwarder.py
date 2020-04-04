@@ -16,10 +16,10 @@ def subscribe_to_pv(name: str):
     if name in pvs_forwarding.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
-    (x_int,) = ctx.get_pvs(name)
-    sub = x_int.subscribe()
+    (pv,) = ctx.get_pvs(name)
+    sub = pv.subscribe()
     sub.add_callback(monitor_callback)
-    pvs_forwarding[name] = x_int
+    pvs_forwarding[name] = pv
     logger.debug(f"Subscribed to PV {name}")
 
 
