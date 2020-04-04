@@ -5,6 +5,7 @@ from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
 import asyncio
+from threading import Lock
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,
@@ -37,7 +38,6 @@ class UpdateHandler:
         sub.add_callback(self._monitor_callback)
         self._cached_update = None
         self._output_type = None
-        self._is_first_call = True
         self._cancelled = False
 
         try:
@@ -48,7 +48,7 @@ class UpdateHandler:
             )
 
         if periodic_update_ms != 0:
-            self._cache_lock = asyncio.Lock()
+            self._cache_lock = Lock()
             self._periodic_update_s = float(periodic_update_ms) / 1000
             self._task = asyncio.ensure_future(self._do_periodic_update())
 
@@ -66,35 +66,22 @@ class UpdateHandler:
             "forwarder-output",
             np.squeeze(response.data).astype(self._output_type),
         )
-        # TODO can't await outside async function, can't make monitor_callback async, can't use cache mutex outside async function
-
-        # If I have a member with the async loop maybe I can start a task in it from here without this being async?
-
-        # _cache_update_task = asyncio.ensure_future(self._update_cache(np.squeeze(response.data).astype(self._output_type)))
-        # await _cache_update_task
-        async with self._cache_lock:
-            self._cached_update = self._update_cache(
-                np.squeeze(response.data).astype(self._output_type)
-            )
+        with self._cache_lock:
+            self._cached_update = np.squeeze(response.data).astype(self._output_type)
 
     async def _publish_cached_update(self):
         self._logger.debug("Doing periodic update")
-        async with self._cache_lock:
+        with self._cache_lock:
             if self._cached_update is not None:
                 publish_f142_message(
                     self._producer, "forwarder-output", self._cached_update,
                 )
 
-    async def _update_cache(self, new_data: np.ndarray):
-        async with self._cache_lock:
-            self._cached_update = new_data
-
     async def _do_periodic_update(self):
         try:
             self._logger.debug("Starting periodic update")
             while not self._cancelled:
-                if not self._is_first_call:
-                    await asyncio.sleep(self._periodic_update_s)
+                await asyncio.sleep(self._periodic_update_s)
                 await self._publish_cached_update()
                 self._is_first_call = False
         except Exception as ex:
