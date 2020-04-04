@@ -4,6 +4,7 @@ from kafka.aioproducer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
+import asyncio
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,
@@ -27,44 +28,78 @@ class UpdateHandler:
         producer: AIOProducer,
         pv: PV,
         schema: str = "f142",
-        periodic_update: int = 0,
+        periodic_update_ms: int = 500,
     ):
-        self.logger = get_logger()
-        self.producer = producer
-        self.pv = pv
-        sub = self.pv.subscribe()
-        sub.add_callback(self.monitor_callback)
-        self.cached_update = None
-        self.output_type = None
+        self._logger = get_logger()
+        self._producer = producer
+        self._pv = pv
+        sub = self._pv.subscribe()
+        sub.add_callback(self._monitor_callback)
+        self._cached_update = None
+        self._output_type = None
+        self._is_first_call = True
+        self._cancelled = False
 
         try:
-            self.message_publisher = schema_publishers[schema]
+            self._message_publisher = schema_publishers[schema]
         except KeyError:
             raise ValueError(
                 f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
             )
 
-        if periodic_update != 0:
-            pass
+        if periodic_update_ms != 0:
+            self._cache_lock = asyncio.Lock()
+            self._periodic_update_s = float(periodic_update_ms) / 1000
+            self._task = asyncio.ensure_future(self._do_periodic_update())
 
-    def monitor_callback(self, response: ReadNotifyResponse):
-        self.logger.debug(f"Received PV update {response.header}")
-        if self.output_type is None:
+    def _monitor_callback(self, response: ReadNotifyResponse):
+        self._logger.debug(f"Received PV update {response.header}")
+        if self._output_type is None:
             try:
-                self.output_type = _numpy_type_from_channel_type[response.data_type]
+                self._output_type = _numpy_type_from_channel_type[response.data_type]
             except KeyError:
-                self.logger.warning(
+                self._logger.warning(
                     f"Don't know what numpy dtype to use for channel type {response.data_type}"
                 )
-        self.message_publisher(
-            self.producer,
+        self._message_publisher(
+            self._producer,
             "forwarder-output",
-            np.squeeze(response.data).astype(self.output_type),
+            np.squeeze(response.data).astype(self._output_type),
         )
-        self.cached_update = response.data
+        # TODO can't await outside async function, can't make monitor_callback async, can't use cache mutex outside async function
 
-    def publish_cached_update(self):
-        if self.cached_update is not None:
-            publish_f142_message(
-                self.producer, "forwarder-output", self.cached_update.data,
+        # If I have a member with the async loop maybe I can start a task in it from here without this being async?
+
+        # _cache_update_task = asyncio.ensure_future(self._update_cache(np.squeeze(response.data).astype(self._output_type)))
+        # await _cache_update_task
+        async with self._cache_lock:
+            self._cached_update = self._update_cache(
+                np.squeeze(response.data).astype(self._output_type)
             )
+
+    async def _publish_cached_update(self):
+        self._logger.debug("Doing periodic update")
+        async with self._cache_lock:
+            if self._cached_update is not None:
+                publish_f142_message(
+                    self._producer, "forwarder-output", self._cached_update,
+                )
+
+    async def _update_cache(self, new_data: np.ndarray):
+        async with self._cache_lock:
+            self._cached_update = new_data
+
+    async def _do_periodic_update(self):
+        try:
+            self._logger.debug("Starting periodic update")
+            while not self._cancelled:
+                if not self._is_first_call:
+                    await asyncio.sleep(self._periodic_update_s)
+                await self._publish_cached_update()
+                self._is_first_call = False
+        except Exception as ex:
+            print(ex)
+
+    def cancel(self):
+        self._cancelled = True
+        self._task.cancel()
