@@ -18,9 +18,17 @@ _numpy_type_from_channel_type = {
     ChannelType.STRING: np.unicode_,
 }
 
+schema_publishers = {"f142": publish_f142_message}
+
 
 class UpdateHandler:
-    def __init__(self, producer: AIOProducer, pv: PV, schema: str = "f142"):
+    def __init__(
+        self,
+        producer: AIOProducer,
+        pv: PV,
+        schema: str = "f142",
+        periodic_update: int = 0,
+    ):
         self.logger = get_logger()
         self.producer = producer
         self.pv = pv
@@ -28,14 +36,16 @@ class UpdateHandler:
         sub.add_callback(self.monitor_callback)
         self.cached_update = None
         self.output_type = None
-        if schema == "f142":
-            self.message_publisher = publish_f142_message
-        elif schema == "TdcTime":
-            raise NotImplementedError("TdcTime schema not yet supported")
-        else:
+
+        try:
+            self.message_publisher = schema_publishers[schema]
+        except KeyError:
             raise ValueError(
-                f'{schema} is not a recognised supported schema, use "f142" or "TdcTime"'
+                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
             )
+
+        if periodic_update != 0:
+            pass
 
     def monitor_callback(self, response: ReadNotifyResponse):
         self.logger.debug(f"Received PV update {response.header}")
