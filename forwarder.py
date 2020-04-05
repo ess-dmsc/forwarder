@@ -1,8 +1,8 @@
 from caproto.threading.client import Context
-from kafka.kafkahelpers import create_producer, create_consumer
-from applicationlogger import setup_logger
-from parseconfigupdate import parse_config_update, CommandTypes
-from updatehandler import UpdateHandler
+from kafka.kafka_helpers import create_producer, create_consumer
+from application_logger import setup_logger
+from parse_config_update import parse_config_update, CommandTypes
+from update_handler import UpdateHandler
 
 
 def subscribe_to_pv(name: str):
@@ -16,7 +16,7 @@ def subscribe_to_pv(name: str):
 
 def unsubscribe_from_pv(name: str):
     try:
-        update_handlers[name].pv.unsubscribe_all()
+        update_handlers[name].stop()
         del update_handlers[name]
     except KeyError:
         logger.warning(
@@ -63,5 +63,7 @@ if __name__ == "__main__":
         logger.info("%% Aborted by user")
 
     finally:
+        for _, handler in update_handlers.items():
+            handler.stop()
         consumer.close()
         producer.close()
