@@ -11,7 +11,7 @@ def subscribe_to_pv(name: str):
         return
     (pv,) = ctx.get_pvs(name)
     update_handlers[name] = UpdateHandler(producer, pv)
-    logger.debug(f"Subscribed to PV {name}")
+    logger.info(f"Subscribed to PV {name}")
 
 
 def unsubscribe_from_pv(name: str):
@@ -22,7 +22,7 @@ def unsubscribe_from_pv(name: str):
         logger.warning(
             "Forwarder asked to unsubscribe from a PV it is not subscribed to"
         )
-    logger.debug(f"Unsubscribed from PV {name}")
+    logger.info(f"Unsubscribed from PV {name}")
 
 
 if __name__ == "__main__":
