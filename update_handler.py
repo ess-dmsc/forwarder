@@ -66,7 +66,9 @@ class UpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: ReadNotifyResponse):
-        self._logger.debug(f"Received PV update {response.header}")
+        self._logger.debug(
+            f"Received PV update, STATUS: {response.metadata.status}, SEVERITY: {response.metadata.severity}, METADATA: {response.metadata}"
+        )
         if self._output_type is None:
             try:
                 self._output_type = _numpy_type_from_channel_type[response.data_type]
@@ -74,13 +76,11 @@ class UpdateHandler:
                 self._logger.warning(
                     f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
                 )
-        print(
-            f"STATUS: {response.metadata.status}, SEVERITY: {response.metadata.severity}, METADATA: {response.metadata}"
-        )
         self._message_publisher(
             self._producer,
             "forwarder-output",
             np.squeeze(response.data).astype(self._output_type),
+            source_name=self._pv.name,
         )
         with self._cache_lock:
             self._cached_update = np.squeeze(response.data).astype(self._output_type)

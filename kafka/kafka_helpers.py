@@ -31,7 +31,11 @@ def create_consumer() -> Consumer:
 
 
 def publish_f142_message(
-    producer: AIOProducer, topic: str, data: np.array, kafka_timestamp: int = None,
+    producer: AIOProducer,
+    topic: str,
+    data: np.array,
+    kafka_timestamp: int = None,
+    source_name: str = None,
 ):
     """
     Publish an f142 message to a given topic.
@@ -39,13 +43,16 @@ def publish_f142_message(
     :param topic: Name of topic to publish to
     :param data:
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
+    :param source_name: Name of the PV
     """
     # TODO get timestamp from EPICS and don't allow None to this method
     if kafka_timestamp is None:
         kafka_timestamp = int(time.time() * 1000)
+    if source_name is None:
+        source_name = "Forwarder-Python"
     f142_message = serialise_f142(
         value=data,
-        source_name="Forwarder-Python",
+        source_name=source_name,
         timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
     )
     producer.produce(topic, f142_message)
