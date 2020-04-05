@@ -83,3 +83,10 @@ class UpdateHandler:
                 publish_f142_message(
                     self._producer, "forwarder-output", self._cached_update,
                 )
+
+    def stop(self):
+        """
+        Stop periodic updates and unsubscribe from PV
+        """
+        self._repeating_timer.cancel()
+        self._pv.unsubscribe_all()
