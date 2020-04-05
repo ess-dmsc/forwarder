@@ -1,6 +1,6 @@
 # MANUAL TEST
 # docker-compose up (start a local kafka cluster)
-# Start incrementingioc.py
+# Start incrementing_ioc.py
 # Start forwarder.py
 # Send config message to add PV: kafkacat -P -b localhost -t forwarder-config config_message_add.json
 # Wait

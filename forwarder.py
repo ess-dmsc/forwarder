@@ -1,8 +1,8 @@
 from caproto.threading.client import Context
-from kafka.kafkahelpers import create_producer, create_consumer
-from applicationlogger import setup_logger
-from parseconfigupdate import parse_config_update, CommandTypes
-from updatehandler import UpdateHandler
+from kafka.kafka_helpers import create_producer, create_consumer
+from application_logger import setup_logger
+from parse_config_update import parse_config_update, CommandTypes
+from update_handler import UpdateHandler
 
 
 def subscribe_to_pv(name: str):

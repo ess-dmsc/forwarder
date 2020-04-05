@@ -1,16 +1,10 @@
-import asyncio
 import confluent_kafka
 from threading import Thread
-from applicationlogger import setup_logger
+from application_logger import setup_logger
 
 
 class AIOProducer:
-    """
-    Based on https://github.com/confluentinc/confluent-kafka-python/blob/master/examples/asyncio.py
-    """
-
-    def __init__(self, configs: dict, loop=None):
-        self._loop = loop or asyncio.get_event_loop()
+    def __init__(self, configs: dict):
         self._producer = confluent_kafka.Producer(configs)
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)

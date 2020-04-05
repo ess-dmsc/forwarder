@@ -1,6 +1,6 @@
-from applicationlogger import get_logger
-from kafka.kafkahelpers import publish_f142_message
-from kafka.aioproducer import AIOProducer
+from application_logger import get_logger
+from kafka.kafka_helpers import publish_f142_message
+from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
@@ -40,6 +40,15 @@ class UpdateHandler:
         self._output_type = None
         self._cancelled = False
 
+        self._logger.debug("a")
+        try:
+            self._loop = asyncio.get_running_loop()
+        except RuntimeError:
+            self._logger.debug("b")
+            self._loop = asyncio.new_event_loop()
+            self._loop.run_forever()
+            self._logger.debug("c")
+
         try:
             self._message_publisher = schema_publishers[schema]
         except KeyError:
@@ -50,7 +59,10 @@ class UpdateHandler:
         if periodic_update_ms != 0:
             self._cache_lock = Lock()
             self._periodic_update_s = float(periodic_update_ms) / 1000
-            self._task = asyncio.ensure_future(self._do_periodic_update())
+            # self._task = asyncio.ensure_future(self._do_periodic_update())
+            self._logger.debug("1")
+            self._task = asyncio.create_task(self._do_periodic_update())
+            self._logger.debug("2")
 
     def _monitor_callback(self, response: ReadNotifyResponse):
         self._logger.debug(f"Received PV update {response.header}")
@@ -78,6 +90,7 @@ class UpdateHandler:
                 )
 
     async def _do_periodic_update(self):
+        self._logger.debug("1111")
         try:
             self._logger.debug("Starting periodic update")
             while not self._cancelled:
@@ -89,3 +102,5 @@ class UpdateHandler:
     def cancel(self):
         self._cancelled = True
         self._task.cancel()
+        # self._loop.stop()
+        # self._loop.close()

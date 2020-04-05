@@ -1,5 +1,5 @@
 import json
-from applicationlogger import get_logger
+from application_logger import get_logger
 import attr
 from enum import Enum
 from typing import Tuple, Union

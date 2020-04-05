@@ -1,5 +1,5 @@
 from confluent_kafka import Consumer
-from .aioproducer import AIOProducer
+from .aio_producer import AIOProducer
 from streaming_data_types.logdata_f142 import serialise_f142
 import uuid
 import numpy as np
