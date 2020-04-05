@@ -12,11 +12,11 @@ from threading import Lock, Event, Timer
 # Unfortunately the serialisation method doesn't know what to do with such a specific dtype
 # so we will cast to a consistent type based on the EPICS channel type.
 _numpy_type_from_channel_type = {
-    ChannelType.INT: np.int32,
-    ChannelType.LONG: np.int64,
-    ChannelType.FLOAT: np.float,
-    ChannelType.DOUBLE: np.float64,
-    ChannelType.STRING: np.unicode_,
+    ChannelType.CTRL_INT: np.int32,
+    ChannelType.CTRL_LONG: np.int64,
+    ChannelType.CTRL_FLOAT: np.float,
+    ChannelType.CTRL_DOUBLE: np.float64,
+    ChannelType.CTRL_STRING: np.unicode_,
 }
 
 schema_publishers = {"f142": publish_f142_message}
@@ -38,16 +38,18 @@ class UpdateHandler:
         producer: AIOProducer,
         pv: PV,
         schema: str = "f142",
-        periodic_update_ms: int = 500,
+        periodic_update_ms: int = 0,
     ):
         self._logger = get_logger()
         self._producer = producer
         self._pv = pv
-        sub = self._pv.subscribe()
+        # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
+        sub = self._pv.subscribe(data_type="control")
         sub.add_callback(self._monitor_callback)
         self._cached_update = None
         self._output_type = None
         self._stop_timer_flag = Event()
+        self._repeating_timer = None
 
         try:
             self._message_publisher = schema_publishers[schema]
@@ -70,9 +72,11 @@ class UpdateHandler:
                 self._output_type = _numpy_type_from_channel_type[response.data_type]
             except KeyError:
                 self._logger.warning(
-                    f"Don't know what numpy dtype to use for channel type {response.data_type}"
+                    f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
                 )
-                response.metadata
+        print(
+            f"STATUS: {response.metadata.status}, SEVERITY: {response.metadata.severity}, METADATA: {response.metadata}"
+        )
         self._message_publisher(
             self._producer,
             "forwarder-output",
@@ -92,5 +96,6 @@ class UpdateHandler:
         """
         Stop periodic updates and unsubscribe from PV
         """
-        self._repeating_timer.cancel()
+        if self._repeating_timer is not None:
+            self._repeating_timer.cancel()
         self._pv.unsubscribe_all()
