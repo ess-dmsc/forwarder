@@ -4,8 +4,8 @@ from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
-import asyncio
-from threading import Lock
+from threading import Lock, Event
+from repeating_timer import RepeatingTimer
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,
@@ -38,16 +38,7 @@ class UpdateHandler:
         sub.add_callback(self._monitor_callback)
         self._cached_update = None
         self._output_type = None
-        self._cancelled = False
-
-        self._logger.debug("a")
-        try:
-            self._loop = asyncio.get_running_loop()
-        except RuntimeError:
-            self._logger.debug("b")
-            self._loop = asyncio.new_event_loop()
-            self._loop.run_forever()
-            self._logger.debug("c")
+        self._stop_timer_flag = Event()
 
         try:
             self._message_publisher = schema_publishers[schema]
@@ -58,11 +49,10 @@ class UpdateHandler:
 
         if periodic_update_ms != 0:
             self._cache_lock = Lock()
-            self._periodic_update_s = float(periodic_update_ms) / 1000
-            # self._task = asyncio.ensure_future(self._do_periodic_update())
-            self._logger.debug("1")
-            self._task = asyncio.create_task(self._do_periodic_update())
-            self._logger.debug("2")
+            periodic_update_s = float(periodic_update_ms) / 1000
+            self._repeating_timer = RepeatingTimer(
+                self._stop_timer_flag, self.publish_cached_update, periodic_update_s
+            )
 
     def _monitor_callback(self, response: ReadNotifyResponse):
         self._logger.debug(f"Received PV update {response.header}")
@@ -81,26 +71,9 @@ class UpdateHandler:
         with self._cache_lock:
             self._cached_update = np.squeeze(response.data).astype(self._output_type)
 
-    async def _publish_cached_update(self):
-        self._logger.debug("Doing periodic update")
+    def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
                 publish_f142_message(
                     self._producer, "forwarder-output", self._cached_update,
                 )
-
-    async def _do_periodic_update(self):
-        self._logger.debug("1111")
-        try:
-            self._logger.debug("Starting periodic update")
-            while not self._cancelled:
-                await asyncio.sleep(self._periodic_update_s)
-                await self._publish_cached_update()
-        except Exception as ex:
-            print(ex)
-
-    def cancel(self):
-        self._cancelled = True
-        self._task.cancel()
-        # self._loop.stop()
-        # self._loop.close()

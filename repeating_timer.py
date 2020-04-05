@@ -8,7 +8,8 @@ class RepeatingTimer(Thread):
         self.stopped = stop_event
         self.interval_s = interval_s
         self.callback = callback
+        self._run()
 
-    def run(self):
+    def _run(self):
         while not self.stopped.wait(self.interval_s):
             self.callback()
