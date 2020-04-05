@@ -5,7 +5,11 @@ from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
 from threading import Lock, Event, Timer
-from epics_to_serialisable_types import numpy_type_from_channel_type
+from epics_to_serialisable_types import (
+    numpy_type_from_channel_type,
+    caproto_alarm_severity_to_f142,
+    caproto_alarm_status_to_f142,
+)
 
 schema_publishers = {"f142": publish_f142_message}
 output_topic = "forwarder-output"
@@ -67,7 +71,6 @@ class UpdateHandler:
                 )
 
         # TODO get timestamp from EPICS for kafka_timestamp
-        #  map caproto EPICS alarm enums to ones in f142
         self._logger.info("before lock")
         with self._cache_lock:
             self._logger.info("after lock")
@@ -81,8 +84,10 @@ class UpdateHandler:
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
                     kafka_timestamp=42,
-                    alarm_status=response.metadata.status,
-                    alarm_severity=response.metadata.severity,
+                    alarm_status=caproto_alarm_status_to_f142(response.metadata.status),
+                    alarm_severity=caproto_alarm_severity_to_f142(
+                        response.metadata.severity
+                    ),
                 )
             else:
                 self._message_publisher(
