@@ -28,6 +28,10 @@ class RepeatTimer(Timer):
             self.function(*self.args, **self.kwargs)
 
 
+def _millisecond_to_seconds(time_ms: int) -> float:
+    return float(time_ms) / 1000
+
+
 class UpdateHandler:
     def __init__(
         self,
@@ -54,9 +58,8 @@ class UpdateHandler:
 
         if periodic_update_ms != 0:
             self._cache_lock = Lock()
-            periodic_update_s = float(periodic_update_ms) / 1000
             self._repeating_timer = RepeatTimer(
-                periodic_update_s, self.publish_cached_update
+                _millisecond_to_seconds(periodic_update_ms), self.publish_cached_update
             )
             self._repeating_timer.start()
 
