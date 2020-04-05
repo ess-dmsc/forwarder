@@ -71,9 +71,7 @@ class UpdateHandler:
                 )
 
         # TODO get timestamp from EPICS for kafka_timestamp
-        self._logger.info("before lock")
         with self._cache_lock:
-            self._logger.info("after lock")
             if (
                 self._cached_update is None
                 or response.metadata.status != self._cached_update.metadata.status
@@ -84,10 +82,10 @@ class UpdateHandler:
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
                     kafka_timestamp=42,
-                    alarm_status=caproto_alarm_status_to_f142(response.metadata.status),
-                    alarm_severity=caproto_alarm_severity_to_f142(
+                    alarm_status=caproto_alarm_status_to_f142[response.metadata.status],
+                    alarm_severity=caproto_alarm_severity_to_f142[
                         response.metadata.severity
-                    ),
+                    ],
                 )
             else:
                 self._message_publisher(
