@@ -4,8 +4,7 @@ from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
-from threading import Lock, Event
-from repeating_timer import RepeatingTimer
+from threading import Lock, Event, Timer
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,
@@ -21,6 +20,12 @@ _numpy_type_from_channel_type = {
 }
 
 schema_publishers = {"f142": publish_f142_message}
+
+
+class RepeatTimer(Timer):
+    def run(self):
+        while not self.finished.wait(self.interval):
+            self.function(*self.args, **self.kwargs)
 
 
 class UpdateHandler:
@@ -50,9 +55,10 @@ class UpdateHandler:
         if periodic_update_ms != 0:
             self._cache_lock = Lock()
             periodic_update_s = float(periodic_update_ms) / 1000
-            self._repeating_timer = RepeatingTimer(
-                self._stop_timer_flag, self.publish_cached_update, periodic_update_s
+            self._repeating_timer = RepeatTimer(
+                periodic_update_s, self.publish_cached_update
             )
+            self._repeating_timer.start()
 
     def _monitor_callback(self, response: ReadNotifyResponse):
         self._logger.debug(f"Received PV update {response.header}")
