@@ -1,9 +1,11 @@
 from confluent_kafka import Consumer
 from .aio_producer import AIOProducer
 from streaming_data_types.logdata_f142 import serialise_f142
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
 import numpy as np
-import time
+from typing import Optional
 
 BROKER_ADDRESS = "localhost:9092"
 
@@ -34,25 +36,33 @@ def publish_f142_message(
     producer: AIOProducer,
     topic: str,
     data: np.array,
-    kafka_timestamp: int = None,
-    source_name: str = None,
+    kafka_timestamp: int,
+    source_name: str,
+    alarm_status: Optional[AlarmStatus] = None,
+    alarm_severity: Optional[AlarmSeverity] = None,
 ):
     """
     Publish an f142 message to a given topic.
-    :param producer:
+    :param producer: Kafka producer to publish update with
     :param topic: Name of topic to publish to
-    :param data:
+    :param data: Value of the PV update
     :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
     :param source_name: Name of the PV
+    :param alarm_status:
+    :param alarm_severity:
     """
-    # TODO get timestamp from EPICS and don't allow None to this method
-    if kafka_timestamp is None:
-        kafka_timestamp = int(time.time() * 1000)
-    if source_name is None:
-        source_name = "Forwarder-Python"
-    f142_message = serialise_f142(
-        value=data,
-        source_name=source_name,
-        timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
-    )
+    if alarm_status is None:
+        f142_message = serialise_f142(
+            value=data,
+            source_name=source_name,
+            timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
+        )
+    else:
+        f142_message = serialise_f142(
+            value=data,
+            source_name=source_name,
+            timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
+            alarm_status=alarm_status,
+            alarm_severity=alarm_severity,
+        )
     producer.produce(topic, f142_message)

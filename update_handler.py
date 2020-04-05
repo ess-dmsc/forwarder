@@ -5,21 +5,10 @@ from caproto import ReadNotifyResponse, ChannelType
 from caproto.threading.client import PV
 import numpy as np
 from threading import Lock, Event, Timer
-
-# caproto can give us values of different dtypes even from the same EPICS channel,
-# for example it will use the smallest integer type it can for the particular value,
-# for example ">i2" (big-endian, 2 byte int).
-# Unfortunately the serialisation method doesn't know what to do with such a specific dtype
-# so we will cast to a consistent type based on the EPICS channel type.
-_numpy_type_from_channel_type = {
-    ChannelType.CTRL_INT: np.int32,
-    ChannelType.CTRL_LONG: np.int64,
-    ChannelType.CTRL_FLOAT: np.float,
-    ChannelType.CTRL_DOUBLE: np.float64,
-    ChannelType.CTRL_STRING: np.unicode_,
-}
+from epics_to_serialisable_types import numpy_type_from_channel_type
 
 schema_publishers = {"f142": publish_f142_message}
+output_topic = "forwarder-output"
 
 
 class RepeatTimer(Timer):
@@ -50,6 +39,7 @@ class UpdateHandler:
         self._output_type = None
         self._stop_timer_flag = Event()
         self._repeating_timer = None
+        self._cache_lock = Lock()
 
         try:
             self._message_publisher = schema_publishers[schema]
@@ -59,7 +49,6 @@ class UpdateHandler:
             )
 
         if periodic_update_ms != 0:
-            self._cache_lock = Lock()
             self._repeating_timer = RepeatTimer(
                 _milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
             )
@@ -71,25 +60,49 @@ class UpdateHandler:
         )
         if self._output_type is None:
             try:
-                self._output_type = _numpy_type_from_channel_type[response.data_type]
+                self._output_type = numpy_type_from_channel_type[response.data_type]
             except KeyError:
                 self._logger.warning(
                     f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
                 )
-        self._message_publisher(
-            self._producer,
-            "forwarder-output",
-            np.squeeze(response.data).astype(self._output_type),
-            source_name=self._pv.name,
-        )
+
+        # TODO get timestamp from EPICS for kafka_timestamp
+        #  map caproto EPICS alarm enums to ones in f142
+        self._logger.info("before lock")
         with self._cache_lock:
-            self._cached_update = np.squeeze(response.data).astype(self._output_type)
+            self._logger.info("after lock")
+            if (
+                self._cached_update is None
+                or response.metadata.status != self._cached_update.metadata.status
+            ):
+                self._message_publisher(
+                    self._producer,
+                    output_topic,
+                    np.squeeze(response.data).astype(self._output_type),
+                    source_name=self._pv.name,
+                    kafka_timestamp=42,
+                    alarm_status=response.metadata.status,
+                    alarm_severity=response.metadata.severity,
+                )
+            else:
+                self._message_publisher(
+                    self._producer,
+                    output_topic,
+                    np.squeeze(response.data).astype(self._output_type),
+                    source_name=self._pv.name,
+                    kafka_timestamp=42,
+                )
+            self._cached_update = response
 
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
-                publish_f142_message(
-                    self._producer, "forwarder-output", self._cached_update,
+                self._message_publisher(
+                    self._producer,
+                    output_topic,
+                    np.squeeze(self._cached_update.data).astype(self._output_type),
+                    source_name=self._pv.name,
+                    kafka_timestamp=42,
                 )
 
     def stop(self):
