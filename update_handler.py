@@ -72,6 +72,7 @@ class UpdateHandler:
                 self._logger.warning(
                     f"Don't know what numpy dtype to use for channel type {response.data_type}"
                 )
+                response.metadata
         self._message_publisher(
             self._producer,
             "forwarder-output",
