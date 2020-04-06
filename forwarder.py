@@ -74,8 +74,12 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
+    if args.version:
+        raise NotImplementedError("Versioning not implemented yet")
+    if args.verbosity != "Debug":
+        raise NotImplementedError("Specifying logging level not implemented yet")
 
-    logger = setup_logger()
+    logger = setup_logger(log_file_name=args.log_file)
     logger.info("Forwarder started")
 
     # EPICS

@@ -1,14 +1,18 @@
 import logging
 import graypy
+from typing import Optional
 
-application_name = "python-forwarder"
+logger_name = "python-forwarder"
 
 
 def setup_logger(
-    name: str = application_name, level: int = logging.DEBUG
+    level: int = logging.DEBUG, log_file_name: Optional[str] = None
 ) -> logging.Logger:
-    logging.basicConfig()
-    logger = logging.getLogger(name)
+    if log_file_name is not None:
+        logging.basicConfig(filename=log_file_name)
+    else:
+        logging.basicConfig()
+    logger = logging.getLogger(logger_name)
     logger.setLevel(level)
     handler = graypy.GELFUDPHandler("localhost", 12201)
     logger.addHandler(handler)
@@ -16,4 +20,4 @@ def setup_logger(
 
 
 def get_logger():
-    return logging.getLogger(application_name)
+    return logging.getLogger(logger_name)
