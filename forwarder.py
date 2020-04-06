@@ -3,6 +3,7 @@ from kafka.kafka_helpers import create_producer, create_consumer
 from application_logger import setup_logger
 from parse_config_update import parse_config_update, CommandTypes
 from update_handler import UpdateHandler
+import logging
 import configargparse
 
 
@@ -60,26 +61,32 @@ def parse_args():
         is_config_file=True,
         help="Read configuration from an ini file",
     )
+    log_choice_to_enum = {
+        "Trace": logging.DEBUG,
+        "Debug": logging.DEBUG,
+        "Warning": logging.WARNING,
+        "Error": logging.ERROR,
+        "Critical": logging.CRITICAL,
+    }
     parser.add_argument(
         "-v",
         "--verbosity",
         required=False,
-        help="Set log message level. Set to one of\n"
-        "`Trace`, `Debug`, `Info`, `Warning`, `Error`\n"
-        'or `Critical`. Ex: "-v Debug". Default: `Error`',
+        help="Set logging level",
+        choices=log_choice_to_enum.keys(),
         default="Error",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.verbosity = log_choice_to_enum[args.verbosity]
+    return args
 
 
 if __name__ == "__main__":
     args = parse_args()
     if args.version:
         raise NotImplementedError("Versioning not implemented yet")
-    if args.verbosity != "Debug":
-        raise NotImplementedError("Specifying logging level not implemented yet")
 
-    logger = setup_logger(log_file_name=args.log_file)
+    logger = setup_logger(level=args.verbosity, log_file_name=args.log_file)
     logger.info("Forwarder started")
 
     # EPICS
