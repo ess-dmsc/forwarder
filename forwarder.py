@@ -3,6 +3,7 @@ from kafka.kafka_helpers import create_producer, create_consumer
 from application_logger import setup_logger
 from parse_config_update import parse_config_update, CommandTypes
 from update_handler import UpdateHandler
+import configargparse
 
 
 def subscribe_to_pv(name: str):
@@ -26,6 +27,50 @@ def unsubscribe_from_pv(name: str):
 
 
 if __name__ == "__main__":
+    parser = configargparse.ArgumentParser(
+        description="Writes NeXus files in a format specified with a json template.\n"
+        "Writer modules can be used to populate the file from Kafka topics."
+    )
+    parser.add_argument(
+        "--version", action="store_true", help="Print application version and exit"
+    )
+    parser.add_argument(
+        "--config-topic",
+        required=True,
+        help="<host[:port][/topic]> Kafka broker/topic to listen for commands",
+        type=str,
+    )
+    parser.add_argument(
+        "--status-topic",
+        required=True,
+        help="<host[:port][/topic]> Kafka broker/topic to publish status updates on",
+        type=str,
+    )
+    parser.add_argument(
+        "--graylog-logger-address",
+        required=False,
+        help="<host:port> Log to Graylog",
+        type=str,
+    )
+    parser.add_argument("--log-file", required=False, help="Log filename", type=str)
+    parser.add_argument(
+        "-c",
+        "--config-file",
+        required=False,
+        is_config_file=True,
+        help="Read configuration from an ini file",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbosity",
+        required=False,
+        help="Set log message level. Set to one of\n"
+        "`Trace`, `Debug`, `Info`, `Warning`, `Error`\n"
+        'or `Critical`. Ex: "-v Debug". Default: `Error`',
+        default="Error",
+    )
+    args = parser.parse_args()
+
     logger = setup_logger()
     logger.info("Forwarder started")
 
@@ -36,7 +81,7 @@ if __name__ == "__main__":
     # Kafka
     producer = create_producer()
     consumer = create_consumer()
-    consumer.subscribe(["forwarder-config"])
+    consumer.subscribe([args.config_topic])
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
