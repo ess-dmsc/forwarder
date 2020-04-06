@@ -76,9 +76,9 @@ def parse_args():
         choices=log_choice_to_enum.keys(),
         default="Error",
     )
-    args = parser.parse_args()
-    args.verbosity = log_choice_to_enum[args.verbosity]
-    return args
+    optargs = parser.parse_args()
+    optargs.verbosity = log_choice_to_enum[optargs.verbosity]
+    return optargs
 
 
 if __name__ == "__main__":
