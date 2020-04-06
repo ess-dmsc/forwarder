@@ -26,7 +26,7 @@ def unsubscribe_from_pv(name: str):
     logger.info(f"Unsubscribed from PV {name}")
 
 
-if __name__ == "__main__":
+def parse_args():
     parser = configargparse.ArgumentParser(
         description="Writes NeXus files in a format specified with a json template.\n"
         "Writer modules can be used to populate the file from Kafka topics."
@@ -69,7 +69,11 @@ if __name__ == "__main__":
         'or `Critical`. Ex: "-v Debug". Default: `Error`',
         default="Error",
     )
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+if __name__ == "__main__":
+    args = parse_args()
 
     logger = setup_logger()
     logger.info("Forwarder started")
