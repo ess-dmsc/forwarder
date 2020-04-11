@@ -9,7 +9,7 @@ logger = get_logger()
 
 class CommandType(Enum):
     ADD = "add"
-    REMOVE = "remove"
+    REMOVE = "stop_channel"
     REMOVE_ALL = "stop_all"
     EXIT = "exit"
 
@@ -22,13 +22,13 @@ class EpicsProtocol(Enum):
 @attr.s
 class Channel:
     name = attr.ib(type=str)
-    protocol = attr.ib(type=EpicsProtocol)
+    protocol = attr.ib(type=Optional[EpicsProtocol])
 
 
 @attr.s
 class ConfigUpdate:
     command_type = attr.ib(type=CommandType)
-    channel_names = attr.ib(type=Optional[Tuple[Channel]])
+    channels = attr.ib(type=Optional[Tuple[Channel]])
 
 
 def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]:
@@ -44,6 +44,16 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
 
     if command_type == CommandType.REMOVE_ALL or command_type == CommandType.EXIT:
         return ConfigUpdate(command_type, None)
+
+    if command_type == CommandType.REMOVE:
+        try:
+            channel_name = config["channel"]
+        except ValueError:
+            logger.warning(
+                f'"channel" field not found in received "{command_type}" command'
+            )
+            return
+        return ConfigUpdate(command_type, (Channel(channel_name, None),))
 
     try:
         streams = config["streams"]

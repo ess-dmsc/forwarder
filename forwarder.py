@@ -124,16 +124,17 @@ if __name__ == "__main__":
             else:
                 logger.info(f"Received config message")
                 config_change = parse_config_update(msg.value())
-                for channel in config_change.channel_names:
-                    if config_change.command_type == CommandType.ADD.value:
-                        subscribe_to_pv(channel.name, channel.protocol)
-                    elif config_change.command_type == CommandType.REMOVE.value:
-                        unsubscribe_from_pv(channel.name)
-                    elif config_change.command_type == CommandType.REMOVE_ALL:
-                        unsubscribe_from_all()
-                    elif config_change.command_type == CommandType.EXIT:
-                        logger.info("Exit command received")
-                        break
+                if config_change.command_type == CommandType.REMOVE_ALL:
+                    unsubscribe_from_all()
+                elif config_change.command_type == CommandType.EXIT:
+                    logger.info("Exit command received")
+                    break
+                else:
+                    for channel in config_change.channels:
+                        if config_change.command_type == CommandType.ADD:
+                            subscribe_to_pv(channel.name, channel.protocol)
+                        elif config_change.command_type == CommandType.REMOVE:
+                            unsubscribe_from_pv(channel.name)
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
