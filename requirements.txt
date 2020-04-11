@@ -1,4 +1,5 @@
 caproto
+p4p
 confluent_kafka
 flatbuffers == 1.11
 graypy

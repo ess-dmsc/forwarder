@@ -2,7 +2,6 @@ from application_logger import get_logger
 from kafka.kafka_helpers import publish_f142_message
 from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
-from caproto.threading.client import PV
 import numpy as np
 from threading import Lock, Event, Timer
 from epics_to_serialisable_types import (
@@ -10,9 +9,17 @@ from epics_to_serialisable_types import (
     caproto_alarm_severity_to_f142,
     caproto_alarm_status_to_f142,
 )
+from caproto.threading.client import Context as CaContext
+from p4p.client.thread import Context as PvaContext
+from enum import Enum
 
 schema_publishers = {"f142": publish_f142_message}
 output_topic = "forwarder-output"
+
+
+class EpicsProtocol(Enum):
+    PVA = "pva"
+    CA = "ca"
 
 
 class RepeatTimer(Timer):
@@ -25,17 +32,53 @@ def _milliseconds_to_seconds(time_ms: int) -> float:
     return float(time_ms) / 1000
 
 
-class UpdateHandler:
+def create_update_handler(
+    producer: AIOProducer,
+    ca_context: CaContext,
+    pva_context: PvaContext,
+    pv_name: str,
+    epics_protocol: str,
+    schema: str = "f142",
+    periodic_update_ms: int = 0,
+):
+    if epics_protocol == EpicsProtocol.PVA:
+        return PvaUpdateHandler(pva_context, pv_name)
+    elif epics_protocol == EpicsProtocol.CA:
+        return CAUpdateHandler(
+            producer, ca_context, pv_name, schema, periodic_update_ms
+        )
+
+
+class PvaUpdateHandler:
+    """
+    Monitors via EPICS v4 Process Variable Access (PVA),
+    serialises updates in FlatBuffers and passes them onto an Kafka Producer.
+    PVA support from p4p library.
+    """
+
+    def __init__(self, context: PvaContext, pv_name: str):
+        # pv_subscription = context.monitor(pv_name, cb)
+        pass
+
+
+class CAUpdateHandler:
+    """
+    Monitors via EPICS v3 Channel Access (CA),
+    serialises updates in FlatBuffers and passes them onto an Kafka Producer.
+    CA support from caproto library.
+    """
+
     def __init__(
         self,
         producer: AIOProducer,
-        pv: PV,
+        context: CaContext,
+        pv_name: str,
         schema: str = "f142",
         periodic_update_ms: int = 0,
     ):
         self._logger = get_logger()
         self._producer = producer
-        self._pv = pv
+        (self._pv,) = context.get_pvs(pv_name)
         # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
         sub = self._pv.subscribe(data_type="control")
         sub.add_callback(self._monitor_callback)
@@ -59,9 +102,7 @@ class UpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: ReadNotifyResponse):
-        self._logger.debug(
-            f"Received PV update, STATUS: {response.metadata.status}, SEVERITY: {response.metadata.severity}, METADATA: {response.metadata}"
-        )
+        self._logger.debug(f"Received PV update, METADATA: {response.metadata}")
         if self._output_type is None:
             try:
                 self._output_type = numpy_type_from_channel_type[response.data_type]

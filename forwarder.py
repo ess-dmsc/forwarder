@@ -1,8 +1,9 @@
-from caproto.threading.client import Context
+from caproto.threading.client import Context as CaContext
+from p4p.client.thread import Context as PvaContext
 from kafka.kafka_helpers import create_producer, create_consumer
 from application_logger import setup_logger
 from parse_config_update import parse_config_update, CommandTypes
-from update_handler import UpdateHandler
+from update_handler import create_update_handler
 import logging
 import configargparse
 
@@ -11,8 +12,8 @@ def subscribe_to_pv(name: str):
     if name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
-    (pv,) = ctx.get_pvs(name)
-    update_handlers[name] = UpdateHandler(producer, pv)
+
+    update_handlers[name] = create_update_handler(producer, ca_ctx, pva_ctx, name, "ca")
     logger.info(f"Subscribed to PV {name}")
 
 
@@ -90,7 +91,8 @@ if __name__ == "__main__":
     logger.info("Forwarder started")
 
     # EPICS
-    ctx = Context()
+    ca_ctx = CaContext()
+    pva_ctx = PvaContext("pva")
     update_handlers = dict()
 
     # Kafka
