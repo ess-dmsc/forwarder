@@ -12,6 +12,7 @@ from epics_to_serialisable_types import (
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from parse_config_update import EpicsProtocol
+import time
 
 schema_publishers = {"f142": publish_f142_message}
 output_topic = "forwarder-output"
@@ -97,6 +98,8 @@ class CAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: ReadNotifyResponse):
+        # Timestamp as early as possible
+        timestamp = time.time_ns()
         self._logger.debug(f"Received PV update, METADATA: {response.metadata}")
         if self._output_type is None:
             try:
@@ -106,18 +109,17 @@ class CAUpdateHandler:
                     f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
                 )
 
-        # TODO get timestamp from EPICS for kafka_timestamp
         with self._cache_lock:
             if (
                 self._cached_update is None
-                or response.metadata.status != self._cached_update.metadata.status
+                or response.metadata.status != self._cached_update[0].metadata.status
             ):
                 self._message_publisher(
                     self._producer,
                     output_topic,
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
-                    kafka_timestamp=42,
+                    timestamp_ns=timestamp,
                     alarm_status=caproto_alarm_status_to_f142[response.metadata.status],
                     alarm_severity=caproto_alarm_severity_to_f142[
                         response.metadata.severity
@@ -129,9 +131,9 @@ class CAUpdateHandler:
                     output_topic,
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
-                    kafka_timestamp=42,
+                    timestamp_ns=timestamp,
                 )
-            self._cached_update = response
+            self._cached_update = (response, timestamp)
 
     def publish_cached_update(self):
         with self._cache_lock:
@@ -139,9 +141,9 @@ class CAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     output_topic,
-                    np.squeeze(self._cached_update.data).astype(self._output_type),
+                    np.squeeze(self._cached_update[0].data).astype(self._output_type),
                     source_name=self._pv.name,
-                    kafka_timestamp=42,
+                    timestamp_ns=self._cached_update[1],
                 )
 
     def stop(self):

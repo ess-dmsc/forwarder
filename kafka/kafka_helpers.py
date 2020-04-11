@@ -10,10 +10,6 @@ from typing import Optional
 BROKER_ADDRESS = "localhost:9092"
 
 
-def _millseconds_to_nanoseconds(time_ms):
-    return int(time_ms * 1000000)
-
-
 def create_producer() -> AIOProducer:
     producer_config = {
         "bootstrap.servers": BROKER_ADDRESS,
@@ -36,7 +32,7 @@ def publish_f142_message(
     producer: AIOProducer,
     topic: str,
     data: np.array,
-    kafka_timestamp: int,
+    timestamp_ns: int,
     source_name: str,
     alarm_status: Optional[AlarmStatus] = None,
     alarm_severity: Optional[AlarmSeverity] = None,
@@ -46,22 +42,20 @@ def publish_f142_message(
     :param producer: Kafka producer to publish update with
     :param topic: Name of topic to publish to
     :param data: Value of the PV update
-    :param kafka_timestamp: Timestamp to set in the Kafka header (milliseconds after unix epoch)
+    :param timestamp_ns: Timestamp for value (nanoseconds after unix epoch)
     :param source_name: Name of the PV
     :param alarm_status:
     :param alarm_severity:
     """
     if alarm_status is None:
         f142_message = serialise_f142(
-            value=data,
-            source_name=source_name,
-            timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
+            value=data, source_name=source_name, timestamp_unix_ns=timestamp_ns,
         )
     else:
         f142_message = serialise_f142(
             value=data,
             source_name=source_name,
-            timestamp_unix_ns=_millseconds_to_nanoseconds(kafka_timestamp),
+            timestamp_unix_ns=timestamp_ns,
             alarm_status=alarm_status,
             alarm_severity=alarm_severity,
         )
