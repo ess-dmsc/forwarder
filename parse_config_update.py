@@ -2,7 +2,7 @@ import json
 from application_logger import get_logger
 import attr
 from enum import Enum
-from typing import Tuple, Union, Generator, Dict
+from typing import Tuple, Union, Generator, Dict, Optional
 
 logger = get_logger()
 
@@ -10,6 +10,7 @@ logger = get_logger()
 class CommandType(Enum):
     ADD = "add"
     REMOVE = "remove"
+    REMOVE_ALL = "stop_all"
 
 
 class EpicsProtocol(Enum):
@@ -26,20 +27,22 @@ class Channel:
 @attr.s
 class ConfigUpdate:
     command_type = attr.ib(type=CommandType)
-    channel_names = attr.ib(type=Tuple[Channel])
+    channel_names = attr.ib(type=Optional[Tuple[Channel]])
 
 
 def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]:
     config = json.loads(config_update_payload)
     try:
-        command_type = config["cmd"]
+        command_type = CommandType(config["cmd"])
     except KeyError:
         logger.warning('Message received in config topic contained no "cmd" field')
         return
-
-    if command_type not in set(command.value for command in CommandType):
-        logger.warning(f'Unrecognised command "{command_type}" received')
+    except ValueError:
+        logger.warning(f'Unrecognised command "{config["cmd"]}" received')
         return
+
+    if command_type == CommandType.REMOVE_ALL:
+        return ConfigUpdate(command_type, None)
 
     try:
         streams = config["streams"]

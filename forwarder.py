@@ -30,6 +30,13 @@ def unsubscribe_from_pv(name: str):
     logger.info(f"Unsubscribed from PV {name}")
 
 
+def unsubscribe_from_all():
+    for update_handler in update_handlers:
+        update_handler.stop()
+    update_handlers.clear()
+    logger.info(f"Unsubscribed from all PVs")
+
+
 def parse_args():
     parser = configargparse.ArgumentParser(
         description="Writes NeXus files in a format specified with a json template.\n"
@@ -122,6 +129,8 @@ if __name__ == "__main__":
                         subscribe_to_pv(channel.name, channel.protocol)
                     elif config_change.command_type == CommandType.REMOVE.value:
                         unsubscribe_from_pv(channel.name)
+                    elif config_change.command_type == CommandType.REMOVE_ALL:
+                        unsubscribe_from_all()
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
