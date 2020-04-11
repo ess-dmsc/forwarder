@@ -131,6 +131,9 @@ if __name__ == "__main__":
                         unsubscribe_from_pv(channel.name)
                     elif config_change.command_type == CommandType.REMOVE_ALL:
                         unsubscribe_from_all()
+                    elif config_change.command_type == CommandType.EXIT:
+                        logger.info("Exit command received")
+                        break
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

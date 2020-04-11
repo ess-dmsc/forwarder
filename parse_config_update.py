@@ -11,6 +11,7 @@ class CommandType(Enum):
     ADD = "add"
     REMOVE = "remove"
     REMOVE_ALL = "stop_all"
+    EXIT = "exit"
 
 
 class EpicsProtocol(Enum):
@@ -41,7 +42,7 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
         return
 
-    if command_type == CommandType.REMOVE_ALL:
+    if command_type == CommandType.REMOVE_ALL or command_type == CommandType.EXIT:
         return ConfigUpdate(command_type, None)
 
     try:
