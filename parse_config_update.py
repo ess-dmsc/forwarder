@@ -37,14 +37,14 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
         return
 
     channels = tuple(
-        (
+        [
             str(update["channel"])
             if "channel" in update.keys()
             else logger.warning(
                 f'"channel" field not found in "stream" entry in received "{command_type}" command'
             )
             for update in streams
-        )
+        ]
     )
 
     return ConfigUpdate(command_type, channels)
