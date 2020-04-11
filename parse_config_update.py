@@ -63,7 +63,8 @@ def _parse_streams(command_type: CommandType, streams: Dict) -> Generator[Channe
                 protocol = EpicsProtocol(update_stream["channel_provider_type"])
             except ValueError:
                 logger.warning(
-                    f'Unrecognised channel_provider_type {update_stream["channel_provider_type"]} provided in configuration change'
+                    f'Unrecognised "channel_provider_type" {update_stream["channel_provider_type"]} '
+                    f"provided in configuration change"
                 )
                 continue
         else:
