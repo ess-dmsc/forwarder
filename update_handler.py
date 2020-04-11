@@ -11,15 +11,10 @@ from epics_to_serialisable_types import (
 )
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
-from enum import Enum
+from parse_config_update import EpicsProtocol
 
 schema_publishers = {"f142": publish_f142_message}
 output_topic = "forwarder-output"
-
-
-class EpicsProtocol(Enum):
-    PVA = "pva"
-    CA = "ca"
 
 
 class RepeatTimer(Timer):
@@ -37,7 +32,7 @@ def create_update_handler(
     ca_context: CaContext,
     pva_context: PvaContext,
     pv_name: str,
-    epics_protocol: str,
+    epics_protocol: EpicsProtocol,
     schema: str = "f142",
     periodic_update_ms: int = 0,
 ):

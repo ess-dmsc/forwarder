@@ -2,18 +2,20 @@ from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from kafka.kafka_helpers import create_producer, create_consumer
 from application_logger import setup_logger
-from parse_config_update import parse_config_update, CommandTypes
+from parse_config_update import parse_config_update, CommandType, EpicsProtocol
 from update_handler import create_update_handler
 import logging
 import configargparse
 
 
-def subscribe_to_pv(name: str):
+def subscribe_to_pv(name: str, protocol: EpicsProtocol):
     if name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
-    update_handlers[name] = create_update_handler(producer, ca_ctx, pva_ctx, name, "ca")
+    update_handlers[name] = create_update_handler(
+        producer, ca_ctx, pva_ctx, name, protocol
+    )
     logger.info(f"Subscribed to PV {name}")
 
 
@@ -115,11 +117,11 @@ if __name__ == "__main__":
             else:
                 logger.info(f"Received config message")
                 config_change = parse_config_update(msg.value())
-                for channel_name in config_change.channel_names:
-                    if config_change.command_type == CommandTypes.ADD.value:
-                        subscribe_to_pv(channel_name)
-                    elif config_change.command_type == CommandTypes.REMOVE.value:
-                        unsubscribe_from_pv(channel_name)
+                for channel in config_change.channel_names:
+                    if config_change.command_type == CommandType.ADD.value:
+                        subscribe_to_pv(channel.name, channel.protocol)
+                    elif config_change.command_type == CommandType.REMOVE.value:
+                        unsubscribe_from_pv(channel.name)
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
