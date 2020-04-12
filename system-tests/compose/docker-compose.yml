@@ -1,0 +1,13 @@
+﻿
+version: '2'
+
+services:
+  forwarder:
+    image: forwarder:latest
+    network_mode: "host"
+    volumes:
+      - ../config-files/forwarder_config.ini:/forwarder_config.ini
+      - ../config-files/forwarder_config.json:/forwarder_config.json
+      - ../logs/:/forwarder_logs/
+    environment:
+      CONFIG_FILE: "/forwarder_config.ini"

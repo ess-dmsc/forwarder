@@ -1,0 +1,8 @@
+pytest
+docker-compose
+confluent-kafka
+flatbuffers
+docker
+pytictoc
+caproto
+numpy

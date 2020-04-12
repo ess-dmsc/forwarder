@@ -1,0 +1,9 @@
+{
+  "streams": [
+    {
+      "channel": "SIMPLE:DOUBLE",
+      "channel_provider_type": "ca",
+      "converter": { "schema": "f142", "topic": "//localhost:9092/TEST_forwarderDataLR" }
+    }
+  ]
+}

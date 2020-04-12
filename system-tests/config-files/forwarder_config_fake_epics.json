@@ -1,0 +1,9 @@
+{
+  "streams": [
+    {
+      "channel": "FakePV",
+      "channel_provider_type": "ca",
+      "converter": { "schema": "f142", "topic": "//localhost:9092/TEST_forward_fake_generated_pvs" }
+    }
+  ]
+}

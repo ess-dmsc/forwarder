@@ -1,0 +1,1 @@
+This file retains this otherwise empty directory in git so that it can be used as a log file output directory in the docker-compose script.

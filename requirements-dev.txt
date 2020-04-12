@@ -3,3 +3,6 @@
 -r requirements.txt
 black
 pre-commit
+pytest
+docker-compose
+docker

@@ -1,0 +1,13 @@
+
+version: '2'
+
+services:
+  forwarder:
+    image: forwarder:latest
+    network_mode: "host"
+    volumes:
+      - ../config-files/forwarder_config_fake_epics.ini:/forwarder_config_fake_epics.ini
+      - ../config-files/forwarder_config_fake_epics.json:/forwarder_config_fake_epics.json
+      - ../logs/:/forwarder_logs/
+    environment:
+      CONFIG_FILE: "/forwarder_config_fake_epics.ini"
