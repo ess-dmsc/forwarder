@@ -39,12 +39,12 @@ Run the python script `forwarder.py` located in the root of the repository.
 
 To build a docker image
 ```
-docker build . -t forwarder-python
+docker build . -t forwarder
 ```
 
 Use environment variables to pass command line arguments, for example
 ```
-docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder-python
+docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder
 ```
 
 ## C++ Forwarder features not replicated here
