@@ -50,4 +50,5 @@ docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status"
 ## C++ Forwarder features not replicated here
 
 Won't do:
-- Forwarding to multiple Kafka clusters
+- Configure forwarding from json file (already agreed to remove from C++ codebase)
+- Forwarding to multiple Kafka clusters (unless deemed necessary feature)
