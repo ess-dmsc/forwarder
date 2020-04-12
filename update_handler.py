@@ -112,7 +112,7 @@ class CAUpdateHandler:
             try:
                 self._output_type = numpy_type_from_channel_type[response.data_type]
             except KeyError:
-                self._logger.warning(
+                self._logger.error(
                     f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
                 )
 

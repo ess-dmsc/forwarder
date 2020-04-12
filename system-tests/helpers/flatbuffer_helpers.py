@@ -50,4 +50,6 @@ def check_expected_value(
             if isinstance(expected_value, float):
                 assert isclose(log_data.value, expected_value)
             else:
-                assert log_data.value == expected_value
+                assert (
+                    log_data.value == expected_value
+                ), f"Expected {expected_value}, got {log_data.value}"

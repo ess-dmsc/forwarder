@@ -102,7 +102,7 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-    initial_string_value = b"test"
+    initial_string_value = "test"
     initial_long_value = 0
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
