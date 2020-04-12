@@ -36,7 +36,7 @@ def unsubscribe_from_pv(name: str):
 
 
 def unsubscribe_from_all():
-    for update_handler in update_handlers:
+    for _, update_handler in update_handlers:
         update_handler.stop()
     update_handlers.clear()
     logger.info(f"Unsubscribed from all PVs")
