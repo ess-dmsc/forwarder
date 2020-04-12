@@ -3,7 +3,8 @@ from kafka.kafka_helpers import publish_f142_message
 from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 import numpy as np
-from threading import Lock, Event, Timer
+from threading import Lock, Event
+from repeat_timer import RepeatTimer, milliseconds_to_seconds
 from epics_to_serialisable_types import (
     numpy_type_from_channel_type,
     caproto_alarm_severity_to_f142,
@@ -17,16 +18,6 @@ import time
 from typing import Optional
 
 schema_publishers = {"f142": publish_f142_message}
-
-
-class RepeatTimer(Timer):
-    def run(self):
-        while not self.finished.wait(self.interval):
-            self.function(*self.args, **self.kwargs)
-
-
-def _milliseconds_to_seconds(time_ms: int) -> float:
-    return float(time_ms) / 1000
 
 
 def create_update_handler(
@@ -100,7 +91,7 @@ class CAUpdateHandler:
 
         if periodic_update_ms is not None:
             self._repeating_timer = RepeatTimer(
-                _milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
+                milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
             )
             self._repeating_timer.start()
 

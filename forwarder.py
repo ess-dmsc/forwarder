@@ -11,6 +11,7 @@ from update_handler import create_update_handler
 import logging
 import configargparse
 from typing import Optional
+from status_reporter import StatusReporter
 
 
 def subscribe_to_pv(new_channel: Channel, pv_update_period: Optional[int]):
@@ -132,6 +133,9 @@ if __name__ == "__main__":
     consumer = create_consumer(config_broker)
     consumer.subscribe([config_topic])
 
+    status_reporter = StatusReporter(update_handlers)
+    status_reporter.start()
+
     # Metrics
     # use https://github.com/zillow/aiographite ?
     # can modify https://github.com/claws/aioprometheus for graphite?
@@ -163,6 +167,7 @@ if __name__ == "__main__":
         logger.info("%% Aborted by user")
 
     finally:
+        status_reporter.stop()
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()
