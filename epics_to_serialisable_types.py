@@ -11,7 +11,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSever
 numpy_type_from_channel_type = {
     ChannelType.CTRL_INT: np.int32,
     ChannelType.CTRL_LONG: np.int64,
-    ChannelType.CTRL_FLOAT: np.float,
+    ChannelType.CTRL_FLOAT: np.float32,
     ChannelType.CTRL_DOUBLE: np.float64,
     ChannelType.CTRL_STRING: np.unicode_,
 }
