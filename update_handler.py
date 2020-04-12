@@ -12,10 +12,10 @@ from epics_to_serialisable_types import (
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from parse_config_update import EpicsProtocol
+from parse_config_update import Channel as ConfigChannel
 import time
 
 schema_publishers = {"f142": publish_f142_message}
-output_topic = "forwarder-output"
 
 
 class RepeatTimer(Timer):
@@ -32,16 +32,20 @@ def create_update_handler(
     producer: AIOProducer,
     ca_context: CaContext,
     pva_context: PvaContext,
-    pv_name: str,
-    epics_protocol: EpicsProtocol,
+    channel: ConfigChannel,
     schema: str = "f142",
     periodic_update_ms: int = 0,
 ):
-    if epics_protocol == EpicsProtocol.PVA:
-        return PvaUpdateHandler(pva_context, pv_name)
-    elif epics_protocol == EpicsProtocol.CA:
+    if channel.protocol == EpicsProtocol.PVA:
+        return PvaUpdateHandler(pva_context, channel.name)
+    elif channel.protocol == EpicsProtocol.CA:
         return CAUpdateHandler(
-            producer, ca_context, pv_name, schema, periodic_update_ms
+            producer,
+            ca_context,
+            channel.name,
+            channel.output_topic,
+            schema,
+            periodic_update_ms,
         )
 
 
@@ -69,11 +73,13 @@ class CAUpdateHandler:
         producer: AIOProducer,
         context: CaContext,
         pv_name: str,
+        output_topic: str,
         schema: str = "f142",
         periodic_update_ms: int = 0,
     ):
         self._logger = get_logger()
         self._producer = producer
+        self._output_topic = output_topic
         (self._pv,) = context.get_pvs(pv_name)
         # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
         sub = self._pv.subscribe(data_type="control")
@@ -116,7 +122,7 @@ class CAUpdateHandler:
             ):
                 self._message_publisher(
                     self._producer,
-                    output_topic,
+                    self._output_topic,
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
                     timestamp_ns=timestamp,
@@ -128,7 +134,7 @@ class CAUpdateHandler:
             else:
                 self._message_publisher(
                     self._producer,
-                    output_topic,
+                    self._output_topic,
                     np.squeeze(response.data).astype(self._output_type),
                     source_name=self._pv.name,
                     timestamp_ns=timestamp,
@@ -140,7 +146,7 @@ class CAUpdateHandler:
             if self._cached_update is not None:
                 self._message_publisher(
                     self._producer,
-                    output_topic,
+                    self._output_topic,
                     np.squeeze(self._cached_update[0].data).astype(self._output_type),
                     source_name=self._pv.name,
                     timestamp_ns=self._cached_update[1],

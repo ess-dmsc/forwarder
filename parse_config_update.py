@@ -3,6 +3,7 @@ from application_logger import get_logger
 import attr
 from enum import Enum
 from typing import Tuple, Union, Generator, Dict, Optional
+from kafka.kafka_helpers import get_broker_and_topic_from_uri
 
 logger = get_logger()
 
@@ -23,6 +24,7 @@ class EpicsProtocol(Enum):
 class Channel:
     name = attr.ib(type=str)
     protocol = attr.ib(type=Optional[EpicsProtocol])
+    output_topic = attr.ib(type=Optional[str])
 
 
 @attr.s
@@ -53,7 +55,7 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
                 f'"channel" field not found in received "{command_type}" command'
             )
             return
-        return ConfigUpdate(command_type, (Channel(channel_name, None),))
+        return ConfigUpdate(command_type, (Channel(channel_name, None, None),))
 
     try:
         streams = config["streams"]
@@ -68,7 +70,9 @@ def _parse_streams(
     command_type: CommandType, streams: Dict
 ) -> Generator[Channel, None, None]:
     for update_stream in streams:
-        if "channel" not in update_stream.keys():
+        try:
+            channel = update_stream["channel"]
+        except ValueError:
             logger.warning(
                 f'"channel" field not found in "stream" entry in received "{command_type}" command'
             )
@@ -86,4 +90,14 @@ def _parse_streams(
         else:
             protocol = EpicsProtocol.PVA
 
-        yield Channel(update_stream["channel"], protocol)
+        try:
+            output_broker, output_topic = get_broker_and_topic_from_uri(
+                update_stream["converter"]["topic"]
+            )
+        except ValueError:
+            logger.warning(
+                f'"topic" field not found in "stream" entry in received "{command_type}" command'
+            )
+            continue
+
+        yield Channel(channel, protocol, output_topic)

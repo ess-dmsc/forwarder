@@ -6,21 +6,21 @@ from kafka.kafka_helpers import (
     get_broker_and_topic_from_uri,
 )
 from application_logger import setup_logger
-from parse_config_update import parse_config_update, CommandType, EpicsProtocol
+from parse_config_update import parse_config_update, CommandType, Channel
 from update_handler import create_update_handler
 import logging
 import configargparse
 
 
-def subscribe_to_pv(name: str, protocol: EpicsProtocol):
-    if name in update_handlers.keys():
+def subscribe_to_pv(channel: Channel):
+    if channel.name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
-    update_handlers[name] = create_update_handler(
-        producer, ca_ctx, pva_ctx, name, protocol
+    update_handlers[channel.name] = create_update_handler(
+        producer, ca_ctx, pva_ctx, channel
     )
-    logger.info(f"Subscribed to PV {name}")
+    logger.info(f"Subscribed to PV {channel.name}")
 
 
 def unsubscribe_from_pv(name: str):
