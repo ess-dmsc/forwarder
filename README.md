@@ -46,3 +46,8 @@ Use environment variables to pass command line arguments, for example
 ```
 docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder-python
 ```
+
+## C++ Forwarder features not replicated here
+
+Won't do:
+- Forwarding to multiple Kafka clusters
