@@ -12,15 +12,15 @@ import logging
 import configargparse
 
 
-def subscribe_to_pv(channel: Channel):
-    if channel.name in update_handlers.keys():
+def subscribe_to_pv(new_channel: Channel):
+    if new_channel.name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
-    update_handlers[channel.name] = create_update_handler(
-        producer, ca_ctx, pva_ctx, channel
+    update_handlers[new_channel.name] = create_update_handler(
+        producer, ca_ctx, pva_ctx, new_channel
     )
-    logger.info(f"Subscribed to PV {channel.name}")
+    logger.info(f"Subscribed to PV {new_channel.name}")
 
 
 def unsubscribe_from_pv(name: str):
@@ -147,7 +147,7 @@ if __name__ == "__main__":
                 else:
                     for channel in config_change.channels:
                         if config_change.command_type == CommandType.ADD:
-                            subscribe_to_pv(channel.name, channel.protocol)
+                            subscribe_to_pv(channel)
                         elif config_change.command_type == CommandType.REMOVE:
                             unsubscribe_from_pv(channel.name)
 
