@@ -281,11 +281,7 @@ def docker_compose_idle_updates(request):
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
     build_and_run(
-        options,
-        request,
-        "forwarder_config_idle_updates.ini",
-        "forwarder_tests.log",
-        "forwarder_config_idle_updates.json",
+        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log",
     )
 
 
