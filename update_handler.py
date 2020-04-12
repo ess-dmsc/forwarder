@@ -151,6 +151,12 @@ class CAUpdateHandler:
                     np.squeeze(self._cached_update[0].data).astype(self._output_type),
                     source_name=self._pv.name,
                     timestamp_ns=self._cached_update[1],
+                    alarm_status=caproto_alarm_status_to_f142[
+                        self._cached_update[0].metadata.status
+                    ],
+                    alarm_severity=caproto_alarm_severity_to_f142[
+                        self._cached_update[0].metadata.severity
+                    ],
                 )
 
     def stop(self):
