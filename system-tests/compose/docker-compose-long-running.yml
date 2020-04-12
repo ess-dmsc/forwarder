@@ -7,7 +7,6 @@ services:
     network_mode: "host"
     volumes:
       - ../config-files/forwarder_config_lr.ini:/forwarder_config_lr.ini
-      - ../config-files/forwarder_config_lr.json:/forwarder_config_lr.json
       - ../logs/:/forwarder_logs/
     environment:
       CONFIG_FILE: "/forwarder_config_lr.ini"

@@ -123,7 +123,7 @@ def run_containers(cmd, options):
     print("\nFinished docker-compose up\n", flush=True)
 
 
-def build_and_run(options, request, config_file=None, log_file=None, json_file=None):
+def build_and_run(options, request, config_file=None, log_file=None):
     local_path = request.config.getoption(LOCAL_BUILD)
     wait_for_debugger = request.config.getoption(WAIT_FOR_DEBUGGER_ATTACH)
     if wait_for_debugger and local_path is None:
@@ -148,8 +148,6 @@ def build_and_run(options, request, config_file=None, log_file=None, json_file=N
             "--log-file",
             f"{log_file}",
         ]
-        if json_file is not None:
-            command_options.extend(["--streams-json", f"./config-files/{json_file}"])
         proc = Popen(command_options)
         if wait_for_debugger:
             input(
@@ -222,11 +220,7 @@ def docker_compose(request):
     options["--file"] = ["compose/docker-compose.yml"]
 
     build_and_run(
-        options,
-        request,
-        "forwarder_config.ini",
-        "forwarder_tests.log",
-        "forwarder_config.json",
+        options, request, "forwarder_config.ini", "forwarder_tests.log",
     )
 
 
@@ -260,11 +254,7 @@ def docker_compose_fake_epics(request):
     options["--file"] = ["compose/docker-compose-fake-epics.yml"]
 
     build_and_run(
-        options,
-        request,
-        "forwarder_config_fake_epics.ini",
-        "forwarder_tests.log",
-        "forwarder_config_fake_epics.json",
+        options, request, "forwarder_config_fake_epics.ini", "forwarder_tests.log",
     )
 
 
@@ -298,9 +288,5 @@ def docker_compose_lr(request):
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
     build_and_run(
-        options,
-        request,
-        "forwarder_config_lr.ini",
-        "forwarder_tests.log",
-        "forwarder_config_lr.json",
+        options, request, "forwarder_config_lr.ini", "forwarder_tests.log",
     )

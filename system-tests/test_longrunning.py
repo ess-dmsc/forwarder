@@ -10,6 +10,10 @@ import docker
 from time import sleep
 from datetime import datetime
 from helpers.flatbuffer_helpers import check_expected_value
+from helpers.producerwrapper import ProducerWrapper
+
+
+CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
 # Skipped by default, Comment out to enable
@@ -21,9 +25,14 @@ def test_long_run(docker_compose_lr):
     :param docker_compose: Test fixture
     :return: None
     """
+    data_topic = "TEST_forwarderDataLR"
+    sleep(5)
+    producer = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    producer.add_config([PVDOUBLE])
+
     # Set up consumer now and subscribe from earliest offset on data topic
     cons = create_consumer("earliest")
-    cons.subscribe(["TEST_forwarderDataLR"])
+    cons.subscribe([data_topic])
     with open("logs/forwarder_lr_stats.log", "w+") as stats_file:
         with open("logs/forwarder_lr_missedupdates.log", "w+") as file:
             for i in range(5150):  # minimum 12 hours with 4 second sleep time
