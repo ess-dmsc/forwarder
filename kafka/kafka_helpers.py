@@ -5,7 +5,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
 import numpy as np
-from typing import Optional
+from typing import Optional, Tuple
 
 BROKER_ADDRESS = "localhost:9092"
 
@@ -26,6 +26,17 @@ def create_consumer() -> Consumer:
             "default.topic.config": {"auto.offset.reset": "latest"},
         }
     )
+
+
+def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
+    if "/" not in uri:
+        raise RuntimeError(
+            f"Unable to parse URI {uri}, should be of form localhost:9092/topic"
+        )
+    topic = uri.split("/")[-1]
+    broker = "".join(uri.split("/")[:-1])
+    broker = broker.strip("/")
+    return broker, topic
 
 
 def publish_f142_message(
