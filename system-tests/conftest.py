@@ -289,27 +289,6 @@ def docker_compose_idle_updates(request):
     )
 
 
-@pytest.fixture(scope="module")
-def docker_compose_idle_updates_long_period(request):
-    """
-    :type request: _pytest.python.FixtureRequest
-    """
-    print("Started preparing test environment...", flush=True)
-
-    # Options must be given as long form
-    options = common_options
-    options["--project-name"] = "longi"
-    options["--file"] = ["compose/docker-compose-idle-updates-long-period.yml"]
-
-    build_and_run(
-        options,
-        request,
-        "forwarder_config_idle_updates_long.ini",
-        "forwarder_tests.log",
-        "forwarder_config_idle_updates_long.json",
-    )
-
-
 @pytest.fixture(scope="module", autouse=False)
 def docker_compose_lr(request):
     """
