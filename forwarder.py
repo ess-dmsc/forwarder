@@ -10,15 +10,16 @@ from parse_config_update import parse_config_update, CommandType, Channel
 from update_handler import create_update_handler
 import logging
 import configargparse
+from typing import Optional
 
 
-def subscribe_to_pv(new_channel: Channel):
+def subscribe_to_pv(new_channel: Channel, pv_update_period: Optional[int]):
     if new_channel.name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
     update_handlers[new_channel.name] = create_update_handler(
-        producer, ca_ctx, pva_ctx, new_channel
+        producer, ca_ctx, pva_ctx, new_channel, periodic_update_ms=pv_update_period
     )
     logger.info(f"Subscribed to PV {new_channel.name}")
 
@@ -84,6 +85,13 @@ def parse_args():
         help="Read configuration from an ini file",
         env_var="CONFIG_FILE",
     )
+    parser.add_argument(
+        "--pv-update-period",
+        required=False,
+        help="If set then PV value will be sent with this interval even if unchanged (units=milliseconds)",
+        env_var="PV_UPDATE_PERIOD",
+        type=int,
+    )
     log_choice_to_enum = {
         "Trace": logging.DEBUG,
         "Debug": logging.DEBUG,
@@ -147,7 +155,7 @@ if __name__ == "__main__":
                 else:
                     for channel in config_change.channels:
                         if config_change.command_type == CommandType.ADD:
-                            subscribe_to_pv(channel)
+                            subscribe_to_pv(channel, args.pv_update_period)
                         elif config_change.command_type == CommandType.REMOVE:
                             unsubscribe_from_pv(channel.name)
 

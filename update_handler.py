@@ -14,6 +14,7 @@ from p4p.client.thread import Context as PvaContext
 from parse_config_update import EpicsProtocol
 from parse_config_update import Channel as ConfigChannel
 import time
+from typing import Optional
 
 schema_publishers = {"f142": publish_f142_message}
 
@@ -34,7 +35,7 @@ def create_update_handler(
     pva_context: PvaContext,
     channel: ConfigChannel,
     schema: str = "f142",
-    periodic_update_ms: int = 0,
+    periodic_update_ms: Optional[int] = None,
 ):
     if channel.protocol == EpicsProtocol.PVA:
         return PvaUpdateHandler(pva_context, channel.name)
@@ -75,7 +76,7 @@ class CAUpdateHandler:
         pv_name: str,
         output_topic: str,
         schema: str = "f142",
-        periodic_update_ms: int = 0,
+        periodic_update_ms: Optional[int] = None,
     ):
         self._logger = get_logger()
         self._producer = producer
@@ -97,7 +98,7 @@ class CAUpdateHandler:
                 f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
             )
 
-        if periodic_update_ms != 0:
+        if periodic_update_ms is not None:
             self._repeating_timer = RepeatTimer(
                 _milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
             )
