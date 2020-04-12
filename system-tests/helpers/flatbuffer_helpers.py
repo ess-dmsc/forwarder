@@ -1,4 +1,4 @@
-from helpers.f142_logdata import Int, Double, String, ArrayFloat, LogData
+from helpers.f142_logdata import Int, Double, String, ArrayFloat, ArrayDouble, LogData
 from helpers.f142_logdata.Value import Value
 from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
 from helpers.f142_logdata.AlarmStatus import AlarmStatus
@@ -10,6 +10,7 @@ ValueTypes = {
     Value.Double: Double.Double,
     Value.String: String.String,
     Value.ArrayFloat: ArrayFloat.ArrayFloat,
+    Value.ArrayDouble: ArrayDouble.ArrayDouble,
 }
 
 
