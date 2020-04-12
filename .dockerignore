@@ -1,0 +1,9 @@
+tests
+.flake8
+.gitignore
+.pre-commit-config.yaml
+docker-compose.yml
+pyproject.toml
+pytest.ini
+requirements.dev.txt
+venv

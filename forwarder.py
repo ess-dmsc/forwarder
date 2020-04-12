@@ -43,33 +43,42 @@ def parse_args():
         "Writer modules can be used to populate the file from Kafka topics."
     )
     parser.add_argument(
-        "--version", action="store_true", help="Print application version and exit"
+        "--version",
+        action="store_true",
+        help="Print application version and exit",
+        env_var="VERSION",
     )
     parser.add_argument(
         "--config-topic",
         required=True,
         help="<host[:port][/topic]> Kafka broker/topic to listen for commands",
         type=str,
+        env_var="CONFIG_TOPIC",
     )
     parser.add_argument(
         "--status-topic",
         required=True,
         help="<host[:port][/topic]> Kafka broker/topic to publish status updates on",
         type=str,
+        env_var="STATUS_TOPIC",
     )
     parser.add_argument(
         "--graylog-logger-address",
         required=False,
         help="<host:port> Log to Graylog",
         type=str,
+        env_var="GRAYLOG_LOGGER_ADDRESS",
     )
-    parser.add_argument("--log-file", required=False, help="Log filename", type=str)
+    parser.add_argument(
+        "--log-file", required=False, help="Log filename", type=str, env_var="LOG_FILE"
+    )
     parser.add_argument(
         "-c",
         "--config-file",
         required=False,
         is_config_file=True,
         help="Read configuration from an ini file",
+        env_var="CONFIG_FILE",
     )
     log_choice_to_enum = {
         "Trace": logging.DEBUG,
@@ -85,6 +94,7 @@ def parse_args():
         help="Set logging level",
         choices=log_choice_to_enum.keys(),
         default="Error",
+        env_var="VERBOSITY",
     )
     optargs = parser.parse_args()
     optargs.verbosity = log_choice_to_enum[optargs.verbosity]

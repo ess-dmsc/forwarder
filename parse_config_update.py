@@ -64,7 +64,9 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
     return ConfigUpdate(command_type, tuple(_parse_streams(command_type, streams)))
 
 
-def _parse_streams(command_type: CommandType, streams: Dict) -> Generator[Channel]:
+def _parse_streams(
+    command_type: CommandType, streams: Dict
+) -> Generator[Channel, None, None]:
     for update_stream in streams:
         if "channel" not in update_stream.keys():
             logger.warning(
