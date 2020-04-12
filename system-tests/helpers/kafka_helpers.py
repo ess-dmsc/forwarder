@@ -1,15 +1,15 @@
 from confluent_kafka import TopicPartition
 from confluent_kafka import Consumer
 import uuid
-from helpers.f142_logdata import LogData
 from pytictoc import TicToc
+from typing import Tuple, Optional
 
 
 class MsgErrorException(Exception):
     pass
 
 
-def get_all_available_messages(consumer):
+def get_all_available_messages(consumer: Consumer):
     """
     Consumes all available messages topics subscribed to by the consumer
     :param consumer: The consumer object
@@ -28,7 +28,7 @@ def get_all_available_messages(consumer):
     return messages
 
 
-def get_last_available_status_message(cons, status_topic):
+def get_last_available_status_message(cons: Consumer, status_topic: str):
     """
 
     :param cons:
@@ -43,7 +43,11 @@ def get_last_available_status_message(cons, status_topic):
     return status_msg
 
 
-def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=15.0):
+def poll_for_valid_message(
+    consumer: Consumer,
+    expected_file_identifier: Optional[bytes] = b"f142",
+    timeout: float = 15.0,
+) -> Tuple[bytes, bytes]:
     """
     Polls the subscribed topics by the consumer and checks the buffer is not empty or malformed.
     Skips connection status messages.
@@ -73,7 +77,7 @@ def poll_for_valid_message(consumer, expected_file_identifier=b"f142", timeout=1
                 or message_file_id == b"ep00"
             ), f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             if message_file_id == b"f142":
-                return LogData.LogData.GetRootAsLogData(msg.value(), 0), msg.key()
+                return msg.value(), msg.key()
 
 
 def create_consumer(offset_reset="earliest"):

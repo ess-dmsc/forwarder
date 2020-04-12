@@ -1,6 +1,5 @@
 from confluent_kafka import TopicPartition, Consumer
 from helpers.producerwrapper import ProducerWrapper
-from helpers.f142_logdata.Value import Value
 from time import sleep
 from helpers.flatbuffer_helpers import (
     check_expected_value,
@@ -54,10 +53,10 @@ def test_forwarding_of_various_pv_types(docker_compose_no_command):
     cons = create_consumer()
     cons.subscribe([data_topic])
 
-    # forwarding_enum(cons, prod)
-    # consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_doublearray(cons, prod)
+    forwarding_enum(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
+    # forwarding_doublearray(cons, prod)
+    # consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
 
     cons.close()
@@ -79,9 +78,9 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, Value.Int, PVENUM, 0)
+    check_expected_value(first_msg, PVENUM, 0)
     second_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(second_msg, Value.Int, PVENUM, 1)
+    check_expected_value(second_msg, PVENUM, 1)
     producer.remove_config(pvs)
 
 
@@ -94,9 +93,7 @@ def forwarding_doublearray(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(
-        first_msg, Value.ArrayDouble, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE
-    )
+    check_expected_value(first_msg, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
     producer.remove_config(pvs)
 
 
@@ -110,8 +107,8 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     expected_values = {
-        PVSTR: (Value.String, initial_string_value),
-        PVLONG: (Value.Int, initial_long_value),
+        PVSTR: initial_string_value,
+        PVLONG: initial_long_value,
     }
     first_msg, _ = poll_for_valid_message(consumer)
     second_msg, _ = poll_for_valid_message(consumer)
