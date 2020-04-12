@@ -14,6 +14,7 @@ numpy_type_from_channel_type = {
     ChannelType.CTRL_FLOAT: np.float32,
     ChannelType.CTRL_DOUBLE: np.float64,
     ChannelType.CTRL_STRING: np.unicode_,
+    ChannelType.CTRL_ENUM: np.int32,
 }
 
 caproto_alarm_severity_to_f142 = {
