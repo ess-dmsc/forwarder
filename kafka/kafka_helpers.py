@@ -7,21 +7,21 @@ import uuid
 import numpy as np
 from typing import Optional, Tuple
 
-BROKER_ADDRESS = "localhost:9092"
+OUTPUT_BROKER_ADDRESS = "localhost:9092"
 
 
 def create_producer() -> AIOProducer:
     producer_config = {
-        "bootstrap.servers": BROKER_ADDRESS,
+        "bootstrap.servers": OUTPUT_BROKER_ADDRESS,
         "message.max.bytes": "20000000",
     }
     return AIOProducer(producer_config)
 
 
-def create_consumer() -> Consumer:
+def create_consumer(broker_address: str) -> Consumer:
     return Consumer(
         {
-            "bootstrap.servers": BROKER_ADDRESS,
+            "bootstrap.servers": broker_address,
             "group.id": uuid.uuid4(),
             "default.topic.config": {"auto.offset.reset": "latest"},
         }

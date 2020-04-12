@@ -1,6 +1,10 @@
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
-from kafka.kafka_helpers import create_producer, create_consumer
+from kafka.kafka_helpers import (
+    create_producer,
+    create_consumer,
+    get_broker_and_topic_from_uri,
+)
 from application_logger import setup_logger
 from parse_config_update import parse_config_update, CommandType, EpicsProtocol
 from update_handler import create_update_handler
@@ -116,8 +120,9 @@ if __name__ == "__main__":
 
     # Kafka
     producer = create_producer()
-    consumer = create_consumer()
-    consumer.subscribe([args.config_topic])
+    config_broker, config_topic = get_broker_and_topic_from_uri(args.config_topic)
+    consumer = create_consumer(config_broker)
+    consumer.subscribe([config_topic])
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
