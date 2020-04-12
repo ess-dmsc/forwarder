@@ -14,7 +14,6 @@ from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 import json
 import numpy as np
-import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
@@ -117,7 +116,6 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-@pytest.mark.skip("Status reporting not implemented yet")
 def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
     """
     GIVEN A PV (double type) is already being forwarded
@@ -159,17 +157,15 @@ def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
     cons.close()
 
 
-@pytest.mark.skip("Status reporting not implemented yet")
 def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
-    base_pv = PVDOUBLE
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     configured_list_of_pvs = []
     number_of_config_updates = 100
     for i in range(number_of_config_updates):
-        pv = base_pv + str(i)
+        pv = f"{PVDOUBLE}{i}"
         prod.add_config([pv])
         configured_list_of_pvs.append(pv)
 

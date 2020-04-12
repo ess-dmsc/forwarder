@@ -73,9 +73,12 @@ class CAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
         (self._pv,) = context.get_pvs(pv_name)
+        # Prevent our monitor timing out if PV is not available right now
+        self._pv.timeout = None
         # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
         sub = self._pv.subscribe(data_type="control")
         sub.add_callback(self._monitor_callback)
+
         self._cached_update = None
         self._output_type = None
         self._stop_timer_flag = Event()
@@ -95,7 +98,7 @@ class CAUpdateHandler:
             )
             self._repeating_timer.start()
 
-    def _monitor_callback(self, response: ReadNotifyResponse):
+    def _monitor_callback(self, sub, response: ReadNotifyResponse):
         # Timestamp as early as possible
         timestamp = time.time_ns()
         self._logger.debug(f"Received PV update, METADATA: {response.metadata}")

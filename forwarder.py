@@ -133,7 +133,8 @@ if __name__ == "__main__":
     consumer = create_consumer(config_broker)
     consumer.subscribe([config_topic])
 
-    status_reporter = StatusReporter(update_handlers)
+    status_broker, status_topic = get_broker_and_topic_from_uri(args.status_topic)
+    status_reporter = StatusReporter(update_handlers, status_broker, status_topic)
     status_reporter.start()
 
     # Metrics
@@ -153,6 +154,7 @@ if __name__ == "__main__":
                 config_change = parse_config_update(msg.value())
                 if config_change.command_type == CommandType.REMOVE_ALL:
                     unsubscribe_from_all()
+                    status_reporter.report_status()
                 elif config_change.command_type == CommandType.EXIT:
                     logger.info("Exit command received")
                     break
@@ -162,6 +164,7 @@ if __name__ == "__main__":
                             subscribe_to_pv(channel, args.pv_update_period)
                         elif config_change.command_type == CommandType.REMOVE:
                             unsubscribe_from_pv(channel.name)
+                    status_reporter.report_status()
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

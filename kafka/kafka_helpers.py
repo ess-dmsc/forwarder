@@ -7,12 +7,10 @@ import uuid
 import numpy as np
 from typing import Optional, Tuple
 
-OUTPUT_BROKER_ADDRESS = "localhost:9092"
 
-
-def create_producer() -> AIOProducer:
+def create_producer(broker_address: str = "localhost:9092") -> AIOProducer:
     producer_config = {
-        "bootstrap.servers": OUTPUT_BROKER_ADDRESS,
+        "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
     return AIOProducer(producer_config)
