@@ -34,3 +34,15 @@ This command can also be used to run the hooks manually.
 ## Running the application
 
 Run the python script `forwarder.py` located in the root of the repository.
+
+## Docker
+
+To build a docker image
+```
+docker build . -t forwarder-python
+```
+
+Use environment variables to pass command line arguments, for example
+```
+docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder-python
+```
