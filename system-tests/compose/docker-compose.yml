@@ -3,7 +3,7 @@ version: '2'
 
 services:
   forwarder:
-    image: forwarder:latest
+    image: forwarder-python:latest
     network_mode: "host"
     volumes:
       - ../config-files/forwarder_config.ini:/forwarder_config.ini

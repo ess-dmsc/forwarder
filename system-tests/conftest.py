@@ -111,7 +111,7 @@ def build_forwarder_image(request):
         if "local_conan_server" in os.environ:
             build_args["local_conan_server"] = os.environ["local_conan_server"]
         image, logs = client.images.build(
-            path="../", tag="forwarder:latest", rm=False, buildargs=build_args
+            path="../", tag="forwarder-python:latest", rm=False, buildargs=build_args
         )
         for item in logs:
             print(item, flush=True)
