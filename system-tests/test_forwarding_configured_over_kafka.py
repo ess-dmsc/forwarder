@@ -53,10 +53,10 @@ def test_forwarding_of_various_pv_types(docker_compose_no_command):
     cons = create_consumer()
     cons.subscribe([data_topic])
 
-    forwarding_enum(cons, prod)
-    consumer_seek_to_end_of_topic(cons, data_topic)
-    # forwarding_floatarray(cons, prod)
+    # forwarding_enum(cons, prod)
     # consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_floatarray(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
 
     cons.close()
