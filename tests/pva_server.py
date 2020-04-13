@@ -21,9 +21,9 @@ def run_pva_server():
     Server.forever(
         providers=[
             {
-                "SIMPLE:PVA:DOUBLE": scalar_double_pv,
-                "SIMPLE:PVA:STR": scalar_string_pv,
-                "SIMPLE:PVA:LONG": scalar_long_pv,
+                "PVA:DOUBLE": scalar_double_pv,
+                "PVA:STR": scalar_string_pv,
+                "PVA:LONG": scalar_long_pv,
             }
         ]
     )  # Runs until KeyboardInterrupt
