@@ -4,12 +4,8 @@ from kafka.aio_producer import AIOProducer
 from typing import Optional
 from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
-from kafka.kafka_helpers import publish_f142_message
 from update_handlers.ca_update_handler import CAUpdateHandler
 from update_handlers.pva_update_handler import PVAUpdateHandler
-
-
-schema_publishers = {"f142": publish_f142_message}
 
 
 def create_update_handler(

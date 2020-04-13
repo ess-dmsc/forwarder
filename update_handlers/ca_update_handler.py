@@ -12,7 +12,7 @@ from epics_to_serialisable_types import (
 from caproto.threading.client import Context as CAContext
 import time
 from typing import Optional
-from update_handlers.create_update_handler import schema_publishers
+from update_handlers.schema_publishers import schema_publishers
 
 
 class CAUpdateHandler:
