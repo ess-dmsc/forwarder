@@ -6,7 +6,7 @@ services:
     image: forwarder:latest
     network_mode: "host"
     volumes:
-      - ../config-files/forwarder_config_no_command.ini:/forwarder_config_no_command.ini
+      - ../config-files/forwarder_config_forwarding.ini:/forwarder_config_forwarding.ini
       - ../logs/:/forwarder_logs/
     environment:
-      CONFIG_FILE: "/forwarder_config_no_command.ini"
+      CONFIG_FILE: "/forwarder_config_forwarding.ini"

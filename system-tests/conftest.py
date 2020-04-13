@@ -208,24 +208,7 @@ def start_kafka(request):
 
 
 @pytest.fixture(scope="module")
-def docker_compose(request):
-    """
-    :type request: _pytest.python.FixtureRequest
-    """
-    print("Started preparing test environment...", flush=True)
-
-    # Options must be given as long form
-    options = common_options
-    options["--project-name"] = "forwarder"
-    options["--file"] = ["compose/docker-compose.yml"]
-
-    build_and_run(
-        options, request, "forwarder_config.ini", "forwarder_tests.log",
-    )
-
-
-@pytest.fixture(scope="module")
-def docker_compose_no_command(request):
+def docker_compose_forwarding(request):
     """
     :type request: _pytest.python.FixtureRequest
     """
@@ -234,10 +217,10 @@ def docker_compose_no_command(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarderNoCommand"
-    options["--file"] = ["compose/docker-compose-no-command.yml"]
+    options["--file"] = ["compose/docker-compose-forwarding.yml"]
 
     build_and_run(
-        options, request, "forwarder_config_no_command.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log",
     )
 
 

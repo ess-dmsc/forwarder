@@ -14,6 +14,7 @@ from helpers.epics_helpers import change_pv_value
 from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
 import json
 import numpy as np
+import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
@@ -42,7 +43,7 @@ def teardown_function(function):
     sleep(3)
 
 
-def test_forwarding_of_various_pv_types(docker_compose_no_command):
+def test_forwarding_of_various_pv_types(docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # (rather than providing it in a JSON file when the forwarder is launched)
     data_topic = "TEST_forwarderData"
@@ -116,7 +117,7 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
+def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     """
     GIVEN A PV (double type) is already being forwarded
     WHEN A message configures two additional PV (str and long types) to be forwarded
@@ -157,7 +158,10 @@ def test_forwarder_status_shows_added_pvs(docker_compose_no_command):
     cons.close()
 
 
-def test_forwarder_can_handle_rapid_config_updates(docker_compose_no_command):
+@pytest.mark.skip(
+    "Currently a problem with PVs that aren't available when subscribe is called"
+)
+def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
