@@ -1,5 +1,4 @@
 from application_logger import get_logger
-from kafka.kafka_helpers import publish_f142_message
 from kafka.aio_producer import AIOProducer
 from caproto import ReadNotifyResponse, ChannelType
 import numpy as np
@@ -10,47 +9,10 @@ from epics_to_serialisable_types import (
     caproto_alarm_severity_to_f142,
     caproto_alarm_status_to_f142,
 )
-from caproto.threading.client import Context as CaContext
-from p4p.client.thread import Context as PvaContext
-from parse_config_update import EpicsProtocol
-from parse_config_update import Channel as ConfigChannel
+from caproto.threading.client import Context as CAContext
 import time
 from typing import Optional
-
-schema_publishers = {"f142": publish_f142_message}
-
-
-def create_update_handler(
-    producer: AIOProducer,
-    ca_context: CaContext,
-    pva_context: PvaContext,
-    channel: ConfigChannel,
-    schema: str = "f142",
-    periodic_update_ms: Optional[int] = None,
-):
-    if channel.protocol == EpicsProtocol.PVA:
-        return PvaUpdateHandler(pva_context, channel.name)
-    elif channel.protocol == EpicsProtocol.CA:
-        return CAUpdateHandler(
-            producer,
-            ca_context,
-            channel.name,
-            channel.output_topic,
-            schema,
-            periodic_update_ms,
-        )
-
-
-class PvaUpdateHandler:
-    """
-    Monitors via EPICS v4 Process Variable Access (PVA),
-    serialises updates in FlatBuffers and passes them onto an Kafka Producer.
-    PVA support from p4p library.
-    """
-
-    def __init__(self, context: PvaContext, pv_name: str):
-        # pv_subscription = context.monitor(pv_name, cb)
-        pass
+from update_handlers.create_update_handler import schema_publishers
 
 
 class CAUpdateHandler:
@@ -63,7 +25,7 @@ class CAUpdateHandler:
     def __init__(
         self,
         producer: AIOProducer,
-        context: CaContext,
+        context: CAContext,
         pv_name: str,
         output_topic: str,
         schema: str = "f142",
@@ -99,7 +61,7 @@ class CAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
-        # Timestamp as early as possible
+        # Create timestamp as early as possible
         timestamp = time.time_ns()
         self._logger.debug(f"Received PV update, METADATA: {response.metadata}")
         if self._output_type is None:
@@ -111,6 +73,7 @@ class CAUpdateHandler:
                 )
 
         with self._cache_lock:
+            # If this is the first update or the alarm status has changed, then include alarm status in message
             if (
                 self._cached_update is None
                 or response.metadata.status != self._cached_update[0].metadata.status
@@ -127,6 +90,7 @@ class CAUpdateHandler:
                     ],
                 )
             else:
+                # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
@@ -139,6 +103,7 @@ class CAUpdateHandler:
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
+                # Always include current alarm status in periodic update messages
                 self._message_publisher(
                     self._producer,
                     self._output_topic,

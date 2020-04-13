@@ -7,7 +7,7 @@ from kafka.kafka_helpers import (
 )
 from application_logger import setup_logger
 from parse_config_update import parse_config_update, CommandType, Channel
-from update_handler import create_update_handler
+from update_handlers.create_update_handler import create_update_handler
 import logging
 import configargparse
 from typing import Optional
