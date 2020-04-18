@@ -31,10 +31,13 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
 
 
-def teardown_function(function):
+@pytest.fixture(scope="function", autouse=True)
+def teardown_function(request):
     """
     Stops forwarder pv listening and resets any values in EPICS
     """
+    # Everything after yield is executed after the test function
+    yield
     print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.stop_all_pvs()
@@ -59,7 +62,9 @@ def teardown_function(function):
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
-    data_topic = "TEST_forwarderData"
+
+    # Use a different topic for each parameter value, otherwise failing one test can cause the following tests to fail
+    data_topic = f"TEST_forwarderData_{epics_protocol.value}"
 
     sleep(5)
     prod = ProducerWrapper(
@@ -187,23 +192,19 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     WHEN A message configures two additional PV (str and long types) to be forwarded
     THEN Forwarder status message lists new PVs
     """
+    cons = create_consumer("latest")
+    sleep(2)
+
     data_topic = "TEST_forwarderData_change_config"
     status_topic = "TEST_forwarderStatus"
     pvs = [PVSTR, PVLONG]
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
     prod.add_config(pvs)
 
+    sleep(2)
+    cons.subscribe([status_topic])
     sleep(5)
-    cons = create_consumer()
-    sleep(2)
-    cons.assign([TopicPartition(status_topic, partition=0)])
-    sleep(2)
 
-    # Get the last available status message
-    partitions = cons.assignment()
-    _, hi = cons.get_watermark_offsets(partitions[0], cached=False, timeout=2.0)
-    last_msg_offset = hi - 1
-    cons.assign([TopicPartition(status_topic, partition=0, offset=last_msg_offset)])
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
 
     status_json = json.loads(status_msg)
@@ -222,7 +223,11 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     cons.close()
 
 
+@pytest.mark.skip("caproto currently blocks if PV doesn't exist")
 def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
+    cons = create_consumer("latest")
+    sleep(2)
+
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
@@ -235,8 +240,6 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
         configured_list_of_pvs.append(pv)
 
     sleep(5)
-    cons = create_consumer()
-    sleep(2)
     cons.assign([TopicPartition(status_topic, partition=0)])
     sleep(2)
     # Get the last available status message

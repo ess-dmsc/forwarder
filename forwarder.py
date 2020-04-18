@@ -40,7 +40,7 @@ def unsubscribe_from_all():
     for _, update_handler in update_handlers.items():
         update_handler.stop()
     update_handlers.clear()
-    logger.info(f"Unsubscribed from all PVs")
+    logger.info("Unsubscribed from all PVs")
 
 
 def parse_args():
