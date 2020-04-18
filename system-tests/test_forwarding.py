@@ -1,9 +1,11 @@
 from confluent_kafka import TopicPartition, Consumer
 from helpers.producerwrapper import ProducerWrapper
+from helpers.forwarderconfig import EpicsProtocol
 from time import sleep
 from helpers.flatbuffer_helpers import (
     check_expected_value,
     check_multiple_expected_values,
+    check_expected_alarm_status,
 )
 from helpers.kafka_helpers import (
     create_consumer,
@@ -11,9 +13,18 @@ from helpers.kafka_helpers import (
     get_last_available_status_message,
 )
 from helpers.epics_helpers import change_pv_value
-from helpers.PVs import PVDOUBLE, PVSTR, PVLONG, PVENUM, PVFLOATARRAY
+from helpers.PVs import (
+    PVDOUBLE,
+    PVSTR,
+    PVLONG,
+    PVENUM,
+    PVFLOATARRAY,
+    PVDOUBLE_WITH_ALARM_THRESHOLDS,
+)
 import json
 import numpy as np
+from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from helpers.f142_logdata.AlarmStatus import AlarmStatus
 import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
@@ -35,6 +46,7 @@ def teardown_function(function):
         PVSTR: "",
         PVLONG: 0,
         PVENUM: np.array(["INIT"]).astype(np.string_),
+        PVDOUBLE_WITH_ALARM_THRESHOLDS: 0.0,
     }
 
     for key, value in defaults.items():
@@ -43,21 +55,26 @@ def teardown_function(function):
     sleep(3)
 
 
-def test_forwarding_of_various_pv_types(docker_compose_forwarding):
+@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
+def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
-    # (rather than providing it in a JSON file when the forwarder is launched)
+    # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
     data_topic = "TEST_forwarderData"
 
     sleep(5)
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod = ProducerWrapper(
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=epics_protocol
+    )
     cons = create_consumer()
     cons.subscribe([data_topic])
 
     forwarding_enum(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    # forwarding_doublearray(cons, prod)
+    # forwarding_floatarray(cons, prod)
     # consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_double_with_alarm(cons, prod)
 
     cons.close()
 
@@ -67,6 +84,53 @@ def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):
     sleep(1)
     # Resubscribe at end of topic
     consumer.subscribe([data_topic])
+
+
+def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
+    pvs = [PVDOUBLE_WITH_ALARM_THRESHOLDS]
+    producer.add_config(pvs)
+    # Wait for config change to be picked up
+    sleep(5)
+
+    initial_value = 0
+
+    # Change the PV value, so something is forwarded
+    # New value is between the HIGH and HIHI alarm thresholds
+    first_updated_value = 17
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value)
+
+    # Change the PV value, so something is forwarded
+    # New value is still between the HIGH and HIHI alarm thresholds
+    second_updated_value = 18
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value)
+
+    # Wait for PV to be updated
+    sleep(5)
+    # Check the initial value is forwarded
+    first_msg, msg_key = poll_for_valid_message(consumer)
+    check_expected_value(first_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, initial_value)
+    check_expected_alarm_status(first_msg, AlarmStatus.UDF, AlarmSeverity.NO_ALARM)
+    assert msg_key == PVDOUBLE_WITH_ALARM_THRESHOLDS.encode(
+        "utf-8"
+    ), "Message key expected to be the same as the PV name"
+    # We set the message key to be the PV name so that all messages from the same PV are sent to
+    # the same partition by Kafka. This ensures that the order of these messages is maintained to the consumer.
+
+    # Check the new value is forwarded
+    second_msg, _ = poll_for_valid_message(consumer)
+    check_expected_value(
+        second_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value
+    )
+    check_expected_alarm_status(second_msg, AlarmStatus.HIGH, AlarmSeverity.MINOR)
+
+    # Check the new value is forwarded, but alarm status should be unchanged
+    third_msg, _ = poll_for_valid_message(consumer)
+    check_expected_value(
+        third_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value
+    )
+    check_expected_alarm_status(
+        third_msg, AlarmStatus.NO_CHANGE, AlarmSeverity.NO_CHANGE
+    )
 
 
 def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
@@ -84,7 +148,7 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-def forwarding_doublearray(consumer: Consumer, producer: ProducerWrapper):
+def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     pvs = [PVFLOATARRAY]
     producer.add_config(pvs)
     # Wait for config to be pushed
@@ -158,9 +222,6 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     cons.close()
 
 
-@pytest.mark.skip(
-    "Currently a problem with PVs that aren't available when subscribe is called"
-)
 def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"

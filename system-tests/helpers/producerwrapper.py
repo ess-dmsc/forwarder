@@ -1,4 +1,4 @@
-from .forwarderconfig import ForwarderConfig
+from .forwarderconfig import ForwarderConfig, EpicsProtocol
 from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
 from typing import List
@@ -9,9 +9,15 @@ class ProducerWrapper:
     A wrapper class for the kafka producer.
     """
 
-    def __init__(self, server, config_topic, data_topic):
+    def __init__(
+        self,
+        server,
+        config_topic,
+        data_topic,
+        epics_protocol: EpicsProtocol = EpicsProtocol.CA,
+    ):
         self.topic = config_topic
-        self.converter = ForwarderConfig(data_topic)
+        self.converter = ForwarderConfig(data_topic, epics_protocol)
         self._set_up_producer(server)
 
     def _set_up_producer(self, server):

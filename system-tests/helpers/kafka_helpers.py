@@ -72,12 +72,15 @@ def poll_for_valid_message(
             return msg.value(), msg.key()
         elif expected_file_identifier is not None:
             message_file_id = msg.value()[4:8]
+
+            # Skip ep00 messages if we are looking for something else
+            if expected_file_identifier != b"ep00" and message_file_id == b"ep00":
+                continue
+
             assert (
                 message_file_id == expected_file_identifier
-                or message_file_id == b"ep00"
             ), f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
-            if message_file_id == b"f142":
-                return msg.value(), msg.key()
+            return msg.value(), msg.key()
 
 
 def create_consumer(offset_reset="earliest"):

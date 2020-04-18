@@ -2,6 +2,8 @@ from cmath import isclose
 import numpy as np
 from streaming_data_types.logdata_f142 import deserialise_f142
 from typing import Any
+from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from helpers.f142_logdata.AlarmStatus import AlarmStatus
 
 
 def check_multiple_expected_values(message_list, expected_values):
@@ -53,3 +55,17 @@ def check_expected_value(
                 assert (
                     log_data.value == expected_value
                 ), f"Expected {expected_value}, got {log_data.value}"
+
+
+def check_expected_alarm_status(
+    log_data_buffer: bytes,
+    expected_status: AlarmStatus,
+    expected_severity: AlarmSeverity,
+):
+    log_data = deserialise_f142(log_data_buffer)
+    assert (
+        log_data.alarm_severity == expected_severity
+    ), f"Actual alarm severity: {log_data.alarm_severity}, Expected alarm severity: {expected_severity}"
+    assert (
+        log_data.alarm_status == expected_status
+    ), f"Actual alarm status: {log_data.alarm_status}, Expected alarm status: {expected_status}"
