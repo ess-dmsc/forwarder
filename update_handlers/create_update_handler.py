@@ -17,7 +17,14 @@ def create_update_handler(
     periodic_update_ms: Optional[int] = None,
 ):
     if channel.protocol == EpicsProtocol.PVA:
-        return PVAUpdateHandler(pva_context, channel.name)
+        return PVAUpdateHandler(
+            producer,
+            pva_context,
+            channel.name,
+            channel.output_topic,
+            schema,
+            periodic_update_ms,
+        )
     elif channel.protocol == EpicsProtocol.CA:
         return CAUpdateHandler(
             producer,

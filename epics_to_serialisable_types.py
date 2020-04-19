@@ -17,6 +17,19 @@ numpy_type_from_channel_type = {
     ChannelType.CTRL_ENUM: np.int32,
     ChannelType.CTRL_CHAR: np.unicode_,
     ChannelType.TIME_STRING: np.unicode_,
+    "?": np.bool,
+    "s": np.unicode_,
+    "b": np.unicode_,
+    "B": np.unicode_,
+    "h": np.int16,
+    "H": np.uint16,
+    "i": np.int32,
+    "I": np.uint32,
+    "l": np.int64,
+    "L": np.int64,
+    "f": np.float32,
+    "d": np.float64,
+    "enum_t": np.int32,
 }
 
 caproto_alarm_severity_to_f142 = {

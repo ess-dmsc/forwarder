@@ -1,4 +1,13 @@
 from p4p.client.thread import Context as PVAContext
+from p4p import Value
+from kafka.aio_producer import AIOProducer
+from application_logger import get_logger
+from typing import Optional
+from threading import Lock, Event
+from update_handlers.schema_publishers import schema_publishers
+from repeat_timer import RepeatTimer, milliseconds_to_seconds
+from epics_to_serialisable_types import numpy_type_from_channel_type
+import numpy as np
 
 
 class PVAUpdateHandler:
@@ -8,6 +17,86 @@ class PVAUpdateHandler:
     PVA support from p4p library.
     """
 
-    def __init__(self, context: PVAContext, pv_name: str):
-        # pv_subscription = context.monitor(pv_name, cb)
-        pass
+    def __init__(
+        self,
+        producer: AIOProducer,
+        context: PVAContext,
+        pv_name: str,
+        output_topic: str,
+        schema: str = "f142",
+        periodic_update_ms: Optional[int] = None,
+    ):
+        self._logger = get_logger()
+        self._producer = producer
+        self._output_topic = output_topic
+
+        self._sub = context.monitor(pv_name, self._monitor_callback)
+        self._pv_name = pv_name
+
+        self._cached_update = None
+        self._output_type = None
+        self._stop_timer_flag = Event()
+        self._repeating_timer = None
+        self._cache_lock = Lock()
+
+        try:
+            self._message_publisher = schema_publishers[schema]
+        except KeyError:
+            raise ValueError(
+                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
+            )
+
+        if periodic_update_ms is not None:
+            self._repeating_timer = RepeatTimer(
+                milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
+            )
+            self._repeating_timer.start()
+
+    def _monitor_callback(self, response: Value):
+        timestamp = (
+            response.raw.timeStamp.secondsPastEpoch * 1000000000
+        ) + response.raw.timeStamp.nanoseconds
+        self._logger.debug(f"Received PV update")
+        # response.raw.alarm.status
+        if self._output_type is None:
+            try:
+                pass
+                self._output_type = numpy_type_from_channel_type[
+                    response.raw.type()["value"]
+                ]
+            except KeyError:
+                self._logger.error(
+                    f"Don't know what numpy dtype to use for channel type {response.raw.type()['value']}"
+                )
+
+        with self._cache_lock:
+            self._message_publisher(
+                self._producer,
+                self._output_topic,
+                np.squeeze(np.array(response.raw.value)).astype(self._output_type),
+                source_name=self._pv_name,
+                timestamp_ns=timestamp,
+            )
+            self._cached_update = (response, timestamp)
+
+    def publish_cached_update(self):
+        with self._cache_lock:
+            if self._cached_update is not None:
+                # Always include current alarm status in periodic update messages
+                self._message_publisher(
+                    self._producer,
+                    self._output_topic,
+                    np.squeeze(np.array(self._cached_update[0].raw.value)).astype(
+                        self._output_type
+                    ),
+                    source_name=self._pv_name,
+                    timestamp_ns=self._cached_update[1],
+                )
+
+    def stop(self):
+        """
+        Stop periodic updates and unsubscribe from PV
+        """
+        if self._repeating_timer is not None:
+            self._repeating_timer.cancel()
+        self._sub.close()
