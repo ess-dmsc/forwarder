@@ -6,7 +6,11 @@ from typing import Optional
 from threading import Lock, Event
 from update_handlers.schema_publishers import schema_publishers
 from repeat_timer import RepeatTimer, milliseconds_to_seconds
-from epics_to_serialisable_types import numpy_type_from_channel_type
+from epics_to_serialisable_types import (
+    numpy_type_from_channel_type,
+    caproto_alarm_severity_to_f142,
+    caproto_alarm_status_to_f142,
+)
 import numpy as np
 from p4p.nt.enum import ntenum
 
@@ -58,7 +62,6 @@ class PVAUpdateHandler:
             response.raw.timeStamp.secondsPastEpoch * 1000000000
         ) + response.raw.timeStamp.nanoseconds
         self._logger.debug(f"Received PV update")
-        # response.raw.alarm.status
         if self._output_type is None:
             try:
                 pass
@@ -73,15 +76,36 @@ class PVAUpdateHandler:
                 )
 
         with self._cache_lock:
-            self._message_publisher(
-                self._producer,
-                self._output_topic,
-                np.squeeze(np.array(self._get_value(response))).astype(
-                    self._output_type
-                ),
-                source_name=self._pv_name,
-                timestamp_ns=timestamp,
-            )
+            # If this is the first update or the alarm status has changed, then include alarm status in message
+            if (
+                self._cached_update is None
+                or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
+            ):
+                self._message_publisher(
+                    self._producer,
+                    self._output_topic,
+                    np.squeeze(np.array(self._get_value(response))).astype(
+                        self._output_type
+                    ),
+                    source_name=self._pv_name,
+                    timestamp_ns=timestamp,
+                    alarm_status=caproto_alarm_status_to_f142[
+                        response.raw.alarm.status
+                    ],
+                    alarm_severity=caproto_alarm_severity_to_f142[
+                        response.raw.alarm.severity
+                    ],
+                )
+            else:
+                self._message_publisher(
+                    self._producer,
+                    self._output_topic,
+                    np.squeeze(np.array(self._get_value(response))).astype(
+                        self._output_type
+                    ),
+                    source_name=self._pv_name,
+                    timestamp_ns=timestamp,
+                )
             self._cached_update = (response, timestamp)
 
     def publish_cached_update(self):
@@ -96,6 +120,12 @@ class PVAUpdateHandler:
                     ).astype(self._output_type),
                     source_name=self._pv_name,
                     timestamp_ns=self._cached_update[1],
+                    alarm_status=caproto_alarm_status_to_f142[
+                        self._cached_update[0].raw.alarm.status
+                    ],
+                    alarm_severity=caproto_alarm_severity_to_f142[
+                        self._cached_update[0].raw.alarm.severity
+                    ],
                 )
 
     def stop(self):
