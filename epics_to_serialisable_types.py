@@ -2,6 +2,10 @@ import numpy as np
 from caproto import ChannelType
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
+from p4p.nt.enum import ntenum
+from p4p.nt.scalar import ntbool, ntfloat, ntint, ntstr, ntstringarray
+
+# ntnumericarray
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,
@@ -17,19 +21,12 @@ numpy_type_from_channel_type = {
     ChannelType.CTRL_ENUM: np.int32,
     ChannelType.CTRL_CHAR: np.unicode_,
     ChannelType.TIME_STRING: np.unicode_,
-    "?": np.bool,
-    "s": np.unicode_,
-    "b": np.unicode_,
-    "B": np.unicode_,
-    "h": np.int16,
-    "H": np.uint16,
-    "i": np.int32,
-    "I": np.uint32,
-    "l": np.int64,
-    "L": np.int64,
-    "f": np.float32,
-    "d": np.float64,
-    "enum_t": np.int32,
+    ntenum: np.int32,
+    ntbool: np.bool,
+    ntfloat: np.float64,
+    ntint: np.int64,
+    ntstr: np.unicode_,
+    ntstringarray: np.unicode_,
 }
 
 caproto_alarm_severity_to_f142 = {

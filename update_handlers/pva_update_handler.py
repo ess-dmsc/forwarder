@@ -8,6 +8,7 @@ from update_handlers.schema_publishers import schema_publishers
 from repeat_timer import RepeatTimer, milliseconds_to_seconds
 from epics_to_serialisable_types import numpy_type_from_channel_type
 import numpy as np
+from p4p.nt.enum import ntenum
 
 
 class PVAUpdateHandler:
@@ -61,19 +62,23 @@ class PVAUpdateHandler:
         if self._output_type is None:
             try:
                 pass
-                self._output_type = numpy_type_from_channel_type[
-                    response.raw.type()["value"]
-                ]
+                self._output_type = numpy_type_from_channel_type[type(response)]
+                if type(response) is ntenum:
+                    self._get_value = lambda resp: resp.raw.value.index
+                else:
+                    self._get_value = lambda resp: resp.raw.value
             except KeyError:
                 self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {response.raw.type()['value']}"
+                    f"Don't know what numpy dtype to use for channel type {type(response)}"
                 )
 
         with self._cache_lock:
             self._message_publisher(
                 self._producer,
                 self._output_topic,
-                np.squeeze(np.array(response.raw.value)).astype(self._output_type),
+                np.squeeze(np.array(self._get_value(response))).astype(
+                    self._output_type
+                ),
                 source_name=self._pv_name,
                 timestamp_ns=timestamp,
             )
@@ -86,9 +91,9 @@ class PVAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(np.array(self._cached_update[0].raw.value)).astype(
-                        self._output_type
-                    ),
+                    np.squeeze(
+                        np.array(self._get_value(self._cached_update[0]))
+                    ).astype(self._output_type),
                     source_name=self._pv_name,
                     timestamp_ns=self._cached_update[1],
                 )
