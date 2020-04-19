@@ -223,7 +223,6 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     cons.close()
 
 
-@pytest.mark.skip("caproto currently blocks if PV doesn't exist")
 def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     cons = create_consumer("latest")
     sleep(2)
@@ -231,7 +230,9 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
 
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    prod = ProducerWrapper(
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=EpicsProtocol.PVA
+    )
     configured_list_of_pvs = []
     number_of_config_updates = 100
     for i in range(number_of_config_updates):
