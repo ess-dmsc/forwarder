@@ -1,6 +1,6 @@
 from p4p.client.thread import Context as PVAContext
 from p4p import Value
-from kafka.aio_producer import AIOProducer
+from kafka.kafka_producer import KafkaProducer
 from application_logger import get_logger
 from typing import Optional
 from threading import Lock, Event
@@ -24,7 +24,7 @@ class PVAUpdateHandler:
 
     def __init__(
         self,
-        producer: AIOProducer,
+        producer: KafkaProducer,
         context: PVAContext,
         pv_name: str,
         output_topic: str,

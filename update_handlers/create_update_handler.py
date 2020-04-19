@@ -1,6 +1,6 @@
 from parse_config_update import EpicsProtocol
 from parse_config_update import Channel as ConfigChannel
-from kafka.aio_producer import AIOProducer
+from kafka.kafka_producer import KafkaProducer
 from typing import Optional
 from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
@@ -9,7 +9,7 @@ from update_handlers.pva_update_handler import PVAUpdateHandler
 
 
 def create_update_handler(
-    producer: AIOProducer,
+    producer: KafkaProducer,
     ca_context: CAContext,
     pva_context: PVAContext,
     channel: ConfigChannel,

@@ -3,7 +3,7 @@ from threading import Thread
 from application_logger import setup_logger
 
 
-class AIOProducer:
+class KafkaProducer:
     def __init__(self, configs: dict):
         self._producer = confluent_kafka.Producer(configs)
         self._cancelled = False

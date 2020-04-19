@@ -1,5 +1,5 @@
 from confluent_kafka import Consumer
-from .aio_producer import AIOProducer
+from .kafka_producer import KafkaProducer
 from streaming_data_types.logdata_f142 import serialise_f142
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
@@ -8,12 +8,12 @@ import numpy as np
 from typing import Optional, Tuple
 
 
-def create_producer(broker_address: str = "localhost:9092") -> AIOProducer:
+def create_producer(broker_address: str = "localhost:9092") -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    return AIOProducer(producer_config)
+    return KafkaProducer(producer_config)
 
 
 def create_consumer(broker_address: str) -> Consumer:
@@ -38,7 +38,7 @@ def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
 
 
 def publish_f142_message(
-    producer: AIOProducer,
+    producer: KafkaProducer,
     topic: str,
     data: np.array,
     timestamp_ns: int,

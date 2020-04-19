@@ -1,5 +1,5 @@
 from application_logger import get_logger
-from kafka.aio_producer import AIOProducer
+from kafka.kafka_producer import KafkaProducer
 from caproto import ReadNotifyResponse, ChannelType
 import numpy as np
 from threading import Lock, Event
@@ -24,7 +24,7 @@ class CAUpdateHandler:
 
     def __init__(
         self,
-        producer: AIOProducer,
+        producer: KafkaProducer,
         context: CAContext,
         pv_name: str,
         output_topic: str,
