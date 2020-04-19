@@ -61,7 +61,6 @@ class PVAUpdateHandler:
         timestamp = (
             response.raw.timeStamp.secondsPastEpoch * 1000000000
         ) + response.raw.timeStamp.nanoseconds
-        self._logger.debug(f"Received PV update")
         if self._output_type is None:
             try:
                 pass

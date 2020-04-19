@@ -63,7 +63,6 @@ class CAUpdateHandler:
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         # Create timestamp as early as possible
         timestamp = time.time_ns()
-        self._logger.debug(f"Received PV update, METADATA: {response.metadata}")
         if self._output_type is None:
             try:
                 self._output_type = numpy_type_from_channel_type[response.data_type]
