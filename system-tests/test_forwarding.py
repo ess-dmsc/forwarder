@@ -46,7 +46,7 @@ def teardown_function(request):
         PVDOUBLE: 0.0,
         # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
         # the PV
-        PVSTR: "",
+        PVSTR: "test",
         PVLONG: 0,
         PVENUM: np.array(["INIT"]).astype(np.string_),
         PVDOUBLE_WITH_ALARM_THRESHOLDS: 0.0,
