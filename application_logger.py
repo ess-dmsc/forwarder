@@ -14,7 +14,7 @@ def setup_logger(
         logging.basicConfig()
     logger = logging.getLogger(logger_name)
     logger.setLevel(level)
-    handler = graypy.GELFUDPHandler("localhost", 12201)
+    handler = graypy.GELFTCPHandler("localhost", 12201)
     logger.addHandler(handler)
     return logger
 
