@@ -1,3 +1,4 @@
+wheel
 caproto == 0.5.0a1
 p4p
 confluent_kafka
