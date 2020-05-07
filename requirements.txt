@@ -6,4 +6,4 @@ graypy
 numpy
 attrs
 ConfigArgParse
-https://github.com/ess-dmsc/python-streaming-data-types/releases/download/0.3.0/streaming_data_types-0.3.0-py3-none-any.whl
+ess-streaming-data-types
