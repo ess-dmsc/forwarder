@@ -74,7 +74,8 @@ class PVAUpdateHandler:
                 )
 
         with self._cache_lock:
-            # If this is the first update or the alarm status has changed, then include alarm status in message
+            # If this is the first update or the alarm status has changed, then
+            # include alarm status in message
             if (
                 self._cached_update is None
                 or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
