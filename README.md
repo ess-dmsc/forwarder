@@ -30,13 +30,6 @@ pre-commit run --all-files
 ```
 This command can also be used to run the hooks manually.
 
-If on Python 3.8 there is not yet a wheel for p4p (2020-05-11), but you can use the following to build from source
-```
-python -m pip install nose numpy
-python -m pip uninstall epicscorelibs     # assuming it is already installed
-python -m pip install --no-binary :all: p4p
-```
-
 ## Running the application
 
 Run the python script `forwarder.py` located in the root of the repository.
