@@ -59,11 +59,10 @@ class PVAUpdateHandler:
 
     def _monitor_callback(self, response: Value):
         timestamp = (
-            response.raw.timeStamp.secondsPastEpoch * 1000000000
+            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + response.raw.timeStamp.nanoseconds
         if self._output_type is None:
             try:
-                pass
                 self._output_type = numpy_type_from_channel_type[type(response)]
                 if type(response) is ntenum:
                     self._get_value = lambda resp: resp.raw.value.index
@@ -75,7 +74,8 @@ class PVAUpdateHandler:
                 )
 
         with self._cache_lock:
-            # If this is the first update or the alarm status has changed, then include alarm status in message
+            # If this is the first update or the alarm status has changed, then
+            # include alarm status in message
             if (
                 self._cached_update is None
                 or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
