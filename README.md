@@ -1,4 +1,3 @@
-
 # Forwarder
 
 ## Installing dependencies
@@ -56,6 +55,7 @@ docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status"
 
 ## C++ Forwarder features not replicated here
 
-Won't do:
+Won't do unless we discover it is necessary:
 - Configure forwarding from json file (already agreed to remove from C++ codebase)
-- Forwarding to multiple Kafka clusters (unless deemed necessary feature)
+- Forwarding to multiple Kafka clusters
+- Forwarding same PV with different converters (can be added separately so it is just a performance improvement, if you would ever want to do this)
