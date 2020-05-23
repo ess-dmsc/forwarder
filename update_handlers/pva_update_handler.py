@@ -86,12 +86,12 @@ class PVAUpdateHandler:
                     np.squeeze(np.array(self._get_value(response))).astype(
                         self._output_type
                     ),
-                    source_name=self._pv_name,
-                    timestamp_ns=timestamp,
-                    alarm_status=caproto_alarm_status_to_f142[
+                    self._pv_name,
+                    timestamp,
+                    caproto_alarm_status_to_f142[
                         response.raw.alarm.status
                     ],
-                    alarm_severity=caproto_alarm_severity_to_f142[
+                    caproto_alarm_severity_to_f142[
                         response.raw.alarm.severity
                     ],
                 )
@@ -102,8 +102,8 @@ class PVAUpdateHandler:
                     np.squeeze(np.array(self._get_value(response))).astype(
                         self._output_type
                     ),
-                    source_name=self._pv_name,
-                    timestamp_ns=timestamp,
+                    self._pv_name,
+                    timestamp,
                 )
             self._cached_update = (response, timestamp)
 
@@ -117,12 +117,12 @@ class PVAUpdateHandler:
                     np.squeeze(
                         np.array(self._get_value(self._cached_update[0]))
                     ).astype(self._output_type),
-                    source_name=self._pv_name,
-                    timestamp_ns=self._cached_update[1],
-                    alarm_status=caproto_alarm_status_to_f142[
+                    self._pv_name,
+                    self._cached_update[1],
+                    caproto_alarm_status_to_f142[
                         self._cached_update[0].raw.alarm.status
                     ],
-                    alarm_severity=caproto_alarm_severity_to_f142[
+                    caproto_alarm_severity_to_f142[
                         self._cached_update[0].raw.alarm.severity
                     ],
                 )

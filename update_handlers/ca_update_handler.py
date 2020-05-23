@@ -82,10 +82,10 @@ class CAUpdateHandler:
                     self._producer,
                     self._output_topic,
                     np.squeeze(response.data).astype(self._output_type),
-                    source_name=self._pv.name,
-                    timestamp_ns=timestamp,
-                    alarm_status=caproto_alarm_status_to_f142[response.metadata.status],
-                    alarm_severity=caproto_alarm_severity_to_f142[
+                    self._pv.name,
+                    timestamp,
+                    caproto_alarm_status_to_f142[response.metadata.status],
+                    caproto_alarm_severity_to_f142[
                         response.metadata.severity
                     ],
                 )
@@ -95,8 +95,8 @@ class CAUpdateHandler:
                     self._producer,
                     self._output_topic,
                     np.squeeze(response.data).astype(self._output_type),
-                    source_name=self._pv.name,
-                    timestamp_ns=timestamp,
+                    self._pv.name,
+                    timestamp,
                 )
             self._cached_update = (response, timestamp)
 
@@ -108,12 +108,12 @@ class CAUpdateHandler:
                     self._producer,
                     self._output_topic,
                     np.squeeze(self._cached_update[0].data).astype(self._output_type),
-                    source_name=self._pv.name,
-                    timestamp_ns=self._cached_update[1],
-                    alarm_status=caproto_alarm_status_to_f142[
+                    self._pv.name,
+                    self._cached_update[1],
+                    caproto_alarm_status_to_f142[
                         self._cached_update[0].metadata.status
                     ],
-                    alarm_severity=caproto_alarm_severity_to_f142[
+                    caproto_alarm_severity_to_f142[
                         self._cached_update[0].metadata.severity
                     ],
                 )

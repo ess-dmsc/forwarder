@@ -1,6 +1,7 @@
 from confluent_kafka import Consumer
 from .kafka_producer import KafkaProducer
 from streaming_data_types.logdata_f142 import serialise_f142
+from streaming_data_types.timestamps_tdct import serialise_tdct
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
@@ -41,8 +42,8 @@ def publish_f142_message(
     producer: KafkaProducer,
     topic: str,
     data: np.array,
-    timestamp_ns: int,
     source_name: str,
+    timestamp_ns: int,
     alarm_status: Optional[AlarmStatus] = None,
     alarm_severity: Optional[AlarmSeverity] = None,
 ):
@@ -51,8 +52,8 @@ def publish_f142_message(
     :param producer: Kafka producer to publish update with
     :param topic: Name of topic to publish to
     :param data: Value of the PV update
-    :param timestamp_ns: Timestamp for value (nanoseconds after unix epoch)
     :param source_name: Name of the PV
+    :param timestamp_ns: Timestamp for value (nanoseconds after unix epoch)
     :param alarm_status:
     :param alarm_severity:
     """
@@ -69,3 +70,24 @@ def publish_f142_message(
             alarm_severity=alarm_severity,
         )
     producer.produce(topic, f142_message)
+
+
+def publish_tdct_message(
+    producer: KafkaProducer,
+    topic: str,
+    data: np.array,
+    source_name: str,
+    *unused
+):
+    """
+    Publish an tdct message to a given topic.
+    Currently the tdct does not contain alarms, but if it turns out to be the long term solution
+    for getting chopper timestamps into Kafka they we will likely add alarms to the schema
+
+    :param producer: Kafka producer to publish update with
+    :param topic: Name of topic to publish to
+    :param data: Value of the PV update
+    :param source_name: Name of the PV
+    :param unused: Allow other args to be passed to match signature of other publish_*_message functions
+    """
+    producer.produce(topic, serialise_tdct(name=source_name, timestamps=data))
