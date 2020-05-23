@@ -99,5 +99,8 @@ def _parse_streams(
                 f'"topic" field not found in "stream" entry in received "{command_type}" command'
             )
             continue
+        except RuntimeError as e:
+            logger.warning(e)
+            continue
 
         yield Channel(channel, protocol, output_topic)
