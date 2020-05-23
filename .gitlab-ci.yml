@@ -1,5 +1,9 @@
 image: "python:3.7"
 
+before_script:
+  - python --version
+  - pip install -r requirements.txt
+
 stages:
   - Static Analysis
   - Test
@@ -17,5 +21,4 @@ black:
 test:
   stage: Test
   script:
-  - pip install -r requirements-dev.txt
   - python -m pytest ./tests
