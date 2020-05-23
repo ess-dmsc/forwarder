@@ -114,7 +114,7 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
     # Check the initial value is forwarded
     first_msg, msg_key = poll_for_valid_message(consumer)
     check_expected_value(first_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, initial_value)
-    check_expected_alarm_status(first_msg, AlarmStatus.UDF, AlarmSeverity.NO_ALARM)
+    # Don't check alarm status of initial state because it is undefined if SoftIOC has not been changed yet
     assert msg_key == PVDOUBLE_WITH_ALARM_THRESHOLDS.encode(
         "utf-8"
     ), "Message key expected to be the same as the PV name"
