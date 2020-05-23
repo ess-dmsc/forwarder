@@ -85,9 +85,7 @@ class CAUpdateHandler:
                     self._pv.name,
                     timestamp,
                     caproto_alarm_status_to_f142[response.metadata.status],
-                    caproto_alarm_severity_to_f142[
-                        response.metadata.severity
-                    ],
+                    caproto_alarm_severity_to_f142[response.metadata.severity],
                 )
             else:
                 # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"

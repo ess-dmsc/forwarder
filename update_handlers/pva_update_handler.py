@@ -88,12 +88,8 @@ class PVAUpdateHandler:
                     ),
                     self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[
-                        response.raw.alarm.status
-                    ],
-                    caproto_alarm_severity_to_f142[
-                        response.raw.alarm.severity
-                    ],
+                    caproto_alarm_status_to_f142[response.raw.alarm.status],
+                    caproto_alarm_severity_to_f142[response.raw.alarm.severity],
                 )
             else:
                 self._message_publisher(

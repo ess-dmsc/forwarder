@@ -73,11 +73,7 @@ def publish_f142_message(
 
 
 def publish_tdct_message(
-    producer: KafkaProducer,
-    topic: str,
-    data: np.array,
-    source_name: str,
-    *unused
+    producer: KafkaProducer, topic: str, data: np.array, source_name: str, *unused
 ):
     """
     Publish an tdct message to a given topic.
