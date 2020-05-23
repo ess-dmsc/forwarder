@@ -1,5 +1,5 @@
-from kafka.kafka_helpers import create_producer
-from repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.kafka.kafka_helpers import create_producer
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from typing import Dict
 import json
 

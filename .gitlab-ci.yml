@@ -18,6 +18,11 @@ black:
   script:
     - python -m black --check .
 
+mypy:
+  stage: Static Analysis
+  script:
+    - python -m mypy --config-file mypy.ini forwarder.py
+
 test:
   stage: Test
   script:

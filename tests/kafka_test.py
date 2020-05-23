@@ -1,4 +1,4 @@
-from kafka.kafka_helpers import get_broker_and_topic_from_uri
+from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
 import pytest
 
 

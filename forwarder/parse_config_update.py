@@ -1,9 +1,9 @@
 import json
-from application_logger import get_logger
+from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
-from typing import Tuple, Union, Generator, Dict, Optional
-from kafka.kafka_helpers import get_broker_and_topic_from_uri
+from typing import Tuple, Generator, Dict, Optional
+from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
 
 logger = get_logger()
 
@@ -19,32 +19,33 @@ class EpicsProtocol(Enum):
     PVA = "pva"
     CA = "ca"
     FAKE = "fake"
+    NONE = "none"
 
 
 @attr.s
 class Channel:
     name = attr.ib(type=str)
-    protocol = attr.ib(type=Optional[EpicsProtocol])
-    output_topic = attr.ib(type=Optional[str])
-    schema = attr.ib(type=Optional[str])
+    protocol = attr.ib(type=EpicsProtocol)
+    output_topic = attr.ib(type=str)
+    schema = attr.ib(type=str)
 
 
 @attr.s
 class ConfigUpdate:
     command_type = attr.ib(type=CommandType)
-    channels = attr.ib(type=Optional[Tuple[Channel]])
+    channels = attr.ib(type=Optional[Tuple[Channel, ...]])
 
 
-def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]:
+def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
     config = json.loads(config_update_payload)
     try:
         command_type = CommandType(config["cmd"])
     except KeyError:
         logger.warning('Message received in config topic contained no "cmd" field')
-        return
+        return None
     except ValueError:
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
-        return
+        return None
 
     if command_type == CommandType.REMOVE_ALL or command_type == CommandType.EXIT:
         return ConfigUpdate(command_type, None)
@@ -56,14 +57,16 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
             logger.warning(
                 f'"channel" field not found in received "{command_type}" command'
             )
-            return
-        return ConfigUpdate(command_type, (Channel(channel_name, None, None, None),))
+            return None
+        return ConfigUpdate(
+            command_type, (Channel(channel_name, EpicsProtocol.NONE, "", ""),)
+        )
 
     try:
         streams = config["streams"]
     except KeyError:
         logger.warning('Message received in config topic contained no "streams" field')
-        return
+        return None
 
     return ConfigUpdate(command_type, tuple(_parse_streams(command_type, streams)))
 

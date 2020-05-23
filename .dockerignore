@@ -9,3 +9,5 @@ pyproject.toml
 pytest.ini
 requirements.dev.txt
 venv
+.mypy_cache
+.pytest_cache

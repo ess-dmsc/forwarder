@@ -1,17 +1,18 @@
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
-from kafka.kafka_helpers import (
+import logging
+import configargparse
+from typing import Optional, Dict
+
+from forwarder.kafka.kafka_helpers import (
     create_producer,
     create_consumer,
     get_broker_and_topic_from_uri,
 )
-from application_logger import setup_logger
-from parse_config_update import parse_config_update, CommandType, Channel
-from update_handlers.create_update_handler import create_update_handler
-import logging
-import configargparse
-from typing import Optional
-from status_reporter import StatusReporter
+from forwarder.application_logger import setup_logger
+from forwarder.parse_config_update import parse_config_update, CommandType, Channel
+from forwarder.update_handlers.create_update_handler import create_update_handler
+from forwarder.status_reporter import StatusReporter
 
 
 def subscribe_to_pv(
@@ -140,7 +141,7 @@ if __name__ == "__main__":
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva")
-    update_handlers = dict()
+    update_handlers: Dict = dict()
 
     # Kafka
     producer = create_producer()
@@ -167,21 +168,25 @@ if __name__ == "__main__":
             else:
                 logger.info("Received config message")
                 config_change = parse_config_update(msg.value())
-                if config_change.command_type == CommandType.REMOVE_ALL:
-                    unsubscribe_from_all()
-                    status_reporter.report_status()
-                elif config_change.command_type == CommandType.EXIT:
-                    logger.info("Exit command received")
-                    break
-                else:
-                    for channel in config_change.channels:
-                        if config_change.command_type == CommandType.ADD:
-                            subscribe_to_pv(
-                                channel, args.fake_pv_period, args.pv_update_period
-                            )
-                        elif config_change.command_type == CommandType.REMOVE:
-                            unsubscribe_from_pv(channel.name)
-                    status_reporter.report_status()
+                if config_change is not None:
+                    if config_change.command_type == CommandType.REMOVE_ALL:
+                        unsubscribe_from_all()
+                        status_reporter.report_status()
+                    elif config_change.command_type == CommandType.EXIT:
+                        logger.info("Exit command received")
+                        break
+                    else:
+                        if config_change.channels is not None:
+                            for channel in config_change.channels:
+                                if config_change.command_type == CommandType.ADD:
+                                    subscribe_to_pv(
+                                        channel,
+                                        args.fake_pv_period,
+                                        args.pv_update_period,
+                                    )
+                                elif config_change.command_type == CommandType.REMOVE:
+                                    unsubscribe_from_pv(channel.name)
+                            status_reporter.report_status()
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

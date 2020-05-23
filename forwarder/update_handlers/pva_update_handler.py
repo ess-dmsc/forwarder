@@ -1,48 +1,46 @@
-from application_logger import get_logger
-from kafka.kafka_producer import KafkaProducer
-from caproto import ReadNotifyResponse, ChannelType
-import numpy as np
-from threading import Lock
-from repeat_timer import RepeatTimer, milliseconds_to_seconds
-from epics_to_serialisable_types import (
+from p4p.client.thread import Context as PVAContext
+from p4p import Value
+from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.application_logger import get_logger
+from typing import Optional, Tuple
+from threading import Lock, Event
+from forwarder.update_handlers.schema_publishers import schema_publishers
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.epics_to_serialisable_types import (
     numpy_type_from_channel_type,
     caproto_alarm_severity_to_f142,
     caproto_alarm_status_to_f142,
 )
-from caproto.threading.client import Context as CAContext
-import time
-from typing import Optional
-from update_handlers.schema_publishers import schema_publishers
+import numpy as np
+from p4p.nt.enum import ntenum
 
 
-class CAUpdateHandler:
+class PVAUpdateHandler:
     """
-    Monitors via EPICS v3 Channel Access (CA),
+    Monitors via EPICS v4 Process Variable Access (PVA),
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
-    CA support from caproto library.
+    PVA support from p4p library.
     """
 
     def __init__(
         self,
         producer: KafkaProducer,
-        context: CAContext,
+        context: PVAContext,
         pv_name: str,
         output_topic: str,
-        schema: str = "f142",
+        schema: str,
         periodic_update_ms: Optional[int] = None,
     ):
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
-        (self._pv,) = context.get_pvs(pv_name)
-        # Prevent our monitor timing out if PV is not available right now
-        self._pv.timeout = None
-        # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
-        sub = self._pv.subscribe(data_type="control")
-        sub.add_callback(self._monitor_callback)
 
-        self._cached_update = None
+        self._sub = context.monitor(pv_name, self._monitor_callback)
+        self._pv_name = pv_name
+
+        self._cached_update: Optional[Tuple[Value, int]] = None
         self._output_type = None
+        self._stop_timer_flag = Event()
         self._repeating_timer = None
         self._cache_lock = Lock()
 
@@ -59,15 +57,20 @@ class CAUpdateHandler:
             )
             self._repeating_timer.start()
 
-    def _monitor_callback(self, sub, response: ReadNotifyResponse):
-        # Create timestamp as early as possible
-        timestamp = time.time_ns()
+    def _monitor_callback(self, response: Value):
+        timestamp = (
+            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
+        ) + response.raw.timeStamp.nanoseconds
         if self._output_type is None:
             try:
-                self._output_type = numpy_type_from_channel_type[response.data_type]
+                self._output_type = numpy_type_from_channel_type[type(response)]
+                if type(response) is ntenum:
+                    self._get_value = lambda resp: resp.raw.value.index
+                else:
+                    self._get_value = lambda resp: resp.raw.value
             except KeyError:
                 self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
+                    f"Don't know what numpy dtype to use for channel type {type(response)}"
                 )
 
         with self._cache_lock:
@@ -75,24 +78,27 @@ class CAUpdateHandler:
             # include alarm status in message
             if (
                 self._cached_update is None
-                or response.metadata.status != self._cached_update[0].metadata.status
+                or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
             ):
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(response.data).astype(self._output_type),
-                    self._pv.name,
+                    np.squeeze(np.array(self._get_value(response))).astype(
+                        self._output_type
+                    ),
+                    self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.metadata.status],
-                    caproto_alarm_severity_to_f142[response.metadata.severity],
+                    caproto_alarm_status_to_f142[response.raw.alarm.status],
+                    caproto_alarm_severity_to_f142[response.raw.alarm.severity],
                 )
             else:
-                # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(response.data).astype(self._output_type),
-                    self._pv.name,
+                    np.squeeze(np.array(self._get_value(response))).astype(
+                        self._output_type
+                    ),
+                    self._pv_name,
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
@@ -104,14 +110,16 @@ class CAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(self._cached_update[0].data).astype(self._output_type),
-                    self._pv.name,
+                    np.squeeze(
+                        np.array(self._get_value(self._cached_update[0]))
+                    ).astype(self._output_type),
+                    self._pv_name,
                     self._cached_update[1],
                     caproto_alarm_status_to_f142[
-                        self._cached_update[0].metadata.status
+                        self._cached_update[0].raw.alarm.status
                     ],
                     caproto_alarm_severity_to_f142[
-                        self._cached_update[0].metadata.severity
+                        self._cached_update[0].raw.alarm.severity
                     ],
                 )
 
@@ -121,4 +129,4 @@ class CAUpdateHandler:
         """
         if self._repeating_timer is not None:
             self._repeating_timer.cancel()
-        self._pv.unsubscribe_all()
+        self._sub.close()

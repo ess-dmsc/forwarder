@@ -1,4 +1,4 @@
-from kafka.kafka_helpers import create_producer
+from forwarder.kafka.kafka_helpers import create_producer
 
 if __name__ == "__main__":
     config_message = (

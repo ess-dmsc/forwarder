@@ -1,6 +1,6 @@
 import confluent_kafka
 from threading import Thread
-from application_logger import setup_logger
+from forwarder.application_logger import setup_logger
 from typing import Optional
 
 

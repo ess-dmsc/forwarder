@@ -1,12 +1,12 @@
-from parse_config_update import EpicsProtocol
-from parse_config_update import Channel as ConfigChannel
-from kafka.kafka_producer import KafkaProducer
+from forwarder.parse_config_update import EpicsProtocol
+from forwarder.parse_config_update import Channel as ConfigChannel
+from forwarder.kafka.kafka_producer import KafkaProducer
 from typing import Optional
 from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
-from update_handlers.ca_update_handler import CAUpdateHandler
-from update_handlers.pva_update_handler import PVAUpdateHandler
-from update_handlers.fake_update_handler import FakeUpdateHandler
+from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
+from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
+from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 
 
 def create_update_handler(

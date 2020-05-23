@@ -32,7 +32,7 @@ This command can also be used to run the hooks manually.
 
 ## Running the application
 
-Run the python script `forwarder.py` located in the root of the repository.
+Run the python script `forwarder.py`
 
 ## Docker
 

@@ -1,9 +1,8 @@
-from kafka.kafka_producer import KafkaProducer
+from forwarder.kafka.kafka_producer import KafkaProducer
 import numpy as np
-from repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 import time
-from typing import Optional
-from update_handlers.schema_publishers import schema_publishers
+from forwarder.update_handlers.schema_publishers import schema_publishers
 from random import randint
 
 
@@ -18,8 +17,8 @@ class FakeUpdateHandler:
         producer: KafkaProducer,
         pv_name: str,
         output_topic: str,
-        schema: str = "f142",
-        fake_pv_period_ms: Optional[int] = None,
+        schema: str,
+        fake_pv_period_ms: int,
     ):
         self._producer = producer
         self._output_topic = output_topic
