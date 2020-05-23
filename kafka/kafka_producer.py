@@ -1,6 +1,7 @@
 import confluent_kafka
 from threading import Thread
 from application_logger import setup_logger
+from typing import Optional
 
 
 class KafkaProducer:
@@ -19,10 +20,10 @@ class KafkaProducer:
         self._cancelled = True
         self._poll_thread.join()
 
-    def produce(self, topic: str, payload: bytes):
+    def produce(self, topic: str, payload: bytes, key: Optional[str] = None):
         def ack(err, _):
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
 
-        self._producer.produce(topic, payload, on_delivery=ack)
+        self._producer.produce(topic, payload, key=key, on_delivery=ack)
         self._producer.poll(0)
