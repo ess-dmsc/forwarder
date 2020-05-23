@@ -41,10 +41,10 @@ class FakeUpdateHandler:
     def _timer_callback(self):
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
-            data = np.array([randint(0, 100)]).astype(np.int32_t)
+            data = np.array([randint(0, 100)]).astype(np.int32)
         else:
             # Otherwise 0D (scalar) is fine
-            data = np.array(randint(0, 100)).astype(np.int32_t)
+            data = np.array(randint(0, 100)).astype(np.int32)
         self._message_publisher(
             self._producer, self._output_topic, data, self._pv_name, time.time_ns(),
         )
