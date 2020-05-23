@@ -5,6 +5,7 @@ black
 pre-commit
 pytest
 flake8
+mypy
 
 # For system tests
 docker-compose
