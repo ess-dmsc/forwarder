@@ -6,6 +6,7 @@ from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
 from update_handlers.ca_update_handler import CAUpdateHandler
 from update_handlers.pva_update_handler import PVAUpdateHandler
+from update_handlers.fake_update_handler import FakeUpdateHandler
 
 
 def create_update_handler(
@@ -13,7 +14,7 @@ def create_update_handler(
     ca_context: CAContext,
     pva_context: PVAContext,
     channel: ConfigChannel,
-    schema: str = "f142",
+    fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
 ):
     if channel.protocol == EpicsProtocol.PVA:
@@ -22,7 +23,7 @@ def create_update_handler(
             pva_context,
             channel.name,
             channel.output_topic,
-            schema,
+            channel.schema,
             periodic_update_ms,
         )
     elif channel.protocol == EpicsProtocol.CA:
@@ -31,6 +32,14 @@ def create_update_handler(
             ca_context,
             channel.name,
             channel.output_topic,
-            schema,
+            channel.schema,
             periodic_update_ms,
+        )
+    elif channel.protocol == EpicsProtocol.FAKE:
+        return FakeUpdateHandler(
+            producer,
+            channel.name,
+            channel.output_topic,
+            channel.schema,
+            fake_pv_period_ms,
         )

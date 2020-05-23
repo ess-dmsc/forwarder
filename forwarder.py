@@ -14,13 +14,20 @@ from typing import Optional
 from status_reporter import StatusReporter
 
 
-def subscribe_to_pv(new_channel: Channel, pv_update_period: Optional[int]):
+def subscribe_to_pv(
+    new_channel: Channel, fake_pv_period: int, pv_update_period: Optional[int]
+):
     if new_channel.name in update_handlers.keys():
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
     update_handlers[new_channel.name] = create_update_handler(
-        producer, ca_ctx, pva_ctx, new_channel, periodic_update_ms=pv_update_period
+        producer,
+        ca_ctx,
+        pva_ctx,
+        new_channel,
+        fake_pv_period,
+        periodic_update_ms=pv_update_period,
     )
     logger.info(f"Subscribed to PV {new_channel.name}")
 
@@ -93,6 +100,14 @@ def parse_args():
         env_var="PV_UPDATE_PERIOD",
         type=int,
     )
+    parser.add_argument(
+        "--fake-pv-period",
+        required=False,
+        help="Set period for random generated PV updates when channel_provider_type is specified as 'fake' (units=milliseconds)",
+        env_var="FAKE_PV_PERIOD",
+        type=int,
+        default=1000,
+    )
     log_choice_to_enum = {
         "Trace": logging.DEBUG,
         "Debug": logging.DEBUG,
@@ -161,7 +176,9 @@ if __name__ == "__main__":
                 else:
                     for channel in config_change.channels:
                         if config_change.command_type == CommandType.ADD:
-                            subscribe_to_pv(channel, args.pv_update_period)
+                            subscribe_to_pv(
+                                channel, args.fake_pv_period, args.pv_update_period
+                            )
                         elif config_change.command_type == CommandType.REMOVE:
                             unsubscribe_from_pv(channel.name)
                     status_reporter.report_status()

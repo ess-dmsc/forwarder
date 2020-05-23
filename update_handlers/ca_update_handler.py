@@ -2,7 +2,7 @@ from application_logger import get_logger
 from kafka.kafka_producer import KafkaProducer
 from caproto import ReadNotifyResponse, ChannelType
 import numpy as np
-from threading import Lock, Event
+from threading import Lock
 from repeat_timer import RepeatTimer, milliseconds_to_seconds
 from epics_to_serialisable_types import (
     numpy_type_from_channel_type,
@@ -43,7 +43,6 @@ class CAUpdateHandler:
 
         self._cached_update = None
         self._output_type = None
-        self._stop_timer_flag = Event()
         self._repeating_timer = None
         self._cache_lock = Lock()
 

@@ -18,6 +18,7 @@ class CommandType(Enum):
 class EpicsProtocol(Enum):
     PVA = "pva"
     CA = "ca"
+    FAKE = "fake"
 
 
 @attr.s
@@ -25,6 +26,7 @@ class Channel:
     name = attr.ib(type=str)
     protocol = attr.ib(type=Optional[EpicsProtocol])
     output_topic = attr.ib(type=Optional[str])
+    schema = attr.ib(type=Optional[str])
 
 
 @attr.s
@@ -55,7 +57,7 @@ def parse_config_update(config_update_payload: str) -> Union[ConfigUpdate, None]
                 f'"channel" field not found in received "{command_type}" command'
             )
             return
-        return ConfigUpdate(command_type, (Channel(channel_name, None, None),))
+        return ConfigUpdate(command_type, (Channel(channel_name, None, None, None),))
 
     try:
         streams = config["streams"]
@@ -103,4 +105,12 @@ def _parse_streams(
             logger.warning(e)
             continue
 
-        yield Channel(channel, protocol, output_topic)
+        try:
+            schema = update_stream["converter"]["schema"]
+        except ValueError:
+            logger.warning(
+                f'"schema" field not found in "stream" entry in received "{command_type}" command'
+            )
+            continue
+
+        yield Channel(channel, protocol, output_topic, schema)
