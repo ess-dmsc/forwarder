@@ -1,5 +1,6 @@
 tests
 system-tests
+manual_testing
 .flake8
 .gitignore
 .pre-commit-config.yaml
