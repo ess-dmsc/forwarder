@@ -1,10 +1,21 @@
+image: "python:3.7"
+
 stages:
-  - test
+  - Static Analysis
+  - Test
+
+flake8:
+  stage: Static Analysis
+  script:
+    - python -m flake8
+
+black:
+  stage: Static Analysis
+  script:
+    - python -m black --check .
 
 test:
-  stage: test
+  stage: Test
   script:
-  - apt-get update -qy
-  - apt-get install -y python3-dev python3-pip
-  - pip3 install -r requirements-dev.txt
-  - python3 -m pytest ./tests
+  - pip install -r requirements-dev.txt
+  - python -m pytest ./tests

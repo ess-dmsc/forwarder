@@ -4,6 +4,7 @@
 black
 pre-commit
 pytest
+flake8
 
 # For system tests
 docker-compose

@@ -165,7 +165,7 @@ if __name__ == "__main__":
             if msg.error():
                 logger.error(msg.error())
             else:
-                logger.info(f"Received config message")
+                logger.info("Received config message")
                 config_change = parse_config_update(msg.value())
                 if config_change.command_type == CommandType.REMOVE_ALL:
                     unsubscribe_from_all()
