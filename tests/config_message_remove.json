@@ -1,4 +1,0 @@
-{
-  "cmd": "stop_channel",
-  "channel": "incrementing_ioc:x_int"
-}
