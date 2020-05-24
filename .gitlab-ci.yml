@@ -21,9 +21,9 @@ black:
 mypy:
   stage: Static Analysis
   script:
-    - python -m mypy --config-file mypy.ini forwarder.py
+    - python -m mypy .
 
 test:
   stage: Test
   script:
-  - python -m pytest ./tests
+  - python -m pytest .
