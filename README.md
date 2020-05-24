@@ -18,7 +18,7 @@ Development dependencies (including all runtime dependencies) can be installed b
 pip install -r requirements-dev.txt
 ```
 
-The black pre-commit hook (installed by [pre-commit](https://pre-commit.com/)) requires Python 3.6 or above.
+`black`, `flake8` and `mypy` can be used as a pre-commit hook (installed by [pre-commit](https://pre-commit.com/)).
 You need to run
 ```
 pre-commit install
@@ -29,11 +29,6 @@ To test the hooks run
 pre-commit run --all-files
 ```
 This command can also be used to run the hooks manually.
-
-`mypy` can be run with
-```
-python -m mypy --config-file mypy.ini .
-```
 
 ## Running the application
 
