@@ -1,13 +1,12 @@
 tests
-system-tests
+system_tests
 manual_testing
-.flake8
+setup.cfg
 .gitignore
 .pre-commit-config.yaml
 docker-compose.yml
 pyproject.toml
-pytest.ini
-requirements.dev.txt
-venv
+requirements-dev.txt
+venv*
 .mypy_cache
 .pytest_cache
