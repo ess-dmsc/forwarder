@@ -1,2 +1,2 @@
 [tool.black]
-exclude = '/(f142_logdata*|venv*)'
+exclude = '/(venv*)'
