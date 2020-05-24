@@ -37,7 +37,7 @@ python -m mypy --config-file mypy.ini .
 
 ## Running the application
 
-Run the python script `forwarder.py`
+Run the python script forwarder_launch.py`
 
 ## Docker
 
