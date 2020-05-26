@@ -9,7 +9,7 @@ import numpy as np
 from typing import Optional, Tuple
 
 
-def create_producer(broker_address: str = "localhost:9092") -> KafkaProducer:
+def create_producer(broker_address: str) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
