@@ -77,6 +77,14 @@ def parse_args():
         env_var="STATUS_TOPIC",
     )
     parser.add_argument(
+        "--output-broker",
+        required=False,
+        help="<host[:port]> Kafka broker to forward data into",
+        type=str,
+        default="localhost:9092",
+        env_var="OUTPUT_BROKER",
+    )
+    parser.add_argument(
         "--graylog-logger-address",
         required=False,
         help="<host:port> Log to Graylog",
@@ -144,7 +152,7 @@ if __name__ == "__main__":
     update_handlers: Dict = dict()
 
     # Kafka
-    producer = create_producer()
+    producer = create_producer(args.output_broker)
     config_broker, config_topic = get_broker_and_topic_from_uri(args.config_topic)
     consumer = create_consumer(config_broker)
     consumer.subscribe([config_topic])
