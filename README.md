@@ -32,7 +32,15 @@ This command can also be used to run the hooks manually.
 
 ## Running the application
 
-Run the python script forwarder_launch.py`
+Run the python script `forwarder_launch.py`.
+For run options do
+```
+forwarder_launch.py --help
+```
+Optional arguments match the C++ codebase with the exception of the additional `--output-broker` option.
+This sets where the data is forwarded to as it is not configurable separately for each EPICS channel,
+see [C++ Forwarder features not replicated here](#c++-forwarder-features-not-replicated-here). 
+
 
 ## Docker
 
