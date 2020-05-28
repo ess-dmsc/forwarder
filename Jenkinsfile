@@ -104,7 +104,7 @@ def get_system_tests_pipeline() {
             timeout(time: 30, activity: true){
               sh """
               source test_env/bin/activate
-              cd system-tests/
+              cd system_tests/
               python -m pytest -s --junitxml=./SystemTestsOutput.xml .
               """
             }
@@ -116,12 +116,12 @@ def get_system_tests_pipeline() {
             // removed.
             sh """
             rm -rf test_env
-            rm -rf system-tests/output-files/* || true
+            rm -rf system_tests/output-files/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
           stage("System tests: Archive") {
-            junit "system-tests/SystemTestsOutput.xml"
+            junit "system_tests/SystemTestsOutput.xml"
           }
         }  // try/finally
       } // dir
