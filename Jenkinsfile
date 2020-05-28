@@ -4,8 +4,6 @@ import ecdcpipeline.PipelineBuilder
 
 project = "forwarder"
 
-python = "python3.6"
-
 container_build_nodes = [
   'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
 ]
@@ -89,9 +87,12 @@ def get_system_tests_pipeline() {
           }  // stage
           stage("System tests: Install requirements") {
             sh """
-            ${python} -m venv test_env
-            source test_env/bin/activate
-            which python
+            curl -O https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+            sh Miniconda3-latest-Linux-x86_64.sh -b -p $HOME/miniconda
+            $HOME/miniconda/bin/conda init bash
+            export PATH=$HOME/miniconda/bin:$PATH
+            python --version
+            cd ${project}
             pip install --upgrade pip
             pip install -r requirements-dev.txt
             pip install -r system_tests/requirements.txt
@@ -103,8 +104,9 @@ def get_system_tests_pipeline() {
             sh "docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true"
             timeout(time: 30, activity: true){
               sh """
-              source test_env/bin/activate
-              cd system_tests/
+              $HOME/miniconda/bin/conda init bash
+              export PATH=$HOME/miniconda/bin:$PATH
+              cd ${project}/system_tests/
               python -m pytest -s --junitxml=./SystemTestsOutput.xml .
               """
             }
