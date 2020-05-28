@@ -94,7 +94,7 @@ def get_system_tests_pipeline() {
             which python
             pip install --upgrade pip
             pip install -r requirements-dev.txt
-            pip install -r system-tests/requirements.txt
+            pip install -r system_tests/requirements.txt
             """
           }  // stage
           stage("System tests: Run") {
