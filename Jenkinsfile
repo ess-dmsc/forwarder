@@ -92,6 +92,7 @@ def get_system_tests_pipeline() {
             ${python} -m venv test_env
             source test_env/bin/activate
             which python
+            cd ${project}
             pip install --upgrade pip
             pip install -r requirements-dev.txt
             pip install -r system_tests/requirements.txt
