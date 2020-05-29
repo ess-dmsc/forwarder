@@ -92,9 +92,10 @@ def get_system_tests_pipeline() {
             $HOME/miniconda/bin/conda init bash
             export PATH=$HOME/miniconda/bin:$PATH
             python --version
+            cd ${project}
             pip install --upgrade pip
-            pip install -r cd ${project}/requirements-dev.txt
-            pip install -r ${project}/system_tests/requirements.txt
+            pip install -r requirements-dev.txt
+            pip install -r system_tests/requirements.txt
             """
           }  // stage
           stage("System tests: Run") {
