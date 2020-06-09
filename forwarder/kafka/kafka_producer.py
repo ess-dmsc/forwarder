@@ -21,11 +21,7 @@ class KafkaProducer:
         self._poll_thread.join()
 
     def produce(
-        self,
-        topic: str,
-        payload: bytes,
-        key: Optional[str] = None,
-        timestamp_ms: Optional[int] = None,
+        self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None,
     ):
         def ack(err, _):
             if err:

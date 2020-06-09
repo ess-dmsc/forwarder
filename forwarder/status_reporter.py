@@ -2,6 +2,7 @@ from forwarder.kafka.kafka_helpers import create_producer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from typing import Dict
 import json
+import time
 
 
 class StatusReporter:
@@ -27,7 +28,7 @@ class StatusReporter:
                 ]
             }
         ).encode("utf-8")
-        self._producer.produce(self._topic, status_message)
+        self._producer.produce(self._topic, status_message, int(time.time() * 1000))
 
     def stop(self):
         self._producer.close()
