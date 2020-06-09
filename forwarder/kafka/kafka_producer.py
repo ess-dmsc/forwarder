@@ -20,10 +20,19 @@ class KafkaProducer:
         self._cancelled = True
         self._poll_thread.join()
 
-    def produce(self, topic: str, payload: bytes, key: Optional[str] = None, timestamp_ms: Optional[int] = None):
+    def produce(
+        self,
+        topic: str,
+        payload: bytes,
+        key: Optional[str] = None,
+        timestamp_ms: Optional[int] = None,
+    ):
         def ack(err, _):
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
 
-        self._producer.produce(topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms)
+        self.logger.info(f"Producing with timestamp: {timestamp_ms}")
+        self._producer.produce(
+            topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms
+        )
         self._producer.poll(0)

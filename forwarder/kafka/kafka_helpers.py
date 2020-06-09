@@ -39,7 +39,7 @@ def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
-    return time_ns//1_000_000
+    return time_ns // 1_000_000
 
 
 def publish_f142_message(
@@ -73,11 +73,21 @@ def publish_f142_message(
             alarm_status=alarm_status,
             alarm_severity=alarm_severity,
         )
-    producer.produce(topic, f142_message, key=source_name, timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns))
+    producer.produce(
+        topic,
+        f142_message,
+        key=source_name,
+        timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
+    )
 
 
 def publish_tdct_message(
-    producer: KafkaProducer, topic: str, data: np.array, source_name: str, timestamp_ns: int, *unused
+    producer: KafkaProducer,
+    topic: str,
+    data: np.array,
+    source_name: str,
+    timestamp_ns: int,
+    *unused,
 ):
     """
     Publish an tdct message to a given topic.
@@ -88,8 +98,12 @@ def publish_tdct_message(
     :param topic: Name of topic to publish to
     :param data: Value of the PV update
     :param source_name: Name of the PV
+    :param timestamp_ns: Timestamp for value (nanoseconds after unix epoch)
     :param unused: Allow other args to be passed to match signature of other publish_*_message functions
     """
     producer.produce(
-        topic, serialise_tdct(name=source_name, timestamps=data), key=source_name, timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns)
+        topic,
+        serialise_tdct(name=source_name, timestamps=data),
+        key=source_name,
+        timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
     )
