@@ -38,6 +38,10 @@ def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
     return broker, topic
 
 
+def _nanoseconds_to_milliseconds(time_ns: int) -> int:
+    return time_ns//1_000_000
+
+
 def publish_f142_message(
     producer: KafkaProducer,
     topic: str,
@@ -69,7 +73,7 @@ def publish_f142_message(
             alarm_status=alarm_status,
             alarm_severity=alarm_severity,
         )
-    producer.produce(topic, f142_message, key=source_name, timestamp_ms=timestamp_ns//1000)
+    producer.produce(topic, f142_message, key=source_name, timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns))
 
 
 def publish_tdct_message(
@@ -87,5 +91,5 @@ def publish_tdct_message(
     :param unused: Allow other args to be passed to match signature of other publish_*_message functions
     """
     producer.produce(
-        topic, serialise_tdct(name=source_name, timestamps=data), key=source_name, timestamp_ms=timestamp_ns//1000
+        topic, serialise_tdct(name=source_name, timestamps=data), key=source_name, timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns)
     )
