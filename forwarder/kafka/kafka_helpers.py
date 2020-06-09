@@ -69,11 +69,11 @@ def publish_f142_message(
             alarm_status=alarm_status,
             alarm_severity=alarm_severity,
         )
-    producer.produce(topic, f142_message, key=source_name)
+    producer.produce(topic, f142_message, key=source_name, timestamp_ms=timestamp_ns//1000)
 
 
 def publish_tdct_message(
-    producer: KafkaProducer, topic: str, data: np.array, source_name: str, *unused
+    producer: KafkaProducer, topic: str, data: np.array, source_name: str, timestamp_ns: int, *unused
 ):
     """
     Publish an tdct message to a given topic.
@@ -87,5 +87,5 @@ def publish_tdct_message(
     :param unused: Allow other args to be passed to match signature of other publish_*_message functions
     """
     producer.produce(
-        topic, serialise_tdct(name=source_name, timestamps=data), key=source_name
+        topic, serialise_tdct(name=source_name, timestamps=data), key=source_name, timestamp_ms=timestamp_ns//1000
     )
