@@ -1,11 +1,11 @@
 from streaming_data_types.logdata_f142 import deserialise_f142
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
-from helpers.f142_logdata.AlarmStatus import AlarmStatus
-from helpers.flatbuffer_helpers import check_expected_value
-from helpers.producerwrapper import ProducerWrapper
+from .helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from .helpers.f142_logdata.AlarmStatus import AlarmStatus
+from .helpers.flatbuffer_helpers import check_expected_value
+from .helpers.producerwrapper import ProducerWrapper
 from time import sleep
-from helpers.PVs import PVDOUBLE
+from .helpers.PVs import PVDOUBLE
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 

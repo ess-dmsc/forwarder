@@ -1,19 +1,19 @@
 from confluent_kafka import TopicPartition, Consumer
-from helpers.producerwrapper import ProducerWrapper
-from helpers.forwarderconfig import EpicsProtocol
+from .helpers.producerwrapper import ProducerWrapper
+from .helpers.forwarderconfig import EpicsProtocol
 from time import sleep
-from helpers.flatbuffer_helpers import (
+from .helpers.flatbuffer_helpers import (
     check_expected_value,
     check_multiple_expected_values,
     check_expected_alarm_status,
 )
-from helpers.kafka_helpers import (
+from .helpers.kafka_helpers import (
     create_consumer,
     poll_for_valid_message,
     get_last_available_status_message,
 )
-from helpers.epics_helpers import change_pv_value
-from helpers.PVs import (
+from .helpers.epics_helpers import change_pv_value
+from .helpers.PVs import (
     PVDOUBLE,
     PVSTR,
     PVLONG,
@@ -23,8 +23,8 @@ from helpers.PVs import (
 )
 import json
 import numpy as np
-from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
-from helpers.f142_logdata.AlarmStatus import AlarmStatus
+from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from .helpers.f142_logdata.AlarmStatus import AlarmStatus
 import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"

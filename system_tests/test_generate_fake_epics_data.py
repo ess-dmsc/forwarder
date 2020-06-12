@@ -1,8 +1,8 @@
-from helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from helpers.flatbuffer_helpers import check_expected_value
+from .helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from .helpers.flatbuffer_helpers import check_expected_value
 from time import sleep
 import pytest
-from helpers.producerwrapper import ProducerWrapper
+from .helpers.producerwrapper import ProducerWrapper
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"

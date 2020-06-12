@@ -1,16 +1,16 @@
-from helpers.epics_helpers import change_pv_value
-from helpers.kafka_helpers import (
+from .helpers.epics_helpers import change_pv_value
+from .helpers.kafka_helpers import (
     create_consumer,
     poll_for_valid_message,
     MsgErrorException,
 )
-from helpers.PVs import PVDOUBLE
+from .helpers.PVs import PVDOUBLE
 import pytest
 import docker
 from time import sleep
 from datetime import datetime
-from helpers.flatbuffer_helpers import check_expected_value
-from helpers.producerwrapper import ProducerWrapper
+from .helpers.flatbuffer_helpers import check_expected_value
+from .helpers.producerwrapper import ProducerWrapper
 
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
