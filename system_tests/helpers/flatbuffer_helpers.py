@@ -2,8 +2,8 @@ from cmath import isclose
 import numpy as np
 from streaming_data_types.logdata_f142 import deserialise_f142
 from typing import Any
-from helpers.f142_logdata.AlarmSeverity import AlarmSeverity
-from helpers.f142_logdata.AlarmStatus import AlarmStatus
+from .f142_logdata.AlarmSeverity import AlarmSeverity
+from .f142_logdata.AlarmStatus import AlarmStatus
 
 
 def check_multiple_expected_values(message_list, expected_values):
