@@ -139,12 +139,13 @@ def build_and_run(options, request, config_file=None, log_file=None):
     else:
         # Launch local build of forwarder
         full_path_of_forwarder_exe = os.path.join(
-            local_path, "bin", "forward-epics-to-kafka"
+            local_path, "forwarder_launch.py"
         )
         command_options = [
+            "python",
             full_path_of_forwarder_exe,
             "-c",
-            f"./config-files/{config_file}",
+            f"{local_path}/system_tests/config-files/{config_file}",
             "--log-file",
             f"{log_file}",
         ]
