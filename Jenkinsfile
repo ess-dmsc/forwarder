@@ -46,6 +46,44 @@ builders = pipeline_builder.createBuilders { container ->
     """
   } // stage
 
+  pipeline_builder.stage("${container.key}: Formatting (black) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m black --check .
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m flake8
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m mypy .
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: flake8") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m flake8
+      python -m black --check .
+      python -m mypy .
+    """
+  } // stage
+
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
