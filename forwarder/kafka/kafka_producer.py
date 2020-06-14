@@ -19,6 +19,8 @@ class KafkaProducer:
     def close(self):
         self._cancelled = True
         self._poll_thread.join()
+        max_wait_to_publish_producer_queue = 2  # seconds
+        self._producer.flush(max_wait_to_publish_producer_queue)
 
     def produce(
         self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None,
