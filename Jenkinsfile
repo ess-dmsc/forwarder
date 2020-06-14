@@ -73,17 +73,6 @@ builders = pipeline_builder.createBuilders { container ->
     """
   } // stage
 
-  pipeline_builder.stage("${container.key}: flake8") {
-    def conan_remote = "ess-dmsc-local"
-    container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      cd ${project}
-      python -m flake8
-      python -m black --check .
-      python -m mypy .
-    """
-  } // stage
-
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
