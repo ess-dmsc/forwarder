@@ -7,7 +7,7 @@ project = "forwarder"
 python = "python3.6"
 
 container_build_nodes = [
-  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
 ]
 
 // Define number of old builds to keep.
