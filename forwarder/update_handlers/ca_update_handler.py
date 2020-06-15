@@ -10,9 +10,12 @@ from forwarder.epics_to_serialisable_types import (
     caproto_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
-import time
 from typing import Optional, Tuple
 from forwarder.update_handlers.schema_publishers import schema_publishers
+
+
+def _seconds_to_nanoseconds(time_seconds: float) -> int:
+    return int(time_seconds * 1_000_000_000)
 
 
 class CAUpdateHandler:
@@ -38,8 +41,8 @@ class CAUpdateHandler:
         # Prevent our monitor timing out if PV is not available right now
         # This causes subscribe() to block so commenting out for now, see ticket #10.
         # self._pv.timeout = None
-        # Subscribe with "data_type='control'" otherwise we don't get the metadata with alarm fields
-        sub = self._pv.subscribe(data_type="control")
+        # Subscribe with "data_type='time'" to get timestamp and alarm fields
+        sub = self._pv.subscribe(data_type="time")
         sub.add_callback(self._monitor_callback)
 
         self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
@@ -61,8 +64,6 @@ class CAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
-        # Create timestamp as early as possible
-        timestamp = time.time_ns()
         if self._output_type is None:
             try:
                 self._output_type = numpy_type_from_channel_type[response.data_type]
@@ -72,6 +73,7 @@ class CAUpdateHandler:
                 )
 
         with self._cache_lock:
+            timestamp = _seconds_to_nanoseconds(response.metadata.timestamp)
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
             if (

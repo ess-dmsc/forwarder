@@ -13,14 +13,13 @@ from p4p.nt.scalar import ntbool, ntfloat, ntint, ntstr, ntstringarray
 # Unfortunately the serialisation method doesn't know what to do with such a specific dtype
 # so we will cast to a consistent type based on the EPICS channel type.
 numpy_type_from_channel_type = {
-    ChannelType.CTRL_INT: np.int32,
-    ChannelType.CTRL_LONG: np.int64,
-    ChannelType.CTRL_FLOAT: np.float32,
-    ChannelType.CTRL_DOUBLE: np.float64,
-    ChannelType.CTRL_STRING: np.unicode_,
-    ChannelType.CTRL_ENUM: np.int32,
-    ChannelType.CTRL_CHAR: np.unicode_,
+    ChannelType.TIME_INT: np.int32,
+    ChannelType.TIME_LONG: np.int64,
+    ChannelType.TIME_FLOAT: np.float32,
+    ChannelType.TIME_DOUBLE: np.float64,
     ChannelType.TIME_STRING: np.unicode_,
+    ChannelType.TIME_ENUM: np.int32,
+    ChannelType.TIME_CHAR: np.unicode_,
     ntenum: np.int32,
     ntbool: np.bool,
     ntfloat: np.float64,

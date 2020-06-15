@@ -29,7 +29,6 @@ class KafkaProducer:
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
 
-        self.logger.info(f"Producing with timestamp: {timestamp_ms}")
         self._producer.produce(
             topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms
         )
