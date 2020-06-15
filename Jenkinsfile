@@ -7,7 +7,7 @@ project = "forwarder"
 python = "python3.6"
 
 container_build_nodes = [
-  'centos7-release': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
 ]
 
 // Define number of old builds to keep.
@@ -43,6 +43,33 @@ builders = pipeline_builder.createBuilders { container ->
       export PATH=/opt/miniconda/bin:$PATH
       python --version
       python -m pip install --user -r ${project}/requirements-dev.txt
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: Formatting (black) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m black --check .
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m flake8
+    """
+  } // stage
+
+  pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
+    def conan_remote = "ess-dmsc-local"
+    container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
+      cd ${project}
+      python -m mypy .
     """
   } // stage
 
