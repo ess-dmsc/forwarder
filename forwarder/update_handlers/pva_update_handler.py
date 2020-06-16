@@ -35,12 +35,10 @@ class PVAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
 
-        self._sub = context.monitor(pv_name, self._monitor_callback)
+        self.__subscribe(context, pv_name)
         self._pv_name = pv_name
 
-        self._cached_update: Optional[Tuple[Value, int]] = None
         self._output_type = None
-        self._stop_timer_flag = Event()
         self._repeating_timer = None
         self._cache_lock = Lock()
 
@@ -58,46 +56,40 @@ class PVAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: Value):
-        timestamp = (
-            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
-        ) + response.raw.timeStamp.nanoseconds
         if self._output_type is None:
+            data_type = self.__get_type(response)
             try:
-                self._output_type = numpy_type_from_channel_type[type(response)]
-                if type(response) is ntenum:
-                    self._get_value = lambda resp: resp.raw.value.index
-                else:
-                    self._get_value = lambda resp: resp.raw.value
+                self._output_type = self.__adapt_to_type(data_type)
             except KeyError:
                 self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {type(response)}"
+                    f"Don't know what numpy dtype to use for channel type {data_type}"
                 )
+
+        timestamp = self.__get_timestamp(response)
 
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
+            severity, status, value = self.__get_values(response)
             if (
                 self._cached_update is None
-                or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
+                or status != self.__get_status(self._cached_update[0])
             ):
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(np.array(self._get_value(response))).astype(
-                        self._output_type
-                    ),
+                    np.squeeze(value).astype(self._output_type),
                     self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.raw.alarm.status],
-                    caproto_alarm_severity_to_f142[response.raw.alarm.severity],
+                    caproto_alarm_status_to_f142[status],
+                    caproto_alarm_severity_to_f142[severity],
                 )
             else:
+                # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(np.array(self._get_value(response))).astype(
-                        self._output_type
-                    ),
+                    np.squeeze(value).astype(self._output_type),
                     self._pv_name,
                     timestamp,
                 )
@@ -107,20 +99,15 @@ class PVAUpdateHandler:
         with self._cache_lock:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
+                severity, status, value = self.__get_values(self._cached_update[0])
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(
-                        np.array(self._get_value(self._cached_update[0]))
-                    ).astype(self._output_type),
+                    np.squeeze(value).astype(self._output_type),
                     self._pv_name,
                     self._cached_update[1],
-                    caproto_alarm_status_to_f142[
-                        self._cached_update[0].raw.alarm.status
-                    ],
-                    caproto_alarm_severity_to_f142[
-                        self._cached_update[0].raw.alarm.severity
-                    ],
+                    caproto_alarm_status_to_f142[status],
+                    caproto_alarm_severity_to_f142[severity],
                 )
 
     def stop(self):
@@ -129,4 +116,36 @@ class PVAUpdateHandler:
         """
         if self._repeating_timer is not None:
             self._repeating_timer.cancel()
+        self.__unsubscribe()
+
+    def __unsubscribe(self):
         self._sub.close()
+
+    def __get_values(self, response):
+        value = np.array(self._get_value(response))
+        status = response.raw.alarm.status
+        severity = response.raw.alarm.severity
+        return severity, status, value
+
+    def __subscribe(self, context, pv_name):
+        self._sub = context.monitor(pv_name, self._monitor_callback)
+        self._cached_update: Optional[Tuple[Value, int]] = None
+
+    def __get_timestamp(self, response):
+        return (
+            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
+        ) + response.raw.timeStamp.nanoseconds
+
+    def __get_type(self, response):
+        return type(response)
+
+    def __get_status(self, response):
+        return response.raw.alarm.status
+
+    def __adapt_to_type(self, data_type):
+        data_type = numpy_type_from_channel_type[data_type]
+        if data_type is ntenum:
+            self._get_value = lambda resp: resp.raw.value.index
+        else:
+            self._get_value = lambda resp: resp.raw.value
+        return data_type
