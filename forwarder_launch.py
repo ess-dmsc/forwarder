@@ -149,7 +149,7 @@ if __name__ == "__main__":
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva")
-    update_handlers: Dict = dict()
+    update_handlers: Dict = {}
 
     # Kafka
     producer = create_producer(args.output_broker)
