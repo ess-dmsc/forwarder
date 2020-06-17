@@ -12,7 +12,7 @@ from forwarder.epics_to_serialisable_types import (
     caproto_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
-from typing import Optional, Tuple
+from typing import Optional, Union
 from forwarder.update_handlers.schema_publishers import schema_publishers
 
 
@@ -23,7 +23,7 @@ class BaseUpdateHandler:
     def __init__(
         self,
         producer: KafkaProducer,
-        context: [CAContext, PVAContext],
+        context: Union[CAContext, PVAContext],
         pv_name: str,
         output_topic: str,
         schema: str,
@@ -55,7 +55,7 @@ class BaseUpdateHandler:
             )
             self._repeating_timer.start()
 
-    def _monitor_callback(self, response: [ReadNotifyResponse, Value]):
+    def _monitor_callback(self, response: Union[ReadNotifyResponse, Value]):
         if self._output_type is None:
             try:
                 self._output_type = self._get_epics_type(response)
