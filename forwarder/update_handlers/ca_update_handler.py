@@ -1,3 +1,4 @@
+from collections import namedtuple
 from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_producer import KafkaProducer
 from caproto import ReadNotifyResponse, ChannelType
@@ -16,6 +17,9 @@ from forwarder.update_handlers.schema_publishers import schema_publishers
 
 def _seconds_to_nanoseconds(time_seconds: float) -> int:
     return int(time_seconds * 1_000_000_000)
+
+
+CachedValue = namedtuple("CachedValue", ["value", "status", "severity", "timestamp"])
 
 
 class CAUpdateHandler:
@@ -44,6 +48,7 @@ class CAUpdateHandler:
         self._output_type = None
         self._repeating_timer = None
         self._cache_lock = Lock()
+        self._cached_update: Optional[CachedValue] = None
 
         try:
             self._message_publisher = schema_publishers[schema]
@@ -70,13 +75,13 @@ class CAUpdateHandler:
 
         timestamp = self.__get_timestamp(response)
 
+        severity, status, value = self.__get_values(response)
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
-            severity, status, value = self.__get_values(response)
             if (
-                self._cached_update is None
-                or status != self.__get_status(self._cached_update[0])
+                    self._cached_update is None
+                    or status != self._cached_update.status
             ):
                 self._message_publisher(
                     self._producer,
@@ -96,21 +101,20 @@ class CAUpdateHandler:
                     self._pv_name,
                     timestamp,
                 )
-            self._cached_update = (response, timestamp)
+            self._cached_update = CachedValue(value, status, severity, timestamp)
 
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
-                severity, status, value = self.__get_values(self._cached_update[0])
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(value).astype(self._output_type),
+                    np.squeeze(self._cached_update.value).astype(self._output_type),
                     self._pv_name,
-                    self._cached_update[1],
-                    caproto_alarm_status_to_f142[status],
-                    caproto_alarm_severity_to_f142[severity],
+                    self._cached_update.timestamp,
+                    caproto_alarm_status_to_f142[self._cached_update.status],
+                    caproto_alarm_severity_to_f142[self._cached_update.severity],
                 )
 
     def stop(self):
@@ -139,8 +143,6 @@ class CAUpdateHandler:
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
         sub.add_callback(self._monitor_callback)
-
-        self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
 
     def __get_timestamp(self, response):
         return _seconds_to_nanoseconds(response.metadata.timestamp)
