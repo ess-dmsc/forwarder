@@ -1,17 +1,4 @@
-from p4p.client.thread import Context as PVAContext
-from p4p import Value
-from caproto import ReadNotifyResponse
-from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.application_logger import get_logger
-from typing import Optional, Tuple
-from threading import Lock, Event
-from forwarder.update_handlers.schema_publishers import schema_publishers
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_channel_type,
-    caproto_alarm_severity_to_f142,
-    caproto_alarm_status_to_f142,
-)
+from forwarder.epics_to_serialisable_types import numpy_type_from_channel_type
 import numpy as np
 from p4p.nt.enum import ntenum
 from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
