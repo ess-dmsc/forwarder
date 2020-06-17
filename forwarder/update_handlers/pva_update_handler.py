@@ -72,7 +72,7 @@ class PVAUpdateHandler:
 
         timestamp = self.__get_timestamp(response)
 
-        severity, status, value = self.__get_values(response)
+        value, status, severity = self.__get_values(response)
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
@@ -129,7 +129,7 @@ class PVAUpdateHandler:
         value = np.array(self._get_value(response))
         status = response.raw.alarm.status
         severity = response.raw.alarm.severity
-        return severity, status, value
+        return value, status, severity
 
     def __subscribe(self, context, pv_name):
         self._sub = context.monitor(pv_name, self._monitor_callback)

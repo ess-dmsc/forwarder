@@ -75,7 +75,7 @@ class CAUpdateHandler:
 
         timestamp = self.__get_timestamp(response)
 
-        severity, status, value = self.__get_values(response)
+        value, status, severity = self.__get_values(response)
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
@@ -132,7 +132,7 @@ class CAUpdateHandler:
         value = response.data
         status = response.metadata.status
         severity = response.metadata.severity
-        return severity, status, value
+        return value, status, severity
 
     def __subscribe(self, context, pv_name):
         (self._pv,) = context.get_pvs(pv_name)
