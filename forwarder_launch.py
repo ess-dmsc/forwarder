@@ -146,7 +146,7 @@ if __name__ == "__main__":
     logger = setup_logger(
         level=args.verbosity,
         log_file_name=args.log_file,
-        graylog_host=args.graylog_logger_address,
+        graylog_logger_address=args.graylog_logger_address,
     )
     logger.info("Forwarder started")
 
