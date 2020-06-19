@@ -78,10 +78,9 @@ def parse_args():
     )
     parser.add_argument(
         "--output-broker",
-        required=False,
+        required=True,
         help="<host[:port]> Kafka broker to forward data into",
         type=str,
-        default="localhost:9092",
         env_var="OUTPUT_BROKER",
     )
     parser.add_argument(
