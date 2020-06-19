@@ -38,9 +38,6 @@ class CAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
         (self._pv,) = context.get_pvs(pv_name)
-        # Prevent our monitor timing out if PV is not available right now
-        # This causes subscribe() to block so commenting out for now, see ticket #10.
-        # self._pv.timeout = None
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
         sub.add_callback(self._monitor_callback)
