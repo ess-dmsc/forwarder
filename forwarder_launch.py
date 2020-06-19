@@ -2,6 +2,8 @@ from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 import logging
 import configargparse
+from os import getpid
+from socket import gethostname
 from typing import Optional, Dict
 
 from forwarder.kafka.kafka_helpers import (
@@ -110,6 +112,14 @@ def parse_args():
         type=int,
     )
     parser.add_argument(
+        "--service-id",
+        required=False,
+        help='Identifier for this particular instance of the Forwarder, defaults to "Forwarder.<HOSTNAME>.<PID>',
+        default=f"Forwarder.{gethostname()}.{getpid()}",
+        env_var="SERVICE_ID",
+        type=str,
+    )
+    parser.add_argument(
         "--fake-pv-period",
         required=False,
         help="Set period for random generated PV updates when channel_provider_type is specified as 'fake' (units=milliseconds)",
@@ -159,7 +169,7 @@ if __name__ == "__main__":
 
     status_broker, status_topic = get_broker_and_topic_from_uri(args.status_topic)
     status_reporter = StatusReporter(
-        update_handlers, create_producer(status_broker), status_topic
+        update_handlers, create_producer(status_broker), status_topic, args.service_id
     )
     status_reporter.start()
 

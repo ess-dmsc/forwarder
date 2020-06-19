@@ -11,6 +11,7 @@ class StatusReporter:
         update_handlers: Dict,
         producer: KafkaProducer,
         topic: str,
+        service_id: str,
         interval_ms: int = 4000,
     ):
         self._repeating_timer = RepeatTimer(
@@ -19,6 +20,7 @@ class StatusReporter:
         self._producer = producer
         self._topic = topic
         self._update_handlers = update_handlers
+        self._service_id = service_id
 
     def start(self):
         self._repeating_timer.start()
