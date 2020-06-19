@@ -1,5 +1,9 @@
 from caproto import ChannelType
+from caproto import ReadNotifyResponse
+from logging import Logger
+from caproto.threading.client import Context
 from forwarder.epics_to_serialisable_types import numpy_type_from_channel_type
+from typing import Callable
 
 
 def _seconds_to_nanoseconds(time_seconds: float) -> int:
@@ -18,16 +22,16 @@ class CAUpdateHandler:
         self._pv.unsubscribe_all()
 
     @staticmethod
-    def get_values(response):
+    def get_values(response: ReadNotifyResponse):
         value = response.data
         status = response.metadata.status
         severity = response.metadata.severity
         return value, status, severity
 
-    def __callback_wrapper(self, ignored, response):
+    def __callback_wrapper(self, ignored, response: ReadNotifyResponse):
         self._monitor_callback(response)
 
-    def subscribe(self, context, pv_name, monitor_callback):
+    def subscribe(self, context: Context, pv_name: str, monitor_callback: Callable):
         (self._pv,) = context.get_pvs(pv_name)
         self._monitor_callback = monitor_callback
         # Prevent our monitor timing out if PV is not available right now
@@ -39,11 +43,11 @@ class CAUpdateHandler:
         sub.add_callback(self.__callback_wrapper)
 
     @staticmethod
-    def get_timestamp(response):
+    def get_timestamp(response: ReadNotifyResponse):
         return _seconds_to_nanoseconds(response.metadata.timestamp)
 
     @staticmethod
-    def get_epics_type(response, logger):
+    def get_epics_type(response: ReadNotifyResponse, logger: Logger):
         try:
             return numpy_type_from_channel_type[response.data_type]
         except KeyError:

@@ -1,6 +1,10 @@
 from forwarder.epics_to_serialisable_types import numpy_type_from_channel_type
 import numpy as np
+from logging import Logger
 from p4p.nt.enum import ntenum
+from p4p import Value
+from typing import Callable
+from p4p.client.thread import Context
 
 
 class PVAUpdateHandler:
@@ -13,22 +17,22 @@ class PVAUpdateHandler:
     def unsubscribe(self):
         self._sub.close()
 
-    def get_values(self, response):
+    def get_values(self, response: Value):
         value = np.array(self._get_value(response))
         status = response.raw.alarm.status
         severity = response.raw.alarm.severity
         return value, status, severity
 
-    def subscribe(self, context, pv_name, monitor_callback):
+    def subscribe(self, context: Context, pv_name: str, monitor_callback: Callable):
         self._sub = context.monitor(pv_name, monitor_callback)
 
     @staticmethod
-    def get_timestamp(response):
+    def get_timestamp(response: Value):
         return (
             response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + response.raw.timeStamp.nanoseconds
 
-    def get_epics_type(self, response, logger):
+    def get_epics_type(self, response: Value, logger: Logger):
         try:
             self._output_type = numpy_type_from_channel_type[type(response)]
             if type(response) is ntenum:
