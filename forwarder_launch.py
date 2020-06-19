@@ -158,7 +158,9 @@ if __name__ == "__main__":
     consumer.subscribe([config_topic])
 
     status_broker, status_topic = get_broker_and_topic_from_uri(args.status_topic)
-    status_reporter = StatusReporter(update_handlers, status_broker, status_topic)
+    status_reporter = StatusReporter(
+        update_handlers, create_producer(status_broker), status_topic
+    )
     status_reporter.start()
 
     # Metrics
