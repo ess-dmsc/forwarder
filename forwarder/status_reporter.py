@@ -47,7 +47,9 @@ class StatusReporter:
             self._interval_ms,
             status_json,
         )
-        self._producer.produce(self._topic, status_message, int(time.time() * 1000))
+        self._producer.produce(
+            self._topic, bytes(status_message), int(time.time() * 1000)
+        )
 
     def stop(self):
         self._producer.close()

@@ -26,6 +26,7 @@ import numpy as np
 from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
 from .helpers.f142_logdata.AlarmStatus import AlarmStatus
 import pytest
+from streaming_data_types.status_x5f2 import deserialise_x5f2
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
@@ -208,7 +209,8 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
 
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
 
-    status_json = json.loads(status_msg)
+    status_msg = deserialise_x5f2(status_msg)
+    status_json = json.loads(status_msg.status_json)
     names_of_channels_being_forwarded = {
         stream["channel_name"] for stream in status_json["streams"]
     }
@@ -247,7 +249,9 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     # Get the last available status message
     status_msg = get_last_available_status_message(cons, status_topic)
 
-    streams_json = json.loads(status_msg)["streams"]
+    status_msg = deserialise_x5f2(status_msg)
+    status_json = json.loads(status_msg.status_json)
+    streams_json = status_json["streams"]
     streams = []
     for item in streams_json:
         streams.append(item["channel_name"])
