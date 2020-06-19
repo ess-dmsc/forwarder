@@ -14,6 +14,8 @@ from forwarder.epics_to_serialisable_types import (
 from caproto.threading.client import Context as CAContext
 from typing import Optional, Union
 from forwarder.update_handlers.schema_publishers import schema_publishers
+from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
+from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 
 
 CachedValue = namedtuple("CachedValue", ["value", "status", "severity", "timestamp"])
@@ -27,13 +29,15 @@ class BaseUpdateHandler:
         pv_name: str,
         output_topic: str,
         schema: str,
+        epics_update_handler: Union[CAUpdateHandler, PVAUpdateHandler],
         periodic_update_ms: Optional[int] = None,
     ):
+        self._epics_update_handler = epics_update_handler
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
 
-        self._subscribe(context, pv_name)
+        self._epics_update_handler.subscribe(context, pv_name, self._monitor_callback)
         self._pv_name = pv_name
 
         self._output_type = None
@@ -58,13 +62,15 @@ class BaseUpdateHandler:
     def _monitor_callback(self, response: Union[ReadNotifyResponse, Value]):
         if self._output_type is None:
             try:
-                self._output_type = self._get_epics_type(response)
+                self._output_type = self._epics_update_handler.get_epics_type(
+                    response, self._logger
+                )
             except KeyError:
                 return
 
-        timestamp = self._get_timestamp(response)
+        timestamp = self._epics_update_handler.get_timestamp(response)
 
-        value, status, severity = self._get_values(response)
+        value, status, severity = self._epics_update_handler.get_values(response)
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
@@ -111,19 +117,4 @@ class BaseUpdateHandler:
         """
         if self._repeating_timer is not None:
             self._repeating_timer.cancel()
-        self._unsubscribe()
-
-    def _unsubscribe(self):
-        raise NotImplementedError("Not implemented")
-
-    def _get_values(self, response):
-        raise NotImplementedError("Not implemented")
-
-    def _subscribe(self, context, pv_name):
-        raise NotImplementedError("Not implemented")
-
-    def _get_timestamp(self, response):
-        raise NotImplementedError("Not implemented")
-
-    def _get_epics_type(self, response):
-        raise NotImplementedError("Not implemented")
+        self._epics_update_handler.unsubscribe()
