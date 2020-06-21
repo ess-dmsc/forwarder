@@ -35,7 +35,8 @@ class PVAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
 
-        self._sub = context.monitor(pv_name, self._monitor_callback)
+        request = context.makeRequest("field(value,timeStamp,alarm)")
+        self._sub = context.monitor(pv_name, self._monitor_callback, request=request)
         self._pv_name = pv_name
 
         self._cached_update: Optional[Tuple[Value, int]] = None
