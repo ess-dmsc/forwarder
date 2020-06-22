@@ -8,7 +8,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSever
 # for example ">i2" (big-endian, 2 byte int).
 # Unfortunately the serialisation method doesn't know what to do with such a specific dtype
 # so we will cast to a consistent type based on the EPICS channel type.
-numpy_type_from_channel_type = {
+numpy_type_from_caproto_type = {
     ChannelType.TIME_INT: np.int32,
     ChannelType.TIME_LONG: np.int64,
     ChannelType.TIME_FLOAT: np.float32,
@@ -33,14 +33,14 @@ numpy_type_from_p4p_type = {
     "?": np.bool,
 }
 
-caproto_alarm_severity_to_f142 = {
+epics_alarm_severity_to_f142 = {
     0: AlarmSeverity.NO_ALARM,
     1: AlarmSeverity.MINOR,
     2: AlarmSeverity.MAJOR,
     3: AlarmSeverity.INVALID,
 }
 
-caproto_alarm_status_to_f142 = {
+epics_alarm_status_to_f142 = {
     0: AlarmStatus.NO_ALARM,
     1: AlarmStatus.READ,
     2: AlarmStatus.WRITE,

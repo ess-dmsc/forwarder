@@ -5,9 +5,9 @@ import numpy as np
 from threading import Lock
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_channel_type,
-    caproto_alarm_severity_to_f142,
-    caproto_alarm_status_to_f142,
+    numpy_type_from_caproto_type,
+    epics_alarm_severity_to_f142,
+    epics_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
 from typing import Optional, Tuple
@@ -63,7 +63,7 @@ class CAUpdateHandler:
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         if self._output_type is None:
             try:
-                self._output_type = numpy_type_from_channel_type[response.data_type]
+                self._output_type = numpy_type_from_caproto_type[response.data_type]
             except KeyError:
                 self._logger.error(
                     f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
@@ -83,8 +83,8 @@ class CAUpdateHandler:
                     np.squeeze(response.data).astype(self._output_type),
                     self._pv.name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.metadata.status],
-                    caproto_alarm_severity_to_f142[response.metadata.severity],
+                    epics_alarm_status_to_f142[response.metadata.status],
+                    epics_alarm_severity_to_f142[response.metadata.severity],
                 )
             else:
                 # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"
@@ -107,10 +107,8 @@ class CAUpdateHandler:
                     np.squeeze(self._cached_update[0].data).astype(self._output_type),
                     self._pv.name,
                     self._cached_update[1],
-                    caproto_alarm_status_to_f142[
-                        self._cached_update[0].metadata.status
-                    ],
-                    caproto_alarm_severity_to_f142[
+                    epics_alarm_status_to_f142[self._cached_update[0].metadata.status],
+                    epics_alarm_severity_to_f142[
                         self._cached_update[0].metadata.severity
                     ],
                 )

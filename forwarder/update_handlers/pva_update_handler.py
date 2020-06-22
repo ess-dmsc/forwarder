@@ -8,8 +8,8 @@ from forwarder.update_handlers.schema_publishers import schema_publishers
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
     numpy_type_from_p4p_type,
-    caproto_alarm_severity_to_f142,
-    caproto_alarm_status_to_f142,
+    epics_alarm_severity_to_f142,
+    epics_alarm_status_to_f142,
 )
 import numpy as np
 from p4p.nt.enum import ntenum
@@ -89,8 +89,8 @@ class PVAUpdateHandler:
                     ),
                     self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.alarm.status],
-                    caproto_alarm_severity_to_f142[response.alarm.severity],
+                    epics_alarm_status_to_f142[response.alarm.status],
+                    epics_alarm_severity_to_f142[response.alarm.severity],
                 )
             else:
                 self._message_publisher(
@@ -116,10 +116,8 @@ class PVAUpdateHandler:
                     ).astype(self._output_type),
                     self._pv_name,
                     self._cached_update[1],
-                    caproto_alarm_status_to_f142[self._cached_update[0].alarm.status],
-                    caproto_alarm_severity_to_f142[
-                        self._cached_update[0].alarm.severity
-                    ],
+                    epics_alarm_status_to_f142[self._cached_update[0].alarm.status],
+                    epics_alarm_severity_to_f142[self._cached_update[0].alarm.severity],
                 )
 
     def stop(self):
