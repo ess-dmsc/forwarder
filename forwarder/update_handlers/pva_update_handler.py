@@ -12,7 +12,6 @@ from forwarder.epics_to_serialisable_types import (
     epics_alarm_status_to_f142,
 )
 import numpy as np
-from p4p.nt.enum import ntenum
 
 
 class PVAUpdateHandler:
@@ -63,16 +62,7 @@ class PVAUpdateHandler:
             response.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + response.timeStamp.nanoseconds
         if self._output_type is None:
-            try:
-                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
-                if type(response) is ntenum:
-                    self._get_value = lambda resp: resp.value.index
-                else:
-                    self._get_value = lambda resp: resp.value
-            except KeyError:
-                self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {type(response)}"
-                )
+            self._try_to_determine_type(response)
 
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
@@ -103,6 +93,26 @@ class PVAUpdateHandler:
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
+
+    def _try_to_determine_type(self, response):
+        try:
+            is_enum = False
+            try:
+                if response.type()["value"].getID() == "enum_t":
+                    is_enum = True
+            except AttributeError:
+                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
+
+            if is_enum:
+                # We forward enum as string
+                self._output_type = np.unicode_
+                self._get_value = lambda resp: resp.value.choices[resp.value.index]
+            else:
+                self._get_value = lambda resp: resp.value
+        except KeyError:
+            self._logger.error(
+                f"Don't know what numpy dtype to use for channel type {type(response)}"
+            )
 
     def publish_cached_update(self):
         with self._cache_lock:
