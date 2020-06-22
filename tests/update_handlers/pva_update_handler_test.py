@@ -7,7 +7,9 @@ from p4p.nt import NTScalar
 
 def create_pv_update() -> Value:
     timestamp_seconds_since_epoch = 1.1
-    return NTScalar("d").wrap(4.2, timestamp=timestamp_seconds_since_epoch)
+    return NTScalar("d", valueAlarm=True).wrap(
+        4.2, timestamp=timestamp_seconds_since_epoch
+    )
 
 
 def test_update_handler_publishes_update():

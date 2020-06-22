@@ -7,7 +7,7 @@ from threading import Lock, Event
 from forwarder.update_handlers.schema_publishers import schema_publishers
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_channel_type,
+    numpy_type_from_p4p_type,
     caproto_alarm_severity_to_f142,
     caproto_alarm_status_to_f142,
 )
@@ -60,15 +60,15 @@ class PVAUpdateHandler:
 
     def _monitor_callback(self, response: Value):
         timestamp = (
-            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
-        ) + response.raw.timeStamp.nanoseconds
+            response.timeStamp.secondsPastEpoch * 1_000_000_000
+        ) + response.timeStamp.nanoseconds
         if self._output_type is None:
             try:
-                self._output_type = numpy_type_from_channel_type[type(response)]
+                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
                 if type(response) is ntenum:
-                    self._get_value = lambda resp: resp.raw.value.index
+                    self._get_value = lambda resp: resp.value.index
                 else:
-                    self._get_value = lambda resp: resp.raw.value
+                    self._get_value = lambda resp: resp.value
             except KeyError:
                 self._logger.error(
                     f"Don't know what numpy dtype to use for channel type {type(response)}"
@@ -79,7 +79,7 @@ class PVAUpdateHandler:
             # include alarm status in message
             if (
                 self._cached_update is None
-                or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
+                or response.alarm.status != self._cached_update[0].alarm.status
             ):
                 self._message_publisher(
                     self._producer,
@@ -89,8 +89,8 @@ class PVAUpdateHandler:
                     ),
                     self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.raw.alarm.status],
-                    caproto_alarm_severity_to_f142[response.raw.alarm.severity],
+                    caproto_alarm_status_to_f142[response.alarm.status],
+                    caproto_alarm_severity_to_f142[response.alarm.severity],
                 )
             else:
                 self._message_publisher(
@@ -116,11 +116,9 @@ class PVAUpdateHandler:
                     ).astype(self._output_type),
                     self._pv_name,
                     self._cached_update[1],
-                    caproto_alarm_status_to_f142[
-                        self._cached_update[0].raw.alarm.status
-                    ],
+                    caproto_alarm_status_to_f142[self._cached_update[0].alarm.status],
                     caproto_alarm_severity_to_f142[
-                        self._cached_update[0].raw.alarm.severity
+                        self._cached_update[0].alarm.severity
                     ],
                 )
 
