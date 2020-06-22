@@ -5,6 +5,8 @@ from p4p.nt import NTScalar, NTEnum
 from streaming_data_types.logdata_f142 import deserialise_f142
 from cmath import isclose
 import pytest
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 
 
 def test_update_handler_publishes_enum_update():
@@ -73,5 +75,37 @@ def test_update_handler_publishes_int_update(pv_value, pv_type):
     pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
+
+    pva_update_handler.stop()
+
+
+def test_update_handler_publishes_alarm_update():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_value = 42
+    pv_type = "i"
+    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_source_name = "source_name"
+    alarm_status = 4  # AlarmStatus.HIGH
+    alarm_severity = 1  # AlarmSeverity.MINOR
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            {
+                "value": pv_value,
+                "alarm": {"status": alarm_status, "severity": alarm_severity},
+            },
+            timestamp=pv_timestamp_s,
+        )
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+    assert pv_update_output.alarm_status == AlarmStatus.HIGH
+    assert pv_update_output.alarm_severity == AlarmSeverity.MINOR
 
     pva_update_handler.stop()
