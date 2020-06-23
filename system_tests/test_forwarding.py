@@ -66,7 +66,8 @@ def wait_for_forwarder_to_be_ready(
     """
     cons = create_consumer("latest")
     cons.assign([TopicPartition(status_topic, partition=0)])
-    cons.consume(timeout_s)
+    cons.consume(timeout=timeout_s)
+    cons.close()
 
 
 @pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
