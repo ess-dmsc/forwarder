@@ -58,7 +58,7 @@ def teardown_function(request):
     sleep(3)
 
 
-@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.CA, EpicsProtocol.PVA])
+@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here

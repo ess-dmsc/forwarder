@@ -87,15 +87,20 @@ def test_update_handler_publishes_alarm_update():
     pv_type = "i"
     pv_timestamp_s = 1.1  # seconds from unix epoch
     pv_source_name = "source_name"
-    alarm_status = 4  # AlarmStatus.HIGH
+    alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
     alarm_severity = 1  # AlarmSeverity.MINOR
+    alarm_message = "HIGH_ALARM"
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(
             {
                 "value": pv_value,
-                "alarm": {"status": alarm_status, "severity": alarm_severity},
+                "alarm": {
+                    "status": alarm_status,
+                    "severity": alarm_severity,
+                    "message": alarm_message,
+                },
             },
             timestamp=pv_timestamp_s,
         )

@@ -7,7 +7,7 @@ from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
     numpy_type_from_caproto_type,
     epics_alarm_severity_to_f142,
-    epics_alarm_status_to_f142,
+    ca_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
 from typing import Optional, Tuple
@@ -83,7 +83,7 @@ class CAUpdateHandler:
                     np.squeeze(response.data).astype(self._output_type),
                     self._pv.name,
                     timestamp,
-                    epics_alarm_status_to_f142[response.metadata.status],
+                    ca_alarm_status_to_f142[response.metadata.status],
                     epics_alarm_severity_to_f142[response.metadata.severity],
                 )
             else:
@@ -107,7 +107,7 @@ class CAUpdateHandler:
                     np.squeeze(self._cached_update[0].data).astype(self._output_type),
                     self._pv.name,
                     self._cached_update[1],
-                    epics_alarm_status_to_f142[self._cached_update[0].metadata.status],
+                    ca_alarm_status_to_f142[self._cached_update[0].metadata.status],
                     epics_alarm_severity_to_f142[
                         self._cached_update[0].metadata.severity
                     ],

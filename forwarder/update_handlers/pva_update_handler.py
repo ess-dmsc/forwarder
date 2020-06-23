@@ -9,9 +9,18 @@ from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
     numpy_type_from_p4p_type,
     epics_alarm_severity_to_f142,
-    epics_alarm_status_to_f142,
+    pva_alarm_message_to_f142_alarm_status,
 )
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 import numpy as np
+
+
+def _get_alarm_status(response):
+    try:
+        alarm_status = pva_alarm_message_to_f142_alarm_status[response.alarm.message]
+    except Exception:
+        alarm_status = AlarmStatus.UDF
+    return alarm_status
 
 
 class PVAUpdateHandler:
@@ -69,7 +78,7 @@ class PVAUpdateHandler:
             # include alarm status in message
             if (
                 self._cached_update is None
-                or response.alarm.status != self._cached_update[0].alarm.status
+                or response.alarm.message != self._cached_update[0].alarm.message
             ):
                 self._message_publisher(
                     self._producer,
@@ -79,7 +88,7 @@ class PVAUpdateHandler:
                     ),
                     self._pv_name,
                     timestamp,
-                    epics_alarm_status_to_f142[response.alarm.status],
+                    _get_alarm_status(response),
                     epics_alarm_severity_to_f142[response.alarm.severity],
                 )
             else:
@@ -126,7 +135,7 @@ class PVAUpdateHandler:
                     ).astype(self._output_type),
                     self._pv_name,
                     self._cached_update[1],
-                    epics_alarm_status_to_f142[self._cached_update[0].alarm.status],
+                    _get_alarm_status(self._cached_update[0]),
                     epics_alarm_severity_to_f142[self._cached_update[0].alarm.severity],
                 )
 
