@@ -12,7 +12,7 @@ if __name__ == "__main__":
         '  "cmd": "add",'
         '  "streams": ['
         "    {"
-        '      "channel": "SIMPLE:DOUBLE3",'
+        '      "channel": "SIMPLE:ENUM",'
         '      "channel_provider_type": "ca",'
         '      "converter": {'
         '        "schema": "f142",'

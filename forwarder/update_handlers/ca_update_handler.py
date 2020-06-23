@@ -10,7 +10,7 @@ from forwarder.epics_to_serialisable_types import (
     ca_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Any
 from forwarder.update_handlers.schema_publishers import schema_publishers
 
 
@@ -62,12 +62,8 @@ class CAUpdateHandler:
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         if self._output_type is None:
-            try:
-                self._output_type = numpy_type_from_caproto_type[response.data_type]
-            except KeyError:
-                self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
-                )
+            if not self._try_to_determine_type(response):
+                return
 
         with self._cache_lock:
             timestamp = _seconds_to_nanoseconds(response.metadata.timestamp)
@@ -80,7 +76,7 @@ class CAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(response.data).astype(self._output_type),
+                    self._get_value(response),
                     self._pv.name,
                     timestamp,
                     ca_alarm_status_to_f142[response.metadata.status],
@@ -91,11 +87,37 @@ class CAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(response.data).astype(self._output_type),
+                    self._get_value(response),
                     self._pv.name,
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
+
+    def _try_to_determine_type(self, response: ReadNotifyResponse) -> bool:
+        """
+        If False is returned then don't continue with forwarding the current response
+        That means determining the type failed, or the monitor was restarted
+        """
+        try:
+            if response.data_type == ChannelType.TIME_ENUM:
+                # We forward enum as string
+                # Resubscribe using ChannelType.TIME_STRING as the data type
+                self._pv.unsubscribe_all()
+                sub = self._pv.subscribe(data_type=ChannelType.TIME_STRING)
+                sub.add_callback(self._monitor_callback)
+                # Don't forward the current response; the monitor will restart with the new data type
+                return False
+            else:
+                self._output_type = numpy_type_from_caproto_type[response.data_type]
+        except KeyError:
+            self._logger.error(
+                f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
+            )
+            return False
+        return True
+
+    def _get_value(self, response: ReadNotifyResponse) -> Any:
+        return np.squeeze(response.data).astype(self._output_type)
 
     def publish_cached_update(self):
         with self._cache_lock:
@@ -104,7 +126,7 @@ class CAUpdateHandler:
                 self._message_publisher(
                     self._producer,
                     self._output_topic,
-                    np.squeeze(self._cached_update[0].data).astype(self._output_type),
+                    self._get_value(self._cached_update[0]),
                     self._pv.name,
                     self._cached_update[1],
                     ca_alarm_status_to_f142[self._cached_update[0].metadata.status],
