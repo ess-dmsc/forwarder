@@ -138,15 +138,14 @@ def build_and_run(options, request, config_file=None, log_file=None):
         run_containers(cmd, options)
     else:
         # Launch local build of forwarder
-        full_path_of_forwarder_exe = os.path.join(
-            local_path, "bin", "forward-epics-to-kafka"
-        )
+        full_path_of_forwarder_exe = os.path.join(local_path, "forwarder_launch.py")
         command_options = [
+            "python",
             full_path_of_forwarder_exe,
             "-c",
-            f"./config-files/{config_file}",
+            os.path.join(local_path, "system_tests", "config-files", config_file),
             "--log-file",
-            f"{log_file}",
+            os.path.join(local_path, "system_tests", "logs", log_file),
         ]
         proc = Popen(command_options)
         if wait_for_debugger:
