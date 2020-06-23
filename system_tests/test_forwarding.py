@@ -58,8 +58,7 @@ def teardown_function(request):
     sleep(3)
 
 
-# Skipping EpicsProtocol.PVA as currently failing epics alarm forwarding, see ticket #4
-@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.CA])
+@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.CA, EpicsProtocol.PVA])
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
@@ -148,9 +147,9 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, PVENUM, 0)
+    check_expected_value(first_msg, PVENUM, "INIT")
     second_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(second_msg, PVENUM, 1)
+    check_expected_value(second_msg, PVENUM, "START")
     producer.remove_config(pvs)
 
 
