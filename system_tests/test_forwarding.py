@@ -58,6 +58,17 @@ def teardown_function(request):
     sleep(3)
 
 
+def wait_for_forwarder_to_be_ready(
+    timeout_s: float = 20, status_topic: str = "TEST_forwarderStatus"
+):
+    """
+    Wait for the Forwarder to produce a status message
+    """
+    cons = create_consumer("latest")
+    cons.assign([TopicPartition(status_topic, partition=0)])
+    cons.consume(timeout_s)
+
+
 @pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
@@ -66,7 +77,7 @@ def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwardin
     # Use a different topic for each parameter value, otherwise failing one test can cause the following tests to fail
     data_topic = f"TEST_forwarderData_{epics_protocol.value}"
 
-    sleep(5)
+    wait_for_forwarder_to_be_ready()
     prod = ProducerWrapper(
         "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=epics_protocol
     )
@@ -193,7 +204,7 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     THEN Forwarder status message lists new PVs
     """
     cons = create_consumer("latest")
-    sleep(2)
+    wait_for_forwarder_to_be_ready()
 
     data_topic = "TEST_forwarderData_change_config"
     status_topic = "TEST_forwarderStatus"
@@ -225,7 +236,7 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
 
 def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     cons = create_consumer("latest")
-    sleep(2)
+    wait_for_forwarder_to_be_ready()
 
     status_topic = "TEST_forwarderStatus"
     data_topic = "TEST_forwarderData_connection_status"
@@ -253,3 +264,20 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
 
     for pv in configured_list_of_pvs:
         assert pv in streams, "Expect configured PV to be reported as being forwarded"
+
+
+def test_forwarder_sends_fake_pv_updates(docker_compose_forwarding):
+    data_topic = "TEST_forwarderData_fake"
+    wait_for_forwarder_to_be_ready()
+    producer = ProducerWrapper(
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=EpicsProtocol.FAKE
+    )
+    producer.add_config(["FakePV"])
+
+    # A fake PV is defined in the config json file with channel name "FakePV"
+    consumer = create_consumer()
+    consumer.subscribe([data_topic])
+    sleep(5)
+    msg, _ = poll_for_valid_message(consumer)
+    # We should see PV updates in Kafka despite there being no IOC running
+    check_expected_value(msg, "FakePV", None)
