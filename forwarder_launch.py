@@ -142,7 +142,11 @@ if __name__ == "__main__":
     if args.version:
         raise NotImplementedError("Versioning not implemented yet")
 
-    logger = setup_logger(level=args.verbosity, log_file_name=args.log_file)
+    logger = setup_logger(
+        level=args.verbosity,
+        log_file_name=args.log_file,
+        graylog_logger_address=args.graylog_logger_address,
+    )
     logger.info("Forwarder started")
 
     # EPICS
