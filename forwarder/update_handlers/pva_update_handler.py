@@ -7,12 +7,20 @@ from threading import Lock, Event
 from forwarder.update_handlers.schema_publishers import schema_publishers
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_channel_type,
-    caproto_alarm_severity_to_f142,
-    caproto_alarm_status_to_f142,
+    numpy_type_from_p4p_type,
+    epics_alarm_severity_to_f142,
+    pva_alarm_message_to_f142_alarm_status,
 )
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 import numpy as np
-from p4p.nt.enum import ntenum
+
+
+def _get_alarm_status(response):
+    try:
+        alarm_status = pva_alarm_message_to_f142_alarm_status[response.alarm.message]
+    except Exception:
+        alarm_status = AlarmStatus.UDF
+    return alarm_status
 
 
 class PVAUpdateHandler:
@@ -35,7 +43,8 @@ class PVAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
 
-        self._sub = context.monitor(pv_name, self._monitor_callback)
+        request = context.makeRequest("field(value,timeStamp,alarm)")
+        self._sub = context.monitor(pv_name, self._monitor_callback, request=request)
         self._pv_name = pv_name
 
         self._cached_update: Optional[Tuple[Value, int]] = None
@@ -59,26 +68,17 @@ class PVAUpdateHandler:
 
     def _monitor_callback(self, response: Value):
         timestamp = (
-            response.raw.timeStamp.secondsPastEpoch * 1_000_000_000
-        ) + response.raw.timeStamp.nanoseconds
+            response.timeStamp.secondsPastEpoch * 1_000_000_000
+        ) + response.timeStamp.nanoseconds
         if self._output_type is None:
-            try:
-                self._output_type = numpy_type_from_channel_type[type(response)]
-                if type(response) is ntenum:
-                    self._get_value = lambda resp: resp.raw.value.index
-                else:
-                    self._get_value = lambda resp: resp.raw.value
-            except KeyError:
-                self._logger.error(
-                    f"Don't know what numpy dtype to use for channel type {type(response)}"
-                )
+            self._try_to_determine_type(response)
 
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
             if (
                 self._cached_update is None
-                or response.raw.alarm.status != self._cached_update[0].raw.alarm.status
+                or response.alarm.message != self._cached_update[0].alarm.message
             ):
                 self._message_publisher(
                     self._producer,
@@ -88,8 +88,8 @@ class PVAUpdateHandler:
                     ),
                     self._pv_name,
                     timestamp,
-                    caproto_alarm_status_to_f142[response.raw.alarm.status],
-                    caproto_alarm_severity_to_f142[response.raw.alarm.severity],
+                    _get_alarm_status(response),
+                    epics_alarm_severity_to_f142[response.alarm.severity],
                 )
             else:
                 self._message_publisher(
@@ -103,6 +103,26 @@ class PVAUpdateHandler:
                 )
             self._cached_update = (response, timestamp)
 
+    def _try_to_determine_type(self, response):
+        try:
+            is_enum = False
+            try:
+                if response.type()["value"].getID() == "enum_t":
+                    is_enum = True
+            except AttributeError:
+                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
+
+            if is_enum:
+                # We forward enum as string
+                self._output_type = np.unicode_
+                self._get_value = lambda resp: resp.value.choices[resp.value.index]
+            else:
+                self._get_value = lambda resp: resp.value
+        except KeyError:
+            self._logger.error(
+                f"Don't know what numpy dtype to use for channel type {type(response)}"
+            )
+
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
@@ -115,12 +135,8 @@ class PVAUpdateHandler:
                     ).astype(self._output_type),
                     self._pv_name,
                     self._cached_update[1],
-                    caproto_alarm_status_to_f142[
-                        self._cached_update[0].raw.alarm.status
-                    ],
-                    caproto_alarm_severity_to_f142[
-                        self._cached_update[0].raw.alarm.severity
-                    ],
+                    _get_alarm_status(self._cached_update[0]),
+                    epics_alarm_severity_to_f142[self._cached_update[0].alarm.severity],
                 )
 
     def stop(self):

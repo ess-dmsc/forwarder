@@ -5,6 +5,7 @@ from enum import Enum
 class EpicsProtocol(Enum):
     PVA = "pva"
     CA = "ca"
+    FAKE = "fake"
 
 
 class ForwarderConfig:

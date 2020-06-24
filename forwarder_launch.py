@@ -151,7 +151,7 @@ if __name__ == "__main__":
 
     # EPICS
     ca_ctx = CaContext()
-    pva_ctx = PvaContext("pva")
+    pva_ctx = PvaContext("pva", nt=False)
     update_handlers: Dict = dict()
 
     # Kafka
