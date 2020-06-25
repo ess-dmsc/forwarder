@@ -79,9 +79,7 @@ def update_stored_config():
     try:
         configuration_store.save_configuration(update_handlers)
     except Exception as error:
-        logger.warning(
-            f"Could not store configuration: {error}"
-        )
+        logger.warning(f"Could not store configuration: {error}")
 
 
 def parse_args():
@@ -113,7 +111,7 @@ def parse_args():
         "--storage-topic",
         required=False,
         help="<host[:port][/topic]> Kafka broker/topic for storage of the "
-             "last known forwarding details",
+        "last known forwarding details",
         type=str,
         env_var="STORAGE_TOPIC",
     )
@@ -121,7 +119,7 @@ def parse_args():
         "-s",
         "--skip-retrieval",
         action="store_true",
-        help="Ignore the stored configuration on startup"
+        help="Ignore the stored configuration on startup",
     )
     parser.add_argument(
         "--output-broker",

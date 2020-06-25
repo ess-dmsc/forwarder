@@ -17,10 +17,17 @@ def test_no_broker_throws_when_strict():
         get_broker_and_topic_from_uri(uri, broker_required=True)
 
 
+def test_no_broker_but_slash_throws_when_strict():
+    uri = "   /some_topic"
+
+    with pytest.raises(RuntimeError):
+        get_broker_and_topic_from_uri(uri, broker_required=True)
+
+
 def test_no_broker_returns_topic_only_when_not_strict():
     uri = "some_topic"
 
     broker, topic = get_broker_and_topic_from_uri(uri, broker_required=False)
 
-    assert broker is None
+    assert broker == ""
     assert topic == "some_topic"

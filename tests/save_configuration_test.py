@@ -43,7 +43,7 @@ def test_when_multiple_pvs_dumped_config_contains_all_pv_details():
 
     store.save_configuration(CHANNELS_TO_STORE)
 
-    stored_channels = json.loads(producer.published_payload)
+    stored_channels = json.loads(producer.published_payload)  # type: ignore
 
     assert_stored_channel_correct(stored_channels[0])
     assert_stored_channel_correct(stored_channels[1])
@@ -55,7 +55,7 @@ def test_when_no_pvs_stored_info_contains_no_pvs():
 
     store.save_configuration({})
 
-    stored_channels = json.loads(producer.published_payload)
+    stored_channels = json.loads(producer.published_payload)  # type: ignore
 
     assert len(stored_channels) == 0
 

@@ -30,13 +30,12 @@ def create_consumer(broker_address: str) -> Consumer:
 def get_broker_and_topic_from_uri(
     uri: str, broker_required: bool = True
 ) -> Tuple[str, str]:
-    if broker_required and "/" not in uri:
+    topic = uri.split("/")[-1]
+    broker = "".join(uri.split("/")[:-1]) if broker_required else ""
+    if broker_required and broker.strip() == "" in uri:
         raise RuntimeError(
             f"Unable to parse URI {uri}, should be of form localhost:9092/topic"
         )
-    topic = uri.split("/")[-1]
-    broker = "".join(uri.split("/")[:-1])
-    broker = broker.strip("/") if broker_required else None
     return broker, topic
 
 

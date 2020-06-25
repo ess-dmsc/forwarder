@@ -19,8 +19,8 @@ def test_update_handler_publishes_enum_update():
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+        producer, context, pv_source_name, "output_topic", "f142"  # type: ignore
+    )
     context.call_monitor_callback_with_fake_pv_update(
         NTEnum(valueAlarm=True).wrap(
             {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
@@ -45,8 +45,8 @@ def test_update_handler_publishes_float_update(pv_value, pv_type):
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+        producer, context, pv_source_name, "output_topic", "f142"  # type: ignore
+    )
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -71,8 +71,8 @@ def test_update_handler_publishes_int_update(pv_value, pv_type):
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+        producer, context, pv_source_name, "output_topic", "f142"  # type: ignore
+    )
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -100,8 +100,8 @@ def test_update_handler_publishes_alarm_update():
     alarm_message = "HIGH_ALARM"
 
     pva_update_handler = PVAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+        producer, context, pv_source_name, "output_topic", "f142"  # type: ignore
+    )
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(
             {
