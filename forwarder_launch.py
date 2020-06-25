@@ -72,12 +72,16 @@ def handle_command(command):
                     elif config_change.command_type == CommandType.REMOVE:
                         unsubscribe_from_pv(channel.name)
                 status_reporter.report_status()
-        try:
-            configuration_store.save_configuration(update_handlers)
-        except Exception as error:
-            logger.warning(
-                f"Could not store configuration: {error}"
-            )
+        update_stored_config()
+
+
+def update_stored_config():
+    try:
+        configuration_store.save_configuration(update_handlers)
+    except Exception as error:
+        logger.warning(
+            f"Could not store configuration: {error}"
+        )
 
 
 def parse_args():
