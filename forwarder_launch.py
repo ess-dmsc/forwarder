@@ -11,7 +11,7 @@ from forwarder.kafka.kafka_helpers import (
     get_broker_and_topic_from_uri,
 )
 from forwarder.application_logger import setup_logger
-from forwarder.configuration_store import ConfigurationStore
+from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.parse_config_update import parse_config_update, CommandType, Channel
 from forwarder.update_handlers.create_update_handler import create_update_handler
 from forwarder.status_reporter import StatusReporter
@@ -72,13 +72,12 @@ def handle_command(command):
                     elif config_change.command_type == CommandType.REMOVE:
                         unsubscribe_from_pv(channel.name)
                 status_reporter.report_status()
-        if configuration_store:
-            try:
-                configuration_store.save_configuration(update_handlers)
-            except Exception as error:
-                logger.warning(
-                    f"Could not store configuration: {error}"
-                )
+        try:
+            configuration_store.save_configuration(update_handlers)
+        except Exception as error:
+            logger.warning(
+                f"Could not store configuration: {error}"
+            )
 
 
 def parse_args():
@@ -219,7 +218,7 @@ if __name__ == "__main__":
             stored_config = configuration_store.retrieve_configuration()
             handle_command(stored_config)
     else:
-        configuration_store = None
+        configuration_store = NullConfigurationStore()
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
@@ -241,8 +240,7 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
-        if configuration_store:
-            configuration_store.stop()
+        configuration_store.stop()
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()
