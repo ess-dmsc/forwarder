@@ -93,9 +93,7 @@ def test_update_handler_publishes_alarm_update():
     pv_type = "i"
     pv_timestamp_s = 1.1  # seconds from unix epoch
     pv_source_name = "source_name"
-    alarm_status = (
-        4
-    )  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
+    alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
     alarm_severity = 1  # AlarmSeverity.MINOR
     alarm_message = "HIGH_ALARM"
 
