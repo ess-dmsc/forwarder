@@ -30,7 +30,7 @@ def create_consumer(broker_address: str) -> Consumer:
 def get_broker_and_topic_from_uri(
     uri: str, broker_required: bool = True
 ) -> Tuple[str, str]:
-    parts = uri.strip().split("/")
+    parts = uri.strip().strip("/").split("/")
     if len(parts) == 2 and "" not in parts:
         return parts[0], parts[1]
     elif broker_required or len(parts) != 1:

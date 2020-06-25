@@ -38,3 +38,12 @@ def test_no_broker_returns_topic_only_when_not_strict():
 
     assert broker == ""
     assert topic == "some_topic"
+
+
+def test_double_slash_before_broker_is_okay():
+    uri = "//localhost:9092/some_topic"
+
+    broker, topic = get_broker_and_topic_from_uri(uri, broker_required=True)
+
+    assert broker == "localhost:9092"
+    assert topic == "some_topic"
