@@ -3,7 +3,6 @@ import time
 from typing import Dict
 from confluent_kafka import TopicPartition
 
-from forwarder.parse_config_update import Channel, EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 
 

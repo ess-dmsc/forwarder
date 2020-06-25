@@ -219,7 +219,7 @@ def docker_compose_forwarding(request):
     options["--file"] = ["compose/docker-compose-forwarding.yml"]
 
     build_and_run(
-        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log"
     )
 
 
@@ -236,7 +236,7 @@ def docker_compose_idle_updates(request):
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
     build_and_run(
-        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log"
     )
 
 
@@ -252,6 +252,4 @@ def docker_compose_lr(request):
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
-    build_and_run(
-        options, request, "forwarder_config_lr.ini", "forwarder_tests.log",
-    )
+    build_and_run(options, request, "forwarder_config_lr.ini", "forwarder_tests.log")

@@ -187,10 +187,7 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     initial_long_value = 0
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
-    expected_values = {
-        PVSTR: initial_string_value,
-        PVLONG: initial_long_value,
-    }
+    expected_values = {PVSTR: initial_string_value, PVLONG: initial_long_value}
     first_msg, _ = poll_for_valid_message(consumer)
     second_msg, _ = poll_for_valid_message(consumer)
     messages = [first_msg, second_msg]

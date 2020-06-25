@@ -14,16 +14,12 @@ CHANNELS_TO_STORE = {
 
 EMPTY_STORED_MESSAGE = b"[]"
 
-STORED_MESSAGE = json.dumps([
-    {
-        "channel": "channel1",
-        "converter": {"topic": "topic1", "schema": "f142"},
-    },
-    {
-        "channel": "channel2",
-        "converter": {"topic": "topic2", "schema": "tdct"},
-    },
-]).encode()
+STORED_MESSAGE = json.dumps(
+    [
+        {"channel": "channel1", "converter": {"topic": "topic1", "schema": "f142"}},
+        {"channel": "channel2", "converter": {"topic": "topic2", "schema": "tdct"}},
+    ]
+).encode()
 
 
 class FakeKafkaMessage:

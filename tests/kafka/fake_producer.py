@@ -10,7 +10,7 @@ class FakeProducer:
         self.published_payload: Optional[bytes] = None
 
     def produce(
-        self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None,
+        self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None
     ):
         self.published_payload = payload
 

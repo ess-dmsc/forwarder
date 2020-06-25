@@ -24,4 +24,3 @@ def test_no_broker_returns_topic_only_when_not_strict():
 
     assert broker is None
     assert topic == "some_topic"
-
