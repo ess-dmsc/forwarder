@@ -17,8 +17,15 @@ def test_no_broker_throws_when_strict():
         get_broker_and_topic_from_uri(uri, broker_required=True)
 
 
-def test_no_broker_but_slash_throws_when_strict():
-    uri = "   /some_topic"
+def test_no_broker_but_leading_slash_throws_when_strict():
+    uri = "/some_topic"
+
+    with pytest.raises(RuntimeError):
+        get_broker_and_topic_from_uri(uri, broker_required=True)
+
+
+def test_no_topic_but_trailing_slash_throws_when_strict():
+    uri = "some_host:9092/"
 
     with pytest.raises(RuntimeError):
         get_broker_and_topic_from_uri(uri, broker_required=True)

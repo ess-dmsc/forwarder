@@ -30,13 +30,15 @@ def create_consumer(broker_address: str) -> Consumer:
 def get_broker_and_topic_from_uri(
     uri: str, broker_required: bool = True
 ) -> Tuple[str, str]:
-    topic = uri.split("/")[-1]
-    broker = "".join(uri.split("/")[:-1]) if broker_required else ""
-    if broker_required and broker.strip() == "" in uri:
+    parts = uri.strip().split("/")
+    if len(parts) == 2 and "" not in parts:
+        return parts[0], parts[1]
+    elif broker_required or len(parts) != 1:
         raise RuntimeError(
             f"Unable to parse URI {uri}, should be of form localhost:9092/topic"
         )
-    return broker, topic
+    else:
+        return "", parts[0]
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
