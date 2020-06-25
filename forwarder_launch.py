@@ -72,7 +72,13 @@ def handle_command(command):
                     elif config_change.command_type == CommandType.REMOVE:
                         unsubscribe_from_pv(channel.name)
                 status_reporter.report_status()
-        configuration_store.save_configuration(update_handlers)
+        if configuration_store:
+            try:
+                configuration_store.save_configuration(update_handlers)
+            except Exception as error:
+                logger.warning(
+                    f"Could not store configuration: {error}"
+                )
 
 
 def parse_args():
@@ -99,6 +105,20 @@ def parse_args():
         help="<host[:port][/topic]> Kafka broker/topic to publish status updates on",
         type=str,
         env_var="STATUS_TOPIC",
+    )
+    parser.add_argument(
+        "--storage-topic",
+        required=False,
+        help="<host[:port][/topic]> Kafka broker/topic for storage of the "
+             "last known forwarding details",
+        type=str,
+        env_var="STORAGE_TOPIC",
+    )
+    parser.add_argument(
+        "-s",
+        "--skip-retrieval",
+        action="store_true",
+        help="Ignore the stored configuration on startup"
     )
     parser.add_argument(
         "--output-broker",
@@ -190,12 +210,16 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
-    configuration_store = ConfigurationStore(
-        create_producer(status_broker), create_consumer(status_broker), "empty"
-    )
-
-    stored_config = configuration_store.retrieve_configuration()
-    handle_command(stored_config)
+    if args.storage_topic:
+        store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
+        configuration_store = ConfigurationStore(
+            create_producer(store_broker), create_consumer(store_broker), store_topic
+        )
+        if not args.skip_retrieval:
+            stored_config = configuration_store.retrieve_configuration()
+            handle_command(stored_config)
+    else:
+        configuration_store = None
 
     # Metrics
     # use https://github.com/zillow/aiographite ?
@@ -217,6 +241,8 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
+        if configuration_store:
+            configuration_store.stop()
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()

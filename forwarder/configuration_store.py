@@ -44,3 +44,7 @@ class ConfigurationStore:
             return json.dumps(config_msg).encode("utf-8")
         else:
             raise RuntimeError("Could not retrieve stored configuration")
+
+    def stop(self):
+        self._producer.close()
+        self._consumer.close()
