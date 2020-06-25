@@ -27,7 +27,6 @@ def create_consumer(broker_address: str) -> Consumer:
     )
 
 
-# TODO: Tests
 def get_broker_and_topic_from_uri(
     uri: str, broker_required: bool = True
 ) -> Tuple[str, str]:
@@ -37,7 +36,7 @@ def get_broker_and_topic_from_uri(
         )
     topic = uri.split("/")[-1]
     broker = "".join(uri.split("/")[:-1])
-    broker = broker.strip("/")
+    broker = broker.strip("/") if broker_required else None
     return broker, topic
 
 
