@@ -27,8 +27,11 @@ def create_consumer(broker_address: str) -> Consumer:
     )
 
 
-def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
-    if "/" not in uri:
+# TODO: Tests
+def get_broker_and_topic_from_uri(
+    uri: str, broker_required: bool = True
+) -> Tuple[str, str]:
+    if broker_required and "/" not in uri:
         raise RuntimeError(
             f"Unable to parse URI {uri}, should be of form localhost:9092/topic"
         )
@@ -63,7 +66,7 @@ def publish_f142_message(
     """
     if alarm_status is None:
         f142_message = serialise_f142(
-            value=data, source_name=source_name, timestamp_unix_ns=timestamp_ns,
+            value=data, source_name=source_name, timestamp_unix_ns=timestamp_ns
         )
     else:
         f142_message = serialise_f142(

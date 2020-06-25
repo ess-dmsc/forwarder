@@ -96,8 +96,8 @@ def _parse_streams(
             protocol = EpicsProtocol.PVA
 
         try:
-            output_broker, output_topic = get_broker_and_topic_from_uri(
-                update_stream["converter"]["topic"]
+            _, output_topic = get_broker_and_topic_from_uri(
+                update_stream["converter"]["topic"], broker_required=False
             )
         except ValueError:
             logger.warning(

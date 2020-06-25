@@ -2,6 +2,7 @@ from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 import logging
 import configargparse
+import sys
 from typing import Optional, Dict
 
 from forwarder.kafka.kafka_helpers import (
@@ -10,6 +11,7 @@ from forwarder.kafka.kafka_helpers import (
     get_broker_and_topic_from_uri,
 )
 from forwarder.application_logger import setup_logger
+from forwarder.configuration_store import ConfigurationStore
 from forwarder.parse_config_update import parse_config_update, CommandType, Channel
 from forwarder.update_handlers.create_update_handler import create_update_handler
 from forwarder.status_reporter import StatusReporter
@@ -49,6 +51,28 @@ def unsubscribe_from_all():
         update_handler.stop()
     update_handlers.clear()
     logger.info("Unsubscribed from all PVs")
+
+
+def handle_command(command):
+    config_change = parse_config_update(command)
+    if config_change is not None:
+        if config_change.command_type == CommandType.REMOVE_ALL:
+            unsubscribe_from_all()
+            status_reporter.report_status()
+        elif config_change.command_type == CommandType.EXIT:
+            logger.info("Exit command received")
+            sys.exit(0)
+        else:
+            if config_change.channels is not None:
+                for channel in config_change.channels:
+                    if config_change.command_type == CommandType.ADD:
+                        subscribe_to_pv(
+                            channel, args.fake_pv_period, args.pv_update_period
+                        )
+                    elif config_change.command_type == CommandType.REMOVE:
+                        unsubscribe_from_pv(channel.name)
+                status_reporter.report_status()
+        configuration_store.save_configuration(update_handlers)
 
 
 def parse_args():
@@ -166,6 +190,13 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
+    configuration_store = ConfigurationStore(
+        create_producer(status_broker), create_consumer(status_broker), "empty"
+    )
+
+    stored_config = configuration_store.retrieve_configuration()
+    handle_command(stored_config)
+
     # Metrics
     # use https://github.com/zillow/aiographite ?
     # can modify https://github.com/claws/aioprometheus for graphite?
@@ -180,27 +211,7 @@ if __name__ == "__main__":
                 logger.error(msg.error())
             else:
                 logger.info("Received config message")
-                config_change = parse_config_update(msg.value())
-                if config_change is not None:
-                    if config_change.command_type == CommandType.REMOVE_ALL:
-                        unsubscribe_from_all()
-                        status_reporter.report_status()
-                    elif config_change.command_type == CommandType.EXIT:
-                        logger.info("Exit command received")
-                        break
-                    else:
-                        if config_change.channels is not None:
-                            for channel in config_change.channels:
-                                if config_change.command_type == CommandType.ADD:
-                                    subscribe_to_pv(
-                                        channel,
-                                        args.fake_pv_period,
-                                        args.pv_update_period,
-                                    )
-                                elif config_change.command_type == CommandType.REMOVE:
-                                    unsubscribe_from_pv(channel.name)
-                            status_reporter.report_status()
-
+                handle_command(msg.value())
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")
 

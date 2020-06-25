@@ -55,6 +55,7 @@ class PVAUpdateHandler:
 
         try:
             self._message_publisher = schema_publishers[schema]
+            self._schema = schema
         except KeyError:
             raise ValueError(
                 f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
@@ -65,6 +66,14 @@ class PVAUpdateHandler:
                 milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
             )
             self._repeating_timer.start()
+
+    @property
+    def output_topic(self):
+        return self._output_topic
+
+    @property
+    def schema(self):
+        return self._schema
 
     def _monitor_callback(self, response: Value):
         timestamp = (
