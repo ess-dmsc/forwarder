@@ -220,7 +220,7 @@ if __name__ == "__main__":
             stored_config = configuration_store.retrieve_configuration()
             handle_command(stored_config)
     else:
-        configuration_store = NullConfigurationStore()
+        configuration_store = NullConfigurationStore
 
     # Metrics
     # use https://github.com/zillow/aiographite ?

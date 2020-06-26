@@ -1,6 +1,7 @@
 import json
 import time
 from typing import Dict
+from unittest import mock
 from confluent_kafka import TopicPartition
 
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
@@ -50,15 +51,16 @@ class ConfigurationStore:
         self._consumer.close()
 
 
-class NullConfigurationStore(ConfigurationStore):
-    def __init__(self):
-        super().__init__(None, None, "")
+NullConfigurationStore = mock.create_autospec(ConfigurationStore)
+# class NullConfigurationStore(ConfigurationStore):
+#     def __init__(self):
+#         super().__init__(None, None, "")
 
-    def save_configuration(self, update_handlers: Dict):
-        pass
+#     def save_configuration(self, update_handlers: Dict):
+#         pass
 
-    def retrieve_configuration(self):
-        pass
+#     def retrieve_configuration(self):
+#         pass
 
-    def stop(self):
-        pass
+#     def stop(self):
+#         pass
