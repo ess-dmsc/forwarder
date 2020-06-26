@@ -217,8 +217,13 @@ if __name__ == "__main__":
             create_producer(store_broker), create_consumer(store_broker), store_topic
         )
         if not args.skip_retrieval:
-            stored_config = configuration_store.retrieve_configuration()
-            handle_command(stored_config)
+            try:
+                stored_config = configuration_store.retrieve_configuration()
+                handle_command(stored_config)
+            except RuntimeError as error:
+                logger.error(
+                    "Could not retrieve stored configuration in start-up: " f"{error}"
+                )
     else:
         configuration_store = NullConfigurationStore
 

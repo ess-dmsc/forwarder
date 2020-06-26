@@ -64,15 +64,3 @@ class ConfigurationStore:
 
 
 NullConfigurationStore = mock.create_autospec(ConfigurationStore)
-# class NullConfigurationStore(ConfigurationStore):
-#     def __init__(self):
-#         super().__init__(None, None, "")
-
-#     def save_configuration(self, update_handlers: Dict):
-#         pass
-
-#     def retrieve_configuration(self):
-#         pass
-
-#     def stop(self):
-#         pass
