@@ -1,8 +1,11 @@
 import json
+import os
+import socket
 import time
 from typing import Dict
 from unittest import mock
 from confluent_kafka import TopicPartition
+from streaming_data_types import deserialise_x5f2, serialise_x5f2
 
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 
@@ -28,8 +31,16 @@ class ConfigurationStore:
                 channel["channel_provider_type"] = "ca"
 
             streams.append(channel)
-        message = json.dumps(streams).encode("utf-8")
-        self._producer.produce(self._topic, message, int(time.time() * 1000))
+        message = serialise_x5f2(
+            "forwarder",
+            "",
+            "",
+            socket.gethostname(),
+            os.getpid(),
+            0,
+            json.dumps(streams),
+        )
+        self._producer.produce(self._topic, bytes(message), int(time.time() * 1000))
 
     def retrieve_configuration(self):
         # Retrieve last message
@@ -41,7 +52,8 @@ class ConfigurationStore:
         msg = self._consumer.consume(timeout=2)
 
         if msg:
-            config_msg = {"cmd": "add", "streams": json.loads(msg[~0].value())}
+            d = deserialise_x5f2(msg[~0].value())
+            config_msg = {"cmd": "add", "streams": json.loads(d.status_json)}
             return json.dumps(config_msg).encode("utf-8")
         else:
             raise RuntimeError("Could not retrieve stored configuration")

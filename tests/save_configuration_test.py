@@ -1,6 +1,7 @@
 import json
 from unittest import mock
 from confluent_kafka import Consumer
+from streaming_data_types import deserialise_x5f2, serialise_x5f2
 
 from forwarder.configuration_store import ConfigurationStore
 from forwarder.parse_config_update import Channel, EpicsProtocol
@@ -12,14 +13,14 @@ CHANNELS_TO_STORE = {
     "channel2": Channel("channel2", EpicsProtocol.PVA, "topic2", "tdct"),
 }
 
-EMPTY_STORED_MESSAGE = b"[]"
+EMPTY_STORED_JSON = "[]"
 
-STORED_MESSAGE = json.dumps(
+NONEMPTY_STORED_JSON = json.dumps(
     [
         {"channel": "channel1", "converter": {"topic": "topic1", "schema": "f142"}},
         {"channel": "channel2", "converter": {"topic": "topic2", "schema": "tdct"}},
     ]
-).encode()
+)
 
 
 class FakeKafkaMessage:
@@ -43,7 +44,8 @@ def test_when_multiple_pvs_dumped_config_contains_all_pv_details():
 
     store.save_configuration(CHANNELS_TO_STORE)
 
-    stored_channels = json.loads(producer.published_payload)  # type: ignore
+    stored_message = deserialise_x5f2(producer.published_payload)
+    stored_channels = json.loads(stored_message.status_json)  # type: ignore
 
     assert_stored_channel_correct(stored_channels[0])
     assert_stored_channel_correct(stored_channels[1])
@@ -55,7 +57,8 @@ def test_when_no_pvs_stored_info_contains_no_pvs():
 
     store.save_configuration({})
 
-    stored_channels = json.loads(producer.published_payload)  # type: ignore
+    stored_message = deserialise_x5f2(producer.published_payload)
+    stored_channels = json.loads(stored_message.status_json)  # type: ignore
 
     assert len(stored_channels) == 0
 
@@ -63,7 +66,8 @@ def test_when_no_pvs_stored_info_contains_no_pvs():
 def test_retrieving_stored_info_with_no_pvs_gets_empty_streams():
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (0, 100)
-    mock_consumer.consume.return_value = [FakeKafkaMessage(EMPTY_STORED_MESSAGE)]
+    message = serialise_x5f2("", "", "", "", 0, 0, status_json=EMPTY_STORED_JSON)
+    mock_consumer.consume.return_value = [FakeKafkaMessage(message)]
     store = ConfigurationStore(
         producer=None, consumer=mock_consumer, topic="store_topic"
     )
@@ -77,7 +81,8 @@ def test_retrieving_stored_info_with_no_pvs_gets_empty_streams():
 def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (0, 100)
-    mock_consumer.consume.return_value = [FakeKafkaMessage(STORED_MESSAGE)]
+    message = serialise_x5f2("", "", "", "", 0, 0, status_json=NONEMPTY_STORED_JSON)
+    mock_consumer.consume.return_value = [FakeKafkaMessage(message)]
     store = ConfigurationStore(
         producer=None, consumer=mock_consumer, topic="store_topic"
     )
