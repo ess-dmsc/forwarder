@@ -1,5 +1,5 @@
 import json
-import mock
+from unittest import mock
 from confluent_kafka import Consumer
 
 from forwarder.configuration_store import ConfigurationStore

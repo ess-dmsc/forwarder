@@ -5,7 +5,6 @@ black
 pre-commit
 pytest
 flake8
-mock
 mypy
 
 # For system tests
