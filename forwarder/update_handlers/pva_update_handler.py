@@ -110,7 +110,18 @@ class PVAUpdateHandler:
                 if response.type()["value"].getID() == "enum_t":
                     is_enum = True
             except AttributeError:
-                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
+                try:
+                    self._output_type = numpy_type_from_p4p_type[
+                        response.type()["value"]
+                    ]
+                except TypeError:
+                    if isinstance(response.value, np.ndarray):
+                        self._output_type = response.value.dtype.type
+                    else:
+                        self._logger.error(
+                            f"Don't know what numpy dtype to use for channel type {type(response)}"
+                        )
+                        return
 
             if is_enum:
                 # We forward enum as string

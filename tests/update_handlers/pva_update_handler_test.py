@@ -1,9 +1,10 @@
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.p4p_fakes import FakeContext
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from p4p.nt import NTScalar, NTEnum
+from p4p.nt import NTScalar, NTEnum, NTNDArray
 from streaming_data_types.logdata_f142 import deserialise_f142
 from cmath import isclose
+import numpy as np
 import pytest
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
@@ -50,6 +51,24 @@ def test_update_handler_publishes_float_update(pv_value, pv_type):
     assert producer.published_payload is not None
     pv_update_output = deserialise_f142(producer.published_payload)
     assert isclose(pv_update_output.value, pv_value, abs_tol=0.0001)
+    assert pv_update_output.source_name == pv_source_name
+
+    pva_update_handler.stop()
+
+
+def test_update_handler_publishes_floatarray_update():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+    pv_value = np.array([1.1, 2.2, 3.3], dtype=np.float)
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(NTNDArray().wrap(pv_value))
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
 
     pva_update_handler.stop()
