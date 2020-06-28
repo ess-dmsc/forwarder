@@ -1,7 +1,7 @@
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.p4p_fakes import FakeContext
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from p4p.nt import NTScalar, NTEnum, NTNDArray
+from p4p.nt import NTScalar, NTEnum
 from streaming_data_types.logdata_f142 import deserialise_f142
 from cmath import isclose
 import numpy as np
@@ -60,11 +60,14 @@ def test_update_handler_publishes_floatarray_update():
     producer = FakeProducer()
     context = FakeContext()
 
+    pv_timestamp_s = 1.1  # seconds from unix epoch
     pv_source_name = "source_name"
-    pv_value = np.array([1.1, 2.2, 3.3], dtype=np.float)
+    pv_value = np.array([1.1, 2.2, 3.3], dtype=np.float32)
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
-    context.call_monitor_callback_with_fake_pv_update(NTNDArray().wrap(pv_value))
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar("af", valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
 
     assert producer.published_payload is not None
     pv_update_output = deserialise_f142(producer.published_payload)
