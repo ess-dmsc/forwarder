@@ -23,7 +23,7 @@ services:
     image: zookeeper:3.4
 
   ioc:
-    image: screamingudder/softioc:cba04c4
+    image: screamingudder/softioc:69433bc
     stdin_open: true
     tty: true
     network_mode: "host"
