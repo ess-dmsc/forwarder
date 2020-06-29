@@ -28,34 +28,43 @@ from .helpers.f142_logdata.AlarmStatus import AlarmStatus
 import pytest
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
-INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3)
+INITIAL_STRING_VALUE = "test"
+INITIAL_ENUM_VALUE = "INIT"
+INITIAL_LONG_VALUE = 0
+INITIAL_DOUBLE_VALUE = 0.0
+INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3, 4.4, 5.5)
 
 
 @pytest.fixture(scope="function", autouse=True)
-def teardown_function(request):
+def setup_and_teardown_function(request):
     """
     Stops forwarder pv listening and resets any values in EPICS
     """
+    # SETUP
+    initial_values = {
+        PVDOUBLE: INITIAL_DOUBLE_VALUE,
+        # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
+        # the PV
+        PVSTR: INITIAL_STRING_VALUE,
+        PVLONG: INITIAL_LONG_VALUE,
+        PVENUM: np.array([INITIAL_ENUM_VALUE]).astype(np.string_),
+        PVDOUBLE_WITH_ALARM_THRESHOLDS: INITIAL_DOUBLE_VALUE,
+        PVFLOATARRAY: INITIAL_FLOATARRAY_VALUE,
+    }
+
+    for key, value in initial_values.items():
+        change_pv_value(key, value)
+
+    sleep(1)
+
+    # TEARDOWN
     # Everything after yield is executed after the test function
     yield
     print("Resetting PVs", flush=True)
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.stop_all_pvs()
 
-    defaults = {
-        PVDOUBLE: 0.0,
-        # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
-        # the PV
-        PVSTR: "test",
-        PVLONG: 0,
-        PVENUM: np.array(["INIT"]).astype(np.string_),
-        PVDOUBLE_WITH_ALARM_THRESHOLDS: 0.0,
-    }
-
-    for key, value in defaults.items():
-        change_pv_value(key, value)
-    change_pv_value(PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
-    sleep(3)
+    sleep(2)
 
 
 def wait_for_forwarder_to_be_ready(
@@ -70,7 +79,7 @@ def wait_for_forwarder_to_be_ready(
     cons.close()
 
 
-@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.PVA, EpicsProtocol.CA])
+@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.CA, EpicsProtocol.PVA])
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
@@ -87,8 +96,8 @@ def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwardin
 
     forwarding_enum(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    # forwarding_floatarray(cons, prod)
-    # consumer_seek_to_end_of_topic(cons, data_topic)
+    forwarding_floatarray(cons, prod)
+    consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_string_and_long(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_double_with_alarm(cons, prod)
@@ -109,8 +118,6 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
     # Wait for config change to be picked up
     sleep(5)
 
-    initial_value = 0
-
     # Change the PV value, so something is forwarded
     # New value is between the HIGH and HIHI alarm thresholds
     first_updated_value = 17
@@ -125,7 +132,9 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
     sleep(5)
     # Check the initial value is forwarded
     first_msg, msg_key = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, initial_value)
+    check_expected_value(
+        first_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, INITIAL_DOUBLE_VALUE
+    )
     # Don't check alarm status of initial state because it is undefined if SoftIOC has not been changed yet
     assert msg_key == PVDOUBLE_WITH_ALARM_THRESHOLDS.encode(
         "utf-8"
@@ -155,13 +164,14 @@ def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config change to be picked up
     sleep(5)
-    change_pv_value(PVENUM, np.array(["START"]).astype(np.string_))
+    new_enum_value = "START"
+    change_pv_value(PVENUM, np.array([new_enum_value]).astype(np.string_))
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, PVENUM, "INIT")
+    check_expected_value(first_msg, PVENUM, INITIAL_ENUM_VALUE)
     second_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(second_msg, PVENUM, "START")
+    check_expected_value(second_msg, PVENUM, new_enum_value)
     producer.remove_config(pvs)
 
 
@@ -170,11 +180,14 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-    change_pv_value(PVFLOATARRAY, np.array([0.0, 0.1, 0.2]).astype(np.string_))
+    new_floatarray_value = [0.0, 0.1, 0.2, 0.3, 0.4]
+    change_pv_value(PVFLOATARRAY, np.array(new_floatarray_value).astype(np.string_))
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     first_msg, _ = poll_for_valid_message(consumer)
     check_expected_value(first_msg, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
+    second_msg, _ = poll_for_valid_message(consumer)
+    check_expected_value(second_msg, PVFLOATARRAY, new_floatarray_value)
     producer.remove_config(pvs)
 
 
@@ -183,8 +196,8 @@ def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-    initial_string_value = "test"
-    initial_long_value = 0
+    initial_string_value = INITIAL_STRING_VALUE
+    initial_long_value = INITIAL_LONG_VALUE
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     expected_values = {

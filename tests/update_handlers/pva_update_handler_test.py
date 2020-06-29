@@ -4,6 +4,7 @@ from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from p4p.nt import NTScalar, NTEnum
 from streaming_data_types.logdata_f142 import deserialise_f142
 from cmath import isclose
+import numpy as np
 import pytest
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
@@ -74,6 +75,33 @@ def test_update_handler_publishes_int_update(pv_value, pv_type):
     assert producer.published_payload is not None
     pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+
+    pva_update_handler.stop()
+
+
+@pytest.mark.parametrize(
+    "pv_value,pv_type",
+    [
+        (np.array([1.1, 2.2, 3.3], dtype=np.float64), "ad"),
+        (np.array([1.1, 2.2, 3.3], dtype=np.float32), "af"),
+    ],
+)
+def test_update_handler_publishes_floatarray_update(pv_value, pv_type):
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_source_name = "source_name"
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
 
     pva_update_handler.stop()

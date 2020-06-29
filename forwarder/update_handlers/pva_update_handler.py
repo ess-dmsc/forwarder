@@ -110,7 +110,11 @@ class PVAUpdateHandler:
                 if response.type()["value"].getID() == "enum_t":
                     is_enum = True
             except AttributeError:
-                self._output_type = numpy_type_from_p4p_type[response.type()["value"]]
+                # Attribute error raised because getID doesn't exist for scalar and scalar-array types.
+                # Array output types are prefixed by "a", we don't need this.
+                self._output_type = numpy_type_from_p4p_type[
+                    response.type()["value"][-1]
+                ]
 
             if is_enum:
                 # We forward enum as string
