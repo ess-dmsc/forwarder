@@ -1,4 +1,5 @@
 import json
+
 from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
@@ -37,12 +38,14 @@ class ConfigUpdate:
 
 
 def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
-    config = json.loads(config_update_payload)
     try:
+        config = json.loads(config_update_payload)
         command_type = CommandType(config["cmd"])
     except KeyError:
         logger.warning('Message received in config topic contained no "cmd" field')
         return None
+    except json.JSONDecodeError:
+        logger.warning(f'Invalid command received')
     except ValueError:
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
         return None
