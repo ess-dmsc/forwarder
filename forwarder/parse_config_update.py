@@ -44,7 +44,7 @@ def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
         logger.warning('Message received in config topic contained no "cmd" field')
         return None
     except json.JSONDecodeError:
-        logger.warning(f'Invalid command received')
+        logger.warning("Command received was not recognised as valid JSON")
     except ValueError:
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
         return None
