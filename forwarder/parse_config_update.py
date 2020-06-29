@@ -1,5 +1,4 @@
 import json
-
 from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
