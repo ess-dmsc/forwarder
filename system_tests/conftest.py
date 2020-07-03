@@ -253,3 +253,20 @@ def docker_compose_lr(request):
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
     build_and_run(options, request, "forwarder_config_lr.ini", "forwarder_tests.log")
+
+
+@pytest.fixture(scope="module", autouse=False)
+def docker_compose_storage(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    print("Started preparing test environment...", flush=True)
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "lr"
+    options["--file"] = ["compose/docker-compose-storage.yml"]
+
+    build_and_run(
+        options, request, "forwarder_config_storage.ini", "forwarder_tests.log"
+    )
