@@ -240,9 +240,6 @@ if __name__ == "__main__":
                 if config_change.command_type == CommandType.REMOVE_ALL:
                     unsubscribe_from_all()
                     status_reporter.report_status()
-                elif config_change.command_type == CommandType.EXIT:
-                    logger.info("Exit command received")
-                    break
                 elif config_change.command_type == CommandType.MALFORMED:
                     continue
                 else:

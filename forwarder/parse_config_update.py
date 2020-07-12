@@ -4,6 +4,7 @@ import attr
 from enum import Enum
 from typing import Tuple, Generator, Dict, Optional
 from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
+from streaming_data_types.forwarder_config_update_rf5k import deserialise_rf5k
 
 logger = get_logger()
 
@@ -12,7 +13,6 @@ class CommandType(Enum):
     ADD = "add"
     REMOVE = "stop_channel"
     REMOVE_ALL = "stop_all"
-    EXIT = "exit"
     MALFORMED = "malformed_config_update"
 
 
@@ -37,7 +37,17 @@ class ConfigUpdate:
     channels = attr.ib(type=Optional[Tuple[Channel, ...]])
 
 
-def parse_config_update(config_update_payload: str) -> ConfigUpdate:
+def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
+    try:
+        deserialise_rf5k(config_update_payload)
+    except RuntimeError:
+        logger.warning(
+            "Unable to deserialise payload of received configuration update message"
+        )
+    return ConfigUpdate(CommandType.MALFORMED, None)
+
+
+def _parse_config_update(config_update_payload: str) -> ConfigUpdate:
     try:
         config = json.loads(config_update_payload)
         command_type = CommandType(config["cmd"])
@@ -49,9 +59,6 @@ def parse_config_update(config_update_payload: str) -> ConfigUpdate:
     except ValueError:
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
         return ConfigUpdate(CommandType.MALFORMED, None)
-
-    if command_type == CommandType.REMOVE_ALL or command_type == CommandType.EXIT:
-        return ConfigUpdate(command_type, None)
 
     if command_type == CommandType.REMOVE:
         try:
