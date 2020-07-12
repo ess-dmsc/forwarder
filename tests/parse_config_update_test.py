@@ -1,8 +1,19 @@
-from streaming_data_types.forwarder_config_update_rf5k import serialise_rf5k
+from streaming_data_types.forwarder_config_update_rf5k import (
+    serialise_rf5k,
+    deserialise_rf5k,
+    StreamInfo,
+)
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
-from forwarder.parse_config_update import parse_config_update, CommandType
+from forwarder.parse_config_update import (
+    parse_config_update,
+    CommandType,
+    _parse_streams,
+)
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
 
 
 def test_parsing_returns_as_malformed_for_message_which_is_not_valid_rf5k_flatbuffer():
@@ -27,3 +38,75 @@ def test_add_config_type_with_no_streams_is_malformed():
     message = serialise_rf5k(UpdateType.ADD, [])
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.MALFORMED
+
+
+def test_parse_streams_skips_stream_info_if_add_config_and_channel_not_specified():
+    empty_channel = ""
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo(empty_channel, "f142", "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert not streams
+
+
+def test_parse_streams_skips_stream_info_if_remove_config_and_channel_not_specified():
+    empty_channel = ""
+    message = serialise_rf5k(
+        UpdateType.REMOVE,
+        [StreamInfo(empty_channel, "f142", "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert not streams
+
+
+def test_parse_streams_skips_stream_info_if_add_config_and_schema_not_specified():
+    empty_schema = ""
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", empty_schema, "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert not streams
+
+
+def test_parse_streams_skips_stream_info_if_add_config_and_topic_not_specified():
+    empty_topic = ""
+    message = serialise_rf5k(
+        UpdateType.ADD, [StreamInfo("test_channel", "f142", empty_topic, Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert not streams
+
+
+def test_parse_streams_skips_stream_info_if_add_config_and_schema_not_recognised():
+    nonexistent_schema = "NONEXISTENT"
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", nonexistent_schema, "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert not streams
+
+
+def test_parse_streams_parses_valid_stream_after_skipping_invalid_stream():
+    nonexistent_schema = "NONEXISTENT"
+    valid_stream_channel_name = "test_valid_stream"
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [
+            StreamInfo(
+                "test_invalid_stream", nonexistent_schema, "output_topic", Protocol.PVA
+            ),
+            StreamInfo(valid_stream_channel_name, "f142", "output_topic", Protocol.PVA),
+        ],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert len(streams) == 1
+    assert streams[0].name == valid_stream_channel_name
