@@ -1,7 +1,10 @@
-from .forwarderconfig import ForwarderConfig, EpicsProtocol
+from .forwarderconfig import ForwarderConfig
 from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
 from typing import List
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
 
 
 class ProducerWrapper:
@@ -10,11 +13,7 @@ class ProducerWrapper:
     """
 
     def __init__(
-        self,
-        server,
-        config_topic,
-        data_topic,
-        epics_protocol: EpicsProtocol = EpicsProtocol.CA,
+        self, server, config_topic, data_topic, epics_protocol: Protocol = Protocol.CA,
     ):
         self.topic = config_topic
         self.converter = ForwarderConfig(data_topic, epics_protocol)
@@ -52,11 +51,9 @@ class ProducerWrapper:
         Create a forwarder configuration to add more pvs to be monitored.
         
         :param pvs: A list of new PVs to add to the forwarder configuration.
-        :return: None
         """
-        data = self.converter.create_forwarder_configuration(pvs)
-        print("Sending data {}".format(data))
-        self.producer.produce(self.topic, value=data)
+        message_buffer = self.converter.create_forwarder_configuration(pvs)
+        self.producer.produce(self.topic, value=message_buffer)
         self.producer.flush()
 
     @staticmethod
@@ -77,17 +74,15 @@ class ProducerWrapper:
         Create a forwarder configuration to remove pvs that are being monitored.
         
         :param pvs: A list of PVs to remove from the forwarder configuration.
-        :return: None
         """
-        data = self.converter.remove_forwarder_configuration(pvs)
-        for pv in data:
-            print("Sending data {}".format(pv))
-            self.producer.produce(self.topic, value=pv)
+        message_buffer = self.converter.remove_forwarder_configuration(pvs)
+        self.producer.produce(self.topic, value=message_buffer)
+        self.producer.flush()
 
     def stop_all_pvs(self):
         """
         Sends a stop_all command to the forwarder to clear all configuration.
-
-        :return: None
         """
-        self.producer.produce(self.topic, value='{"cmd": "stop_all"}')
+        message_buffer = self.converter.remove_all_forwarder_configuration()
+        self.producer.produce(self.topic, value=message_buffer)
+        self.producer.flush()
