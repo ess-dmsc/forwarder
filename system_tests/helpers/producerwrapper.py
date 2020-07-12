@@ -13,13 +13,17 @@ class ProducerWrapper:
     """
 
     def __init__(
-        self, server, config_topic, data_topic, epics_protocol: Protocol = Protocol.CA,
+        self,
+        server: str,
+        config_topic: str,
+        data_topic: str,
+        epics_protocol: Protocol = Protocol.CA,
     ):
         self.topic = config_topic
         self.converter = ForwarderConfig(data_topic, epics_protocol)
         self._set_up_producer(server)
 
-    def _set_up_producer(self, server):
+    def _set_up_producer(self, server: str):
         conf = {"bootstrap.servers": server}
         try:
             self.producer = Producer(**conf)
@@ -57,14 +61,14 @@ class ProducerWrapper:
         self.producer.flush()
 
     @staticmethod
-    def topic_exists(topicname, server):
+    def topic_exists(topic_name: str, server: str) -> bool:
         conf = {"bootstrap.servers": server, "group.id": uuid.uuid4()}
         consumer = Consumer(**conf)
         try:
-            consumer.subscribe([topicname])
+            consumer.subscribe([topic_name])
             consumer.close()
         except KafkaException as e:
-            print("topic '{}' does not exist".format(topicname))
+            print("topic '{}' does not exist".format(topic_name))
             print(e)
             return False
         return True
