@@ -17,13 +17,13 @@ def test_parses_removeall_config_type():
     assert config_update.command_type == CommandType.REMOVE_ALL
 
 
-def test_parses_remove_config_type():
+def test_remove_config_type_with_no_streams_is_malformed():
     message = serialise_rf5k(UpdateType.REMOVE, [])
     config_update = parse_config_update(message)
-    assert config_update.command_type == CommandType.REMOVE_ALL
+    assert config_update.command_type == CommandType.MALFORMED
 
 
-def test_parses_add_config_type():
+def test_add_config_type_with_no_streams_is_malformed():
     message = serialise_rf5k(UpdateType.ADD, [])
     config_update = parse_config_update(message)
-    assert config_update.command_type == CommandType.REMOVE_ALL
+    assert config_update.command_type == CommandType.MALFORMED

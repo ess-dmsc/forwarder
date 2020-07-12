@@ -5,6 +5,10 @@ from enum import Enum
 from typing import Tuple, Generator, Dict, Optional
 from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
 from streaming_data_types.forwarder_config_update_rf5k import deserialise_rf5k
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+from flatbuffers.packer import struct as flatbuffer_struct
 
 logger = get_logger()
 
@@ -37,14 +41,44 @@ class ConfigUpdate:
     channels = attr.ib(type=Optional[Tuple[Channel, ...]])
 
 
+config_change_to_command_type = {
+    UpdateType.ADD: CommandType.ADD,
+    UpdateType.REMOVE: CommandType.REMOVE,
+    UpdateType.REMOVEALL: CommandType.REMOVE_ALL,
+}
+
+
 def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
-        deserialise_rf5k(config_update_payload)
-    except RuntimeError:
+        config_update = deserialise_rf5k(config_update_payload)
+    except (RuntimeError, flatbuffer_struct.error):
         logger.warning(
             "Unable to deserialise payload of received configuration update message"
         )
-    return ConfigUpdate(CommandType.MALFORMED, None)
+        return ConfigUpdate(CommandType.MALFORMED, None)
+
+    try:
+        command_type = config_change_to_command_type[config_update.config_change]
+    except KeyError:
+        logger.warning(
+            "Unrecogised configuration change type in configuration update message"
+        )
+        return ConfigUpdate(CommandType.MALFORMED, None)
+
+    if command_type == CommandType.REMOVE_ALL:
+        return ConfigUpdate(CommandType.REMOVE_ALL, None)
+    elif (
+        command_type == CommandType.ADD
+        or command_type == CommandType.REMOVE
+        and not config_update.streams
+    ):
+        logger.warning(
+            "Configuration update message requests adding or removing streams "
+            "but does not contain details of streams"
+        )
+        return ConfigUpdate(CommandType.MALFORMED, None)
+
+    return ConfigUpdate(command_type, None)
 
 
 def _parse_config_update(config_update_payload: str) -> ConfigUpdate:
