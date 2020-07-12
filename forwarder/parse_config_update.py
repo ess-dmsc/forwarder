@@ -1,13 +1,18 @@
-import json
 from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
-from typing import Tuple, Generator, Dict, Optional
-from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
-from streaming_data_types.forwarder_config_update_rf5k import deserialise_rf5k
+from typing import Tuple, Generator, Optional, List
+from streaming_data_types.forwarder_config_update_rf5k import (
+    deserialise_rf5k,
+    StreamInfo,
+)
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
+from forwarder.update_handlers.schema_publishers import schema_publishers
 from flatbuffers.packer import struct as flatbuffer_struct
 
 logger = get_logger()
@@ -47,6 +52,12 @@ config_change_to_command_type = {
     UpdateType.REMOVEALL: CommandType.REMOVE_ALL,
 }
 
+config_protocol_to_epics_protocol = {
+    Protocol.PVA: EpicsProtocol.PVA,
+    Protocol.CA: EpicsProtocol.CA,
+    Protocol.FAKE: EpicsProtocol.FAKE,
+}
+
 
 def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
@@ -67,97 +78,56 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 
     if command_type == CommandType.REMOVE_ALL:
         return ConfigUpdate(CommandType.REMOVE_ALL, None)
-    elif (
+
+    parsed_streams = tuple(_parse_streams(command_type, config_update.streams))
+    if (
         command_type == CommandType.ADD
         or command_type == CommandType.REMOVE
-        and not config_update.streams
+        and not parsed_streams
     ):
         logger.warning(
             "Configuration update message requests adding or removing streams "
-            "but does not contain details of streams"
+            "but does not contain valid details of streams"
         )
         return ConfigUpdate(CommandType.MALFORMED, None)
 
-    return ConfigUpdate(command_type, None)
-
-
-def _parse_config_update(config_update_payload: str) -> ConfigUpdate:
-    try:
-        config = json.loads(config_update_payload)
-        command_type = CommandType(config["cmd"])
-    except KeyError:
-        logger.warning('Message received in config topic contained no "cmd" field')
-        return ConfigUpdate(CommandType.MALFORMED, None)
-    except json.JSONDecodeError:
-        logger.warning("Command received was not recognised as valid JSON")
-    except ValueError:
-        logger.warning(f'Unrecognised command "{config["cmd"]}" received')
-        return ConfigUpdate(CommandType.MALFORMED, None)
-
-    if command_type == CommandType.REMOVE:
-        try:
-            channel_name = config["channel"]
-        except ValueError:
-            logger.warning(
-                f'"channel" field not found in received "{command_type}" command'
-            )
-            return ConfigUpdate(CommandType.MALFORMED, None)
-        return ConfigUpdate(
-            command_type, (Channel(channel_name, EpicsProtocol.NONE, "", ""),)
-        )
-
-    try:
-        streams = config["streams"]
-    except KeyError:
-        logger.warning('Message received in config topic contained no "streams" field')
-        return ConfigUpdate(CommandType.MALFORMED, None)
-
-    return ConfigUpdate(command_type, tuple(_parse_streams(command_type, streams)))
+    return ConfigUpdate(command_type, parsed_streams)
 
 
 def _parse_streams(
-    command_type: CommandType, streams: Dict
+    command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
-    for update_stream in streams:
-        try:
-            channel = update_stream["channel"]
-        except ValueError:
+    for stream in streams:
+        if not stream.channel:
             logger.warning(
-                f'"channel" field not found in "stream" entry in received "{command_type}" command'
+                "Channel name not given when trying to add stream from configuration update message."
             )
             continue
 
-        if "channel_provider_type" in update_stream.keys():
-            try:
-                protocol = EpicsProtocol(update_stream["channel_provider_type"])
-            except ValueError:
-                logger.warning(
-                    f'Unrecognised "channel_provider_type" {update_stream["channel_provider_type"]} '
-                    f"provided in configuration change"
-                )
-                continue
-        else:
-            protocol = EpicsProtocol.PVA
+        if command_type == CommandType.REMOVE:
+            yield Channel(stream.channel, EpicsProtocol.NONE, "", "")
 
-        try:
-            output_broker, output_topic = get_broker_and_topic_from_uri(
-                update_stream["converter"]["topic"]
-            )
-        except ValueError:
+        if not stream.schema or not stream.topic:
             logger.warning(
-                f'"topic" field not found in "stream" entry in received "{command_type}" command'
+                f"Schema or output topic not given when trying to add stream from configuration "
+                f"update message. Channel was given as {stream.channel}."
             )
             continue
-        except RuntimeError as e:
-            logger.warning(e)
+
+        if stream.schema not in schema_publishers.keys():
+            logger.warning(
+                f'Unsupported schema type "{stream.schema}" specified for'
+                f"stream in configuration update message."
+            )
             continue
 
         try:
-            schema = update_stream["converter"]["schema"]
-        except ValueError:
+            epics_protocol = config_protocol_to_epics_protocol[stream.protocol]
+        except KeyError:
             logger.warning(
-                f'"schema" field not found in "stream" entry in received "{command_type}" command'
+                f'Unrecognised protocol type "{stream.protocol}" specified for'
+                f"stream in configuration update message."
             )
             continue
 
-        yield Channel(channel, protocol, output_topic, schema)
+        yield Channel(stream.channel, epics_protocol, stream.topic, stream.schema)
