@@ -104,6 +104,7 @@ def _parse_streams(
 
         if command_type == CommandType.REMOVE:
             yield Channel(stream.channel, EpicsProtocol.NONE, "", "")
+            continue
 
         if not stream.schema or not stream.topic:
             logger.warning(

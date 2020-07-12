@@ -94,6 +94,30 @@ def test_parse_streams_skips_stream_info_if_add_config_and_schema_not_recognised
     assert not streams
 
 
+def test_parse_streams_parses_valid_remove_config():
+    test_channel_name = "test_channel"
+    message = serialise_rf5k(
+        UpdateType.REMOVE,
+        [StreamInfo(test_channel_name, "f142", "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert len(streams) == 1
+    assert streams[0].name == test_channel_name
+
+
+def test_parse_streams_parses_valid_add_config():
+    test_channel_name = "test_channel"
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo(test_channel_name, "f142", "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
+    assert len(streams) == 1
+    assert streams[0].name == test_channel_name
+
+
 def test_parse_streams_parses_valid_stream_after_skipping_invalid_stream():
     nonexistent_schema = "NONEXISTENT"
     valid_stream_channel_name = "test_valid_stream"
