@@ -7,4 +7,5 @@ graypy
 numpy
 attrs
 ConfigArgParse
-ess-streaming-data-types >= 0.7.0
+# ess-streaming-data-types >= 0.9.0
+-e git+git://github.com/ess-dmsc/python-streaming-data-types.git@dd3c88ab2ed07fb7b0e3e234caac018dab12602e#egg=streaming_data_types
