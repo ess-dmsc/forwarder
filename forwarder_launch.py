@@ -237,25 +237,24 @@ if __name__ == "__main__":
             else:
                 logger.info("Received config message")
                 config_change = parse_config_update(msg.value())
-                if config_change is not None:
-                    if config_change.command_type == CommandType.REMOVE_ALL:
-                        unsubscribe_from_all()
+                if config_change.command_type == CommandType.REMOVE_ALL:
+                    unsubscribe_from_all()
+                    status_reporter.report_status()
+                elif config_change.command_type == CommandType.EXIT:
+                    logger.info("Exit command received")
+                    break
+                elif config_change.command_type == CommandType.MALFORMED:
+                    continue
+                else:
+                    if config_change.channels is not None:
+                        for channel in config_change.channels:
+                            if config_change.command_type == CommandType.ADD:
+                                subscribe_to_pv(
+                                    channel, args.fake_pv_period, args.pv_update_period,
+                                )
+                            elif config_change.command_type == CommandType.REMOVE:
+                                unsubscribe_from_pv(channel.name)
                         status_reporter.report_status()
-                    elif config_change.command_type == CommandType.EXIT:
-                        logger.info("Exit command received")
-                        break
-                    else:
-                        if config_change.channels is not None:
-                            for channel in config_change.channels:
-                                if config_change.command_type == CommandType.ADD:
-                                    subscribe_to_pv(
-                                        channel,
-                                        args.fake_pv_period,
-                                        args.pv_update_period,
-                                    )
-                                elif config_change.command_type == CommandType.REMOVE:
-                                    unsubscribe_from_pv(channel.name)
-                            status_reporter.report_status()
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

@@ -13,6 +13,7 @@ class CommandType(Enum):
     REMOVE = "stop_channel"
     REMOVE_ALL = "stop_all"
     EXIT = "exit"
+    MALFORMED = "malformed_config_update"
 
 
 class EpicsProtocol(Enum):
@@ -36,18 +37,18 @@ class ConfigUpdate:
     channels = attr.ib(type=Optional[Tuple[Channel, ...]])
 
 
-def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
+def parse_config_update(config_update_payload: str) -> ConfigUpdate:
     try:
         config = json.loads(config_update_payload)
         command_type = CommandType(config["cmd"])
     except KeyError:
         logger.warning('Message received in config topic contained no "cmd" field')
-        return None
+        return ConfigUpdate(CommandType.MALFORMED, None)
     except json.JSONDecodeError:
         logger.warning("Command received was not recognised as valid JSON")
     except ValueError:
         logger.warning(f'Unrecognised command "{config["cmd"]}" received')
-        return None
+        return ConfigUpdate(CommandType.MALFORMED, None)
 
     if command_type == CommandType.REMOVE_ALL or command_type == CommandType.EXIT:
         return ConfigUpdate(command_type, None)
@@ -59,7 +60,7 @@ def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
             logger.warning(
                 f'"channel" field not found in received "{command_type}" command'
             )
-            return None
+            return ConfigUpdate(CommandType.MALFORMED, None)
         return ConfigUpdate(
             command_type, (Channel(channel_name, EpicsProtocol.NONE, "", ""),)
         )
@@ -68,7 +69,7 @@ def parse_config_update(config_update_payload: str) -> Optional[ConfigUpdate]:
         streams = config["streams"]
     except KeyError:
         logger.warning('Message received in config topic contained no "streams" field')
-        return None
+        return ConfigUpdate(CommandType.MALFORMED, None)
 
     return ConfigUpdate(command_type, tuple(_parse_streams(command_type, streams)))
 
