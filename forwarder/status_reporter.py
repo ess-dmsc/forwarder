@@ -15,6 +15,7 @@ class StatusReporter:
         producer: KafkaProducer,
         topic: str,
         service_id: str,
+        version: str,
         interval_ms: int = 4000,
     ):
         self._repeating_timer = RepeatTimer(
@@ -25,6 +26,7 @@ class StatusReporter:
         self._update_handlers = update_handlers
         self._service_id = service_id
         self._interval_ms = interval_ms
+        self._version = version
 
     def start(self):
         self._repeating_timer.start()
@@ -40,7 +42,7 @@ class StatusReporter:
         )
         status_message = serialise_x5f2(
             "Forwarder",
-            "version",
+            self._version,
             self._service_id,
             gethostname(),
             getpid(),

@@ -15,6 +15,7 @@ from forwarder.application_logger import setup_logger
 from forwarder.parse_config_update import parse_config_update, CommandType, Channel
 from forwarder.update_handlers.create_update_handler import create_update_handler
 from forwarder.status_reporter import StatusReporter
+import configparser
 
 
 def subscribe_to_pv(
@@ -53,7 +54,49 @@ def unsubscribe_from_all():
     logger.info("Unsubscribed from all PVs")
 
 
+class VersionArgParser(configargparse.ArgumentParser):
+    def error(self, message: str):
+        """
+        Override the default implementation so nothing gets printed to screen
+        """
+        raise RuntimeError("Did not ask for --version")
+
+    def _print_message(self, message: str, file: None = None):
+        """
+        Override the default implementation so nothing gets printed to screen
+        """
+        raise RuntimeError("Did not ask for --version")
+
+
+def _get_version() -> str:
+    """
+    Gets the current version from the setup.cfg file
+    """
+    config = configparser.ConfigParser()
+    config.read("setup.cfg")
+    return str(config["metadata"]["version"])
+
+
+def _print_version_if_requested():
+    version_arg_parser = VersionArgParser()
+    version_arg_parser.add_argument(
+        "--version",
+        required=True,
+        action="store_true",
+        help="Print application version and exit",
+        env_var="VERSION",
+    )
+    try:
+        version_arg_parser.parse_args()
+        print(_get_version())
+        exit()
+    except RuntimeError:
+        pass
+
+
 def parse_args():
+    _print_version_if_requested()
+
     parser = configargparse.ArgumentParser(
         description="Writes NeXus files in a format specified with a json template.\n"
         "Writer modules can be used to populate the file from Kafka topics."
@@ -149,15 +192,14 @@ def parse_args():
 
 if __name__ == "__main__":
     args = parse_args()
-    if args.version:
-        raise NotImplementedError("Versioning not implemented yet")
 
     logger = setup_logger(
         level=args.verbosity,
         log_file_name=args.log_file,
         graylog_logger_address=args.graylog_logger_address,
     )
-    logger.info("Forwarder started")
+    version = _get_version()
+    logger.info(f"Forwarder v{version} started")
 
     # EPICS
     ca_ctx = CaContext()
@@ -172,7 +214,11 @@ if __name__ == "__main__":
 
     status_broker, status_topic = get_broker_and_topic_from_uri(args.status_topic)
     status_reporter = StatusReporter(
-        update_handlers, create_producer(status_broker), status_topic, args.service_id
+        update_handlers,
+        create_producer(status_broker),
+        status_topic,
+        args.service_id,
+        version,
     )
     status_reporter.start()
 
