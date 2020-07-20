@@ -1,7 +1,6 @@
 tests
 system_tests
 manual_testing
-setup.cfg
 .gitignore
 .pre-commit-config.yaml
 docker-compose.yml
