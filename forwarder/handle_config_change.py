@@ -26,14 +26,17 @@ def _subscribe_to_pv(
         logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
         return
 
-    update_handlers[new_channel.name] = create_update_handler(
-        producer,
-        ca_ctx,
-        pva_ctx,
-        new_channel,
-        fake_pv_period,
-        periodic_update_ms=pv_update_period,
-    )
+    try:
+        update_handlers[new_channel.name] = create_update_handler(
+            producer,
+            ca_ctx,
+            pva_ctx,
+            new_channel,
+            fake_pv_period,
+            periodic_update_ms=pv_update_period,
+        )
+    except RuntimeError as error:
+        logger.error(str(error))
     logger.info(f"Subscribed to PV {new_channel.name}")
 
 

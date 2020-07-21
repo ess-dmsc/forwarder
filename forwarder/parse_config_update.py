@@ -32,15 +32,17 @@ class EpicsProtocol(Enum):
     NONE = "none"
 
 
-@attr.s
+# Using frozen=True makes instances of Channel immutable
+# and means attrs generates a __hash__ method so that we can use it as a dictionary key
+@attr.s(frozen=True)
 class Channel:
     name = attr.ib(type=str)
     protocol = attr.ib(type=EpicsProtocol)
-    output_topic = attr.ib(type=str)
-    schema = attr.ib(type=str)
+    output_topic = attr.ib(type=Optional[str])
+    schema = attr.ib(type=Optional[str])
 
 
-@attr.s
+@attr.s(frozen=True)
 class ConfigUpdate:
     command_type = attr.ib(type=CommandType)
     channels = attr.ib(type=Optional[Tuple[Channel, ...]])
