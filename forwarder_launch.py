@@ -1,10 +1,6 @@
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
-import logging
-import configargparse
-from os import getpid
-from socket import gethostname
-from typing import Optional, Dict
+from typing import Dict
 
 from forwarder.kafka.kafka_helpers import (
     create_producer,
@@ -12,182 +8,10 @@ from forwarder.kafka.kafka_helpers import (
     get_broker_and_topic_from_uri,
 )
 from forwarder.application_logger import setup_logger
-from forwarder.parse_config_update import parse_config_update, CommandType, Channel
-from forwarder.update_handlers.create_update_handler import create_update_handler
+from forwarder.parse_config_update import parse_config_update
 from forwarder.status_reporter import StatusReporter
-import configparser
-
-
-def subscribe_to_pv(
-    new_channel: Channel, fake_pv_period: int, pv_update_period: Optional[int]
-):
-    if new_channel.name in update_handlers.keys():
-        logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
-        return
-
-    update_handlers[new_channel.name] = create_update_handler(
-        producer,
-        ca_ctx,
-        pva_ctx,
-        new_channel,
-        fake_pv_period,
-        periodic_update_ms=pv_update_period,
-    )
-    logger.info(f"Subscribed to PV {new_channel.name}")
-
-
-def unsubscribe_from_pv(name: str):
-    try:
-        update_handlers[name].stop()
-        del update_handlers[name]
-    except KeyError:
-        logger.warning(
-            "Forwarder asked to unsubscribe from a PV it is not subscribed to"
-        )
-    logger.info(f"Unsubscribed from PV {name}")
-
-
-def unsubscribe_from_all():
-    for _, update_handler in update_handlers.items():
-        update_handler.stop()
-    update_handlers.clear()
-    logger.info("Unsubscribed from all PVs")
-
-
-class VersionArgParser(configargparse.ArgumentParser):
-    def error(self, message: str):
-        """
-        Override the default implementation so nothing gets printed to screen
-        """
-        raise RuntimeError("Did not ask for --version")
-
-    def _print_message(self, message: str, file: None = None):
-        """
-        Override the default implementation so nothing gets printed to screen
-        """
-        raise RuntimeError("Did not ask for --version")
-
-
-def _get_version() -> str:
-    """
-    Gets the current version from the setup.cfg file
-    """
-    config = configparser.ConfigParser()
-    config.read("setup.cfg")
-    return str(config["metadata"]["version"])
-
-
-def _print_version_if_requested():
-    version_arg_parser = VersionArgParser()
-    version_arg_parser.add_argument(
-        "--version",
-        required=True,
-        action="store_true",
-        help="Print application version and exit",
-        env_var="VERSION",
-    )
-    try:
-        version_arg_parser.parse_args()
-        print(_get_version())
-        exit()
-    except RuntimeError:
-        pass
-
-
-def parse_args():
-    _print_version_if_requested()
-
-    parser = configargparse.ArgumentParser(
-        description="Writes NeXus files in a format specified with a json template.\n"
-        "Writer modules can be used to populate the file from Kafka topics."
-    )
-    parser.add_argument(
-        "--version",
-        action="store_true",
-        help="Print application version and exit",
-        env_var="VERSION",
-    )
-    parser.add_argument(
-        "--config-topic",
-        required=True,
-        help="<host[:port][/topic]> Kafka broker/topic to listen for commands",
-        type=str,
-        env_var="CONFIG_TOPIC",
-    )
-    parser.add_argument(
-        "--status-topic",
-        required=True,
-        help="<host[:port][/topic]> Kafka broker/topic to publish status updates on",
-        type=str,
-        env_var="STATUS_TOPIC",
-    )
-    parser.add_argument(
-        "--output-broker",
-        required=True,
-        help="<host[:port]> Kafka broker to forward data into",
-        type=str,
-        env_var="OUTPUT_BROKER",
-    )
-    parser.add_argument(
-        "--graylog-logger-address",
-        required=False,
-        help="<host:port> Log to Graylog",
-        type=str,
-        env_var="GRAYLOG_LOGGER_ADDRESS",
-    )
-    parser.add_argument(
-        "--log-file", required=False, help="Log filename", type=str, env_var="LOG_FILE"
-    )
-    parser.add_argument(
-        "-c",
-        "--config-file",
-        required=False,
-        is_config_file=True,
-        help="Read configuration from an ini file",
-        env_var="CONFIG_FILE",
-    )
-    parser.add_argument(
-        "--pv-update-period",
-        required=False,
-        help="If set then PV value will be sent with this interval even if unchanged (units=milliseconds)",
-        env_var="PV_UPDATE_PERIOD",
-        type=int,
-    )
-    parser.add_argument(
-        "--service-id",
-        required=False,
-        help='Identifier for this particular instance of the Forwarder, defaults to "Forwarder.<HOSTNAME>.<PID>',
-        default=f"Forwarder.{gethostname()}.{getpid()}",
-        env_var="SERVICE_ID",
-        type=str,
-    )
-    parser.add_argument(
-        "--fake-pv-period",
-        required=False,
-        help="Set period for random generated PV updates when channel_provider_type is specified as 'fake' (units=milliseconds)",
-        env_var="FAKE_PV_PERIOD",
-        type=int,
-        default=1000,
-    )
-    log_choice_to_enum = {
-        "Trace": logging.DEBUG,
-        "Debug": logging.DEBUG,
-        "Warning": logging.WARNING,
-        "Error": logging.ERROR,
-        "Critical": logging.CRITICAL,
-    }
-    parser.add_argument(
-        "-v",
-        "--verbosity",
-        required=False,
-        help="Set logging level",
-        choices=log_choice_to_enum.keys(),
-        default="Error",
-        env_var="VERBOSITY",
-    )
-    optargs = parser.parse_args()
-    optargs.verbosity = log_choice_to_enum[optargs.verbosity]
-    return optargs
+from forwarder.parse_commandline_args import parse_args, get_version
+from forwarder.handle_config_change import handle_configuration_change
 
 
 if __name__ == "__main__":
@@ -198,7 +22,7 @@ if __name__ == "__main__":
         log_file_name=args.log_file,
         graylog_logger_address=args.graylog_logger_address,
     )
-    version = _get_version()
+    version = get_version()
     logger.info(f"Forwarder v{version} started")
 
     # EPICS
@@ -219,12 +43,12 @@ if __name__ == "__main__":
         status_topic,
         args.service_id,
         version,
+        logger,
     )
     status_reporter.start()
 
     # Metrics
-    # use https://github.com/zillow/aiographite ?
-    # can modify https://github.com/claws/aioprometheus for graphite?
+    # use https://github.com/Jetsetter/graphyte ?
     # https://julien.danjou.info/atomic-lock-free-counters-in-python/
 
     try:
@@ -237,21 +61,17 @@ if __name__ == "__main__":
             else:
                 logger.info("Received config message")
                 config_change = parse_config_update(msg.value())
-                if config_change.command_type == CommandType.REMOVE_ALL:
-                    unsubscribe_from_all()
-                    status_reporter.report_status()
-                elif config_change.command_type == CommandType.MALFORMED:
-                    continue
-                else:
-                    if config_change.channels is not None:
-                        for channel in config_change.channels:
-                            if config_change.command_type == CommandType.ADD:
-                                subscribe_to_pv(
-                                    channel, args.fake_pv_period, args.pv_update_period,
-                                )
-                            elif config_change.command_type == CommandType.REMOVE:
-                                unsubscribe_from_pv(channel.name)
-                        status_reporter.report_status()
+                handle_configuration_change(
+                    config_change,
+                    args.fake_pv_period,
+                    args.pv_update_period,
+                    update_handlers,
+                    producer,
+                    ca_ctx,
+                    pva_ctx,
+                    logger,
+                    status_reporter,
+                )
 
     except KeyboardInterrupt:
         logger.info("%% Aborted by user")

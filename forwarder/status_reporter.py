@@ -6,6 +6,7 @@ import json
 import time
 from socket import gethostname
 from os import getpid
+from logging import Logger
 
 
 class StatusReporter:
@@ -16,6 +17,7 @@ class StatusReporter:
         topic: str,
         service_id: str,
         version: str,
+        logger: Logger,
         interval_ms: int = 4000,
     ):
         self._repeating_timer = RepeatTimer(
@@ -27,6 +29,7 @@ class StatusReporter:
         self._service_id = service_id
         self._interval_ms = interval_ms
         self._version = version
+        self._logger = logger
 
     def start(self):
         self._repeating_timer.start()
@@ -52,6 +55,7 @@ class StatusReporter:
         self._producer.produce(
             self._topic, bytes(status_message), int(time.time() * 1000)
         )
+        self._logger.debug(status_json)
 
     def stop(self):
         self._producer.close()

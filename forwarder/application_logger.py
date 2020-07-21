@@ -11,7 +11,7 @@ def setup_logger(
     graylog_logger_address: Optional[str] = None,
 ) -> logging.Logger:
     if log_file_name is not None:
-        logging.basicConfig(filename=log_file_name)
+        logging.basicConfig(filename=log_file_name, format="%(asctime)s %(message)s")
     else:
         logging.basicConfig()
     logger = logging.getLogger(logger_name)
