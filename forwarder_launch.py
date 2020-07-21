@@ -23,7 +23,7 @@ if __name__ == "__main__":
         graylog_logger_address=args.graylog_logger_address,
     )
     version = get_version()
-    logger.info(f"Forwarder v{version} started")
+    logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
 
     # EPICS
     ca_ctx = CaContext()
