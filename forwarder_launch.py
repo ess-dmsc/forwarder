@@ -12,6 +12,8 @@ from forwarder.parse_config_update import parse_config_update
 from forwarder.status_reporter import StatusReporter
 from forwarder.parse_commandline_args import parse_args, get_version
 from forwarder.handle_config_change import handle_configuration_change
+from forwarder.update_handlers.create_update_handler import UpdateHandler
+from forwarder.parse_config_update import Channel
 
 
 if __name__ == "__main__":
@@ -28,7 +30,7 @@ if __name__ == "__main__":
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
-    update_handlers: Dict = dict()
+    update_handlers: Dict[Channel, UpdateHandler] = dict()
 
     # Kafka
     producer = create_producer(args.output_broker)

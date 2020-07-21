@@ -10,11 +10,12 @@ from forwarder.status_reporter import StatusReporter
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.update_handlers.create_update_handler import UpdateHandler
 
 
 def _subscribe_to_pv(
     new_channel: Channel,
-    update_handlers: Dict,
+    update_handlers: Dict[Channel, UpdateHandler],
     producer: KafkaProducer,
     ca_ctx: CaContext,
     pva_ctx: PvaContext,
@@ -22,12 +23,14 @@ def _subscribe_to_pv(
     fake_pv_period: int,
     pv_update_period: Optional[int],
 ):
-    if new_channel.name in update_handlers.keys():
-        logger.warning("Forwarder asked to subscribe to PV it is already subscribed to")
+    if new_channel in update_handlers.keys():
+        logger.warning(
+            "Forwarder asked to subscribe to PV it is already has an identical configuration for"
+        )
         return
 
     try:
-        update_handlers[new_channel.name] = create_update_handler(
+        update_handlers[new_channel] = create_update_handler(
             producer,
             ca_ctx,
             pva_ctx,
@@ -40,18 +43,24 @@ def _subscribe_to_pv(
     logger.info(f"Subscribed to PV {new_channel.name}")
 
 
-def _unsubscribe_from_pv(name: str, update_handlers: Dict, logger: Logger):
-    try:
-        update_handlers[name].stop()
-        del update_handlers[name]
-    except KeyError:
-        logger.warning(
-            "Forwarder asked to unsubscribe from a PV it is not subscribed to"
-        )
+def _unsubscribe_from_pv(
+    name: str, update_handlers: Dict[Channel, UpdateHandler], logger: Logger
+):
+    channels_to_remove = []
+    for channel in update_handlers.keys():
+        if channel.name == name:
+            channels_to_remove.append(channel)
+
+    for channel in channels_to_remove:
+        update_handlers[channel].stop()
+        del update_handlers[channel]
+
     logger.info(f"Unsubscribed from PV {name}")
 
 
-def _unsubscribe_from_all(update_handlers: Dict, logger: Logger):
+def _unsubscribe_from_all(
+    update_handlers: Dict[Channel, UpdateHandler], logger: Logger
+):
     for _, update_handler in update_handlers.items():
         update_handler.stop()
     update_handlers.clear()
@@ -62,7 +71,7 @@ def handle_configuration_change(
     configuration_change: ConfigUpdate,
     fake_pv_period: int,
     pv_update_period: Optional[int],
-    update_handlers: Dict,
+    update_handlers: Dict[Channel, UpdateHandler],
     producer: KafkaProducer,
     ca_ctx: CaContext,
     pva_ctx: PvaContext,
