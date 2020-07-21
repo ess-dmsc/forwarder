@@ -27,7 +27,9 @@ _logger.addHandler(logging.NullHandler())
 
 
 def _get_channel_names(update_handlers: Dict[Channel, UpdateHandler]) -> List[str]:
-    return [channel.name for channel in update_handlers.keys()]
+    return [
+        channel.name for channel in update_handlers.keys() if channel.name is not None
+    ]
 
 
 @pytest.fixture(scope="function")

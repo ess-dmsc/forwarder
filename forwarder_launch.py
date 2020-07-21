@@ -30,6 +30,8 @@ if __name__ == "__main__":
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
+    # Using dictionary with Channel as key to ensure we avoid having multiple handlers active for
+    # identical configurations: serialising updates from same pv with same schema and publishing to same topic
     update_handlers: Dict[Channel, UpdateHandler] = dict()
 
     # Kafka

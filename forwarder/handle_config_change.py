@@ -44,7 +44,7 @@ def _subscribe_to_pv(
 
 
 def _unsubscribe_from_pv(
-    name: str, update_handlers: Dict[Channel, UpdateHandler], logger: Logger
+    name: Optional[str], update_handlers: Dict[Channel, UpdateHandler], logger: Logger
 ):
     channels_to_remove = []
     for channel in update_handlers.keys():
