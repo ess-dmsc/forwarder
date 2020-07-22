@@ -1,65 +1,36 @@
-import json
-from enum import Enum
-
-
-class EpicsProtocol(Enum):
-    PVA = "pva"
-    CA = "ca"
-    FAKE = "fake"
+from streaming_data_types.forwarder_config_update_rf5k import serialise_rf5k, StreamInfo
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+from typing import List
 
 
 class ForwarderConfig:
     """
-    Class that converts the pv information to a forwarder config.
+    Class that converts the pv information to a forwarder config message payload
     """
 
     def __init__(
-        self, topic, epics_protocol: EpicsProtocol = EpicsProtocol.CA, schema="f142"
+        self, topic: str, epics_protocol: Protocol = Protocol.CA, schema: str = "f142"
     ):
         self.schema = schema
         self.topic = topic
         self.epics_protocol = epics_protocol
 
-    def _get_converter(self):
-        """
-        Get the flatbuffers schema and the topic it's being applied to.
-        
-        :return:(dict) The dictionary of the schema and topic for the flatbuffers converter.
-        """
-        return {"schema": self.schema, "topic": "//localhost:9092/" + self.topic}
+    def _create_streams(self, pvs: List[str]) -> List[StreamInfo]:
+        return [
+            StreamInfo(pv, self.schema, self.topic, self.epics_protocol) for pv in pvs
+        ]
 
-    def _create_stream(self, blk):
-        """
-        Create a stream for the JSON for specified block.
-        
-        :param blk:(string) The block containing the PV data.
-        :return:(dict) The stream information including channel and flatbuffer encoding.
-        """
-        return {
-            "channel": blk,
-            "converter": self._get_converter(),
-            "channel_provider_type": self.epics_protocol.value,
-        }
+    def create_forwarder_configuration(self, pvs: List[str]) -> bytes:
+        return serialise_rf5k(UpdateType.ADD, self._create_streams(pvs))
 
-    def create_forwarder_configuration(self, pvs):
-        """
-        Add all specified PVs and return JSON string.
-        
-        :param pvs:(list) The PVs in all blocks.
-        :return: (string) The JSON configuration string.
-        """
-        output_dict = {"cmd": "add", "streams": [self._create_stream(pv) for pv in pvs]}
-        return json.dumps(output_dict)
+    def remove_forwarder_configuration(self, pvs: List[str]) -> bytes:
+        return serialise_rf5k(UpdateType.REMOVE, self._create_streams(pvs))
 
-    def remove_forwarder_configuration(self, pvs):
-        """
-        Remove old forwarder configuration with the stop_channel command.
-        
-        :param pvs:(list) All PVs to be removed.
-        :return:(list) A list of json strings with all PVs to remove.
-        """
-        output_list = []
-        for pv in pvs:
-            out_dict = {"cmd": "stop_channel", "channel": pv}
-            output_list.append(json.dumps(out_dict))
-        return output_list
+    @staticmethod
+    def remove_all_forwarder_configuration() -> bytes:
+        return serialise_rf5k(UpdateType.REMOVEALL, [])

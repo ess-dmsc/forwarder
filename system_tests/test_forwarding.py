@@ -1,6 +1,8 @@
 from confluent_kafka import TopicPartition, Consumer
 from .helpers.producerwrapper import ProducerWrapper
-from .helpers.forwarderconfig import EpicsProtocol
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
 from time import sleep
 from .helpers.flatbuffer_helpers import (
     check_expected_value,
@@ -80,13 +82,13 @@ def wait_for_forwarder_to_be_ready(
     cons.close()
 
 
-@pytest.mark.parametrize("epics_protocol", [EpicsProtocol.CA, EpicsProtocol.PVA])
+@pytest.mark.parametrize("epics_protocol", [Protocol.CA, Protocol.PVA])
 def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwarding):
     # Update forwarder configuration over Kafka
     # The SoftIOC makes our test PVs available over CA and PVA, so we can test both here
 
     # Use a different topic for each parameter value, otherwise failing one test can cause the following tests to fail
-    data_topic = f"TEST_forwarderData_{epics_protocol.value}"
+    data_topic = f"TEST_forwarderData_{epics_protocol}"
 
     wait_for_forwarder_to_be_ready()
     prod = ProducerWrapper(
@@ -258,7 +260,7 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
     data_topic = "TEST_forwarderData_connection_status"
 
     prod = ProducerWrapper(
-        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=EpicsProtocol.PVA
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=Protocol.PVA
     )
     configured_list_of_pvs = []
     number_of_config_updates = 100
@@ -288,7 +290,7 @@ def test_forwarder_sends_fake_pv_updates(docker_compose_forwarding):
     data_topic = "TEST_forwarderData_fake"
     wait_for_forwarder_to_be_ready()
     producer = ProducerWrapper(
-        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=EpicsProtocol.FAKE
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=Protocol.FAKE
     )
     producer.add_config(["FakePV"])
 
