@@ -152,3 +152,14 @@ def test_parse_streams_skips_stream_info_if_remove_config_and_channel_name_schem
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
     assert not streams
+
+
+def test_parse_streams_skips_stream_info_if_remove_config_and_schema_present_but_not_recognised():
+    nonexistent_schema = "NONEXISTENT"
+    message = serialise_rf5k(
+        UpdateType.REMOVE,
+        [StreamInfo("test_channel", nonexistent_schema, "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
+    assert not streams
