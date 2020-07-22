@@ -32,15 +32,17 @@ class EpicsProtocol(Enum):
     NONE = "none"
 
 
-@attr.s
+# Using frozen=True makes instances of Channel immutable
+# and means attrs generates a __hash__ method so that we can use it as a dictionary key
+@attr.s(frozen=True)
 class Channel:
-    name = attr.ib(type=str)
+    name = attr.ib(type=Optional[str])
     protocol = attr.ib(type=EpicsProtocol)
-    output_topic = attr.ib(type=str)
-    schema = attr.ib(type=str)
+    output_topic = attr.ib(type=Optional[str])
+    schema = attr.ib(type=Optional[str])
 
 
-@attr.s
+@attr.s(frozen=True)
 class ConfigUpdate:
     command_type = attr.ib(type=CommandType)
     channels = attr.ib(type=Optional[Tuple[Channel, ...]])
@@ -96,24 +98,22 @@ def _parse_streams(
     command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
     for stream in streams:
-        if not stream.channel:
+        fields_present = (bool(stream.channel), bool(stream.schema), bool(stream.topic))
+        if command_type == CommandType.ADD and not all(fields_present):
             logger.warning(
-                "Channel name not given when trying to add stream from configuration update message."
+                f"All details must be given when adding a stream, but received ADD request for "
+                f"channel='{stream.channel}', schema='{stream.schema}', topic='{stream.topic}'. Skipping."
             )
             continue
 
-        if command_type == CommandType.REMOVE:
-            yield Channel(stream.channel, EpicsProtocol.NONE, "", "")
-            continue
-
-        if not stream.schema or not stream.topic:
+        if command_type == CommandType.REMOVE and not any(fields_present):
             logger.warning(
-                f"Schema or output topic not given when trying to add stream from configuration "
-                f"update message. Channel was given as {stream.channel}."
+                f"At least one of channel, schema or topic must be given when removing a stream, but received REMOVE "
+                f"request for channel='{stream.channel}', schema='{stream.schema}', topic='{stream.topic}'. Skipping."
             )
             continue
 
-        if stream.schema not in schema_publishers.keys():
+        if stream.schema and stream.schema not in schema_publishers.keys():
             logger.warning(
                 f'Unsupported schema type "{stream.schema}" specified for'
                 f"stream in configuration update message."

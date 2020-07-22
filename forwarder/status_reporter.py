@@ -6,16 +6,20 @@ import json
 import time
 from socket import gethostname
 from os import getpid
+from logging import Logger
+from forwarder.update_handlers.create_update_handler import UpdateHandler
+from forwarder.parse_config_update import Channel
 
 
 class StatusReporter:
     def __init__(
         self,
-        update_handlers: Dict,
+        update_handlers: Dict[Channel, UpdateHandler],
         producer: KafkaProducer,
         topic: str,
         service_id: str,
         version: str,
+        logger: Logger,
         interval_ms: int = 4000,
     ):
         self._repeating_timer = RepeatTimer(
@@ -27,6 +31,7 @@ class StatusReporter:
         self._service_id = service_id
         self._interval_ms = interval_ms
         self._version = version
+        self._logger = logger
 
     def start(self):
         self._repeating_timer.start()
@@ -35,8 +40,8 @@ class StatusReporter:
         status_json = json.dumps(
             {
                 "streams": [
-                    {"channel_name": channel_name}
-                    for channel_name in self._update_handlers.keys()
+                    {"channel_name": channel.name}
+                    for channel in self._update_handlers.keys()
                 ]
             }
         )
@@ -52,6 +57,7 @@ class StatusReporter:
         self._producer.produce(
             self._topic, bytes(status_message), int(time.time() * 1000)
         )
+        self._logger.debug(status_json)
 
     def stop(self):
         self._producer.close()

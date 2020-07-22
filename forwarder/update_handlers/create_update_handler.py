@@ -1,12 +1,15 @@
 from forwarder.parse_config_update import EpicsProtocol
 from forwarder.parse_config_update import Channel as ConfigChannel
 from forwarder.kafka.kafka_producer import KafkaProducer
-from typing import Optional
+from typing import Optional, Union
 from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
+
+
+UpdateHandler = Union[CAUpdateHandler, PVAUpdateHandler, FakeUpdateHandler]
 
 
 def create_update_handler(
@@ -16,7 +19,19 @@ def create_update_handler(
     channel: ConfigChannel,
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
-):
+) -> UpdateHandler:
+    if channel.name is None:
+        raise RuntimeError(
+            f"PV name not specified when adding handler for channel {channel.name}"
+        )
+    if channel.output_topic is None:
+        raise RuntimeError(
+            f"Output topic not specified when adding handler for channel {channel.name}"
+        )
+    if channel.schema is None:
+        raise RuntimeError(
+            f"Schema not specified when adding handler for channel {channel.name}"
+        )
     if channel.protocol == EpicsProtocol.PVA:
         return PVAUpdateHandler(
             producer,
@@ -43,3 +58,4 @@ def create_update_handler(
             channel.schema,
             fake_pv_period_ms,
         )
+    raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")
