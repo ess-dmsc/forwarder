@@ -54,9 +54,6 @@ Use environment variables to pass command line arguments, for example
 docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder
 ```
 
-## C++ Forwarder features not replicated here
+## Making a release
 
-Won't do unless we discover it is necessary:
-- Configure forwarding from json file (already agreed to remove from C++ codebase)
-- Forwarding to multiple Kafka clusters, `--output-broker` can be used to configure, broker in PV configuration is ignored (but allowed for compatibility with C++ codebase interface for now)
-- Forwarding same PV with different converters (can be added separately so it is just a performance improvement, if you would ever want to do this)
+Version should be set in `setup.cfg`. The application picks up its version from that file.
