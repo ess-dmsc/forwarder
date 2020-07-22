@@ -161,7 +161,7 @@ def test_update_handlers_can_be_removed_by_schema_and_topic(update_handlers,):
     # Only the handler with the channel matching provided topic AND schema should be removed
     config_update = ConfigUpdate(
         CommandType.REMOVE,
-        (Channel(None, EpicsProtocol.NONE, topic_name_1, schema_2),),
+        (Channel(None, EpicsProtocol.NONE, topic_name_2, schema_1),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore

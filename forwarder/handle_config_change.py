@@ -40,22 +40,43 @@ def _subscribe_to_pv(
         )
     except RuntimeError as error:
         logger.error(str(error))
-    logger.info(f"Subscribed to PV {new_channel.name}")
+    logger.info(
+        f"Subscribed to PV name='{new_channel.name}', schema='{new_channel.schema}', topic='{new_channel.output_topic}'"
+    )
 
 
 def _unsubscribe_from_pv(
-    name: Optional[str], update_handlers: Dict[Channel, UpdateHandler], logger: Logger
+    remove_channel: Channel,
+    update_handlers: Dict[Channel, UpdateHandler],
+    logger: Logger,
 ):
+    def _match_channel_field(
+        field_in_remove_request: Optional[str], field_in_existing_channel: Optional[str]
+    ) -> bool:
+        return (
+            True
+            if not field_in_remove_request
+            or field_in_existing_channel == field_in_remove_request
+            else False
+        )
+
     channels_to_remove = []
     for channel in update_handlers.keys():
-        if channel.name == name:
+        matching_fields = (
+            _match_channel_field(remove_channel.name, channel.name),
+            _match_channel_field(remove_channel.schema, channel.schema),
+            _match_channel_field(remove_channel.output_topic, channel.output_topic),
+        )
+        if all(matching_fields):
             channels_to_remove.append(channel)
 
     for channel in channels_to_remove:
         update_handlers[channel].stop()
         del update_handlers[channel]
 
-    logger.info(f"Unsubscribed from PV {name}")
+    logger.info(
+        f"Unsubscribed from PVs matching name='{remove_channel.name}', schema='{remove_channel.schema}', topic='{remove_channel.output_topic}'"
+    )
 
 
 def _unsubscribe_from_all(
@@ -100,5 +121,5 @@ def handle_configuration_change(
                         pv_update_period,
                     )
                 elif configuration_change.command_type == CommandType.REMOVE:
-                    _unsubscribe_from_pv(channel.name, update_handlers, logger)
+                    _unsubscribe_from_pv(channel, update_handlers, logger)
     status_reporter.report_status()
