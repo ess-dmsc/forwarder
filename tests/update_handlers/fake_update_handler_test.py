@@ -1,6 +1,7 @@
 from tests.kafka.fake_producer import FakeProducer
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from streaming_data_types.logdata_f142 import deserialise_f142
+from streaming_data_types.timestamps_tdct import deserialise_tdct
 import pytest
 
 
@@ -21,5 +22,19 @@ def test_update_handler_publishes_f142_update():
     assert producer.published_payload is not None
     pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.source_name == pv_source_name
+
+    fake_update_handler.stop()
+
+
+def test_update_handler_publishes_tdct_update():
+    producer = FakeProducer()
+
+    pv_source_name = "source_name"
+    fake_update_handler = FakeUpdateHandler(producer, pv_source_name, "output_topic", "tdct", 100)  # type: ignore
+    fake_update_handler._timer_callback()
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_tdct(producer.published_payload)
+    assert pv_update_output.name == pv_source_name
 
     fake_update_handler.stop()
