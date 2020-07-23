@@ -83,11 +83,9 @@ builders = pipeline_builder.createBuilders { container ->
     """
     container.copyFrom("${project}/${test_output}", ".")
     xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
-    if ( env.CHANGE_ID ) {
-      container.copyFrom("${project}/coverage.xml", ".")
-      withCredentials([string(credentialsId: 'forwarder-codecov-token', variable: 'TOKEN')]) {
-      sh "curl -s https://codecov.io/bash | bash -s - -t ${TOKEN} -C ${scm_vars.GIT_COMMIT} -f coverage.xml"
-      }
+    container.copyFrom("${project}/coverage.xml", ".")
+    withCredentials([string(credentialsId: 'forwarder-codecov-token', variable: 'TOKEN')]) {
+    sh "curl -s https://codecov.io/bash | bash -s - -t ${TOKEN} -C ${scm_vars.GIT_COMMIT} -f coverage.xml"
     }
   } // stage
 }  // createBuilders
