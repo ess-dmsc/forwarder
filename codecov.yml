@@ -1,0 +1,16 @@
+ignore:
+  - "forwarder/tests"
+  - "**/*__init__.py"
+  - "forwarder/forwarder_launch.py"
+  - "forwarder/forwarder/kafka/*"
+  - "forwarder/forwarder/parse_commandline_args.py"
+  - "forwarder/forwarder/application_logger.py"
+
+comment:
+  layout: "header, diff, tree, changes, sunburst"
+  require_changes: false
+
+coverage:
+  status:
+    patch: off
+    project: off
