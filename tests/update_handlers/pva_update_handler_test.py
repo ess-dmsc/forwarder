@@ -10,6 +10,14 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 
 
+def test_update_handler_throws_if_schema_not_recognised():
+    producer = FakeProducer()
+    context = FakeContext()
+    non_existing_schema = "DOESNTEXIST"
+    with pytest.raises(ValueError):
+        PVAUpdateHandler(producer, context, "source_name", "output_topic", non_existing_schema)  # type: ignore
+
+
 def test_update_handler_publishes_enum_update():
     producer = FakeProducer()
     context = FakeContext()
