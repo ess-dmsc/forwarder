@@ -1,3 +1,6 @@
+fixes:
+  - "forwarder/::"
+
 ignore:
   - "forwarder/tests"
   - "**/*__init__.py"
