@@ -1,3 +1,6 @@
+[![Build Status](https://jenkins.esss.dk/dm/job/ess-dmsc/job/forwarder/job/master/badge/icon)](https://jenkins.esss.dk/dm/job/ess-dmsc/job/forwarder/job/master/) [![codecov](https://codecov.io/gh/ess-dmsc/forwarder/branch/master/graph/badge.svg)](https://codecov.io/gh/ess-dmsc/forwarder)
+
+
 # Forwarder
 
 ## Installing dependencies
