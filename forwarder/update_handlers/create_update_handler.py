@@ -20,15 +20,13 @@ def create_update_handler(
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
 ) -> UpdateHandler:
-    if channel.name is None:
-        raise RuntimeError(
-            f"PV name not specified when adding handler for channel {channel.name}"
-        )
-    if channel.output_topic is None:
+    if not channel.name:
+        raise RuntimeError("PV name not specified when adding handler for channel")
+    if not channel.output_topic:
         raise RuntimeError(
             f"Output topic not specified when adding handler for channel {channel.name}"
         )
-    if channel.schema is None:
+    if not channel.schema:
         raise RuntimeError(
             f"Schema not specified when adding handler for channel {channel.name}"
         )

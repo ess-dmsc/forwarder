@@ -1,0 +1,19 @@
+fixes:
+  - "forwarder/::"
+
+ignore:
+  - "tests"
+  - "**/*__init__.py"
+  - "forwarder_launch.py"
+  - "forwarder/kafka/*"
+  - "forwarder/parse_commandline_args.py"
+  - "forwarder/application_logger.py"
+
+comment:
+  layout: "header, diff, tree, changes, sunburst"
+  require_changes: false
+
+coverage:
+  status:
+    patch: off
+    project: off
