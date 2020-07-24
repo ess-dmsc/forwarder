@@ -29,13 +29,13 @@ Append `--wait-to-attach-debugger` to the `pytest` command to pause running the 
 been attached. This option only works in conjunction with the `--local-build` option. A message will appear in the 
 console and it will report the process ID and wait for user input before continuing. However note that the Forwarder 
 process itself continues running so you may need to find the debugger message amoung other output, I haven't found a 
-solution to this as SIGSTOP seems to causes the Forwarder process to terminate rather than pause.  
+solution to this as SIGSTOP seems to causes the Forwarder process to terminate rather than pause.
 
 ### General Architecture
 
 The system tests use pytest for the test runner, and use separate fixtures for different configurations of the forwarder. 
 
-Firstly, the system tests attempt to build and tag the latest forwarder image. This can take a lot of time especially if something in conan has changed, as it has to reinstall all of the conan packages.
+Firstly, the system tests attempt to build and tag the latest forwarder image. This can take a few minutes if it needs to download the base docker images.
 
 The IOC, Kafka and Zookeeper containers are started with `docker-compose` and persist throughout all of the tests, and when finished will be stopped and removed. 
 
