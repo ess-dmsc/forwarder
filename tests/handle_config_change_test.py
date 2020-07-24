@@ -293,6 +293,27 @@ def test_multicharacter_wildcard_can_be_used_to_remove_channels_by_name(
     assert test_channel_3 in update_handlers.keys()
 
 
+def test_wildcard_cannot_be_used_to_remove_channels_by_schema(update_handlers,):
+    # No wildcard matching on schemas because ? and * are allowed characters in schema identifiers
+
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+
+    test_channel_3 = Channel("channel_3", EpicsProtocol.NONE, "topic_3", "f142")
+    update_handlers[Channel("channel_1", EpicsProtocol.NONE, "topic_1", "f142")] = StubUpdateHandler()  # type: ignore
+    update_handlers[Channel("channel_2", EpicsProtocol.NONE, "topic_2", "f142")] = StubUpdateHandler()  # type: ignore
+    update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
+
+    config_update = ConfigUpdate(
+        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, None, "f?42"),),
+    )
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
+    assert (
+        len(update_handlers) == 3
+    ), "Expected no channels to be removed as ? is not treated as a wildcard when matching schemas"
+
+
 def test_update_handlers_are_added_when_add_config_update_is_handled(update_handlers):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
