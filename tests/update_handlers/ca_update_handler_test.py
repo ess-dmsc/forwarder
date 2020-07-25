@@ -50,3 +50,78 @@ def test_update_handler_publishes_float_update(
     assert pv_update_output.source_name == pv_source_name
 
     update_handler.stop()
+
+
+@pytest.mark.parametrize(
+    "pv_value,pv_caproto_type,pv_numpy_type",
+    [(1, ChannelType.TIME_LONG, np.int64), (-3, ChannelType.TIME_INT, np.int32)],
+)
+def test_update_handler_publishes_int_update(pv_value, pv_caproto_type, pv_numpy_type):
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+
+    metadata = (0, 0, TimeStamp(4, 0))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+
+    update_handler.stop()
+
+
+@pytest.mark.parametrize(
+    "pv_value,pv_caproto_type,pv_numpy_type",
+    [
+        (
+            np.array([1.1, 2.2, 3.3]).astype(np.float64),
+            ChannelType.TIME_DOUBLE,
+            np.float64,
+        ),
+        (
+            np.array([1.1, 2.2, 3.3]).astype(np.float32),
+            ChannelType.TIME_FLOAT,
+            np.float32,
+        ),
+    ],
+)
+def test_update_handler_publishes_floatarray_update(
+    pv_value, pv_caproto_type, pv_numpy_type
+):
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+
+    metadata = (0, 0, TimeStamp(4, 0))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            len(pv_value),
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert np.allclose(pv_update_output.value, pv_value)
+    assert pv_update_output.source_name == pv_source_name
+
+    update_handler.stop()
