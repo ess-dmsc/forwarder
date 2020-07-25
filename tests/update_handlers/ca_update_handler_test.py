@@ -242,3 +242,41 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
 
     update_handler.stop()
+
+
+def test_update_handler_publishes_enum_update():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_caproto_type = ChannelType.TIME_ENUM
+    pv_source_name = "source_name"
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+
+    # Nothing gets published when ENUM type update is received, the handler will resubscribe using STRING
+    # type as the string is more useful to forwarder to the filewriter than the enum int
+    metadata = (0, 0, TimeStamp(4, 0))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(np.array([0]), pv_caproto_type, 1, 1, 1, metadata=metadata,)
+    )
+    # Second update, with STRING type
+    enum_string_value = "ENUM_STRING"
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            [enum_string_value.encode("utf8")],
+            ChannelType.TIME_STRING,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert (
+        producer.messages_published == 1
+    ), "Only expected a single message with string payload, not the original enum update"
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert pv_update_output.value == enum_string_value
+    assert pv_update_output.source_name == pv_source_name
+
+    update_handler.stop()
