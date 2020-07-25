@@ -6,6 +6,9 @@ from streaming_data_types.logdata_f142 import deserialise_f142
 import pytest
 from caproto import ReadNotifyResponse, ChannelType, TimeStamp
 import numpy as np
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
+from time import sleep
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -125,3 +128,123 @@ def test_update_handler_publishes_floatarray_update(
     assert pv_update_output.source_name == pv_source_name
 
     update_handler.stop()
+
+
+def test_update_handler_publishes_alarm_update():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_value = 42
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    pv_source_name = "source_name"
+    alarm_status = 6  # AlarmStatus.LOW
+    alarm_severity = 1  # AlarmSeverity.MINOR
+
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+
+    metadata = (alarm_status, alarm_severity, TimeStamp(4, 0))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+    assert pv_update_output.alarm_status == AlarmStatus.LOW
+    assert pv_update_output.alarm_severity == AlarmSeverity.MINOR
+
+    update_handler.stop()
+
+
+def test_update_handler_publishes_periodic_update():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_value = 42
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    pv_source_name = "source_name"
+
+    update_period_ms = 10
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142", update_period_ms)  # type: ignore
+    metadata = (0, 0, TimeStamp(4, 0))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_f142(producer.published_payload)
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+
+    sleep(0.05)
+    assert (
+        producer.messages_published > 1
+    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
+
+    update_handler.stop()
+
+
+# def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequent_updates():
+#     producer = FakeProducer()
+#     context = FakeContext()
+#
+#     pv_timestamp_s = 1.1  # seconds from unix epoch
+#     pv_source_name = "source_name"
+#     pv_value = -3
+#     pv_type = "i"
+#     alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
+#     alarm_severity = 1  # AlarmSeverity.MINOR
+#     alarm_message = "HIGH_ALARM"
+#
+#     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+#     context.call_monitor_callback_with_fake_pv_update(
+#         NTScalar(pv_type, valueAlarm=True).wrap(
+#             {
+#                 "value": pv_value,
+#                 "alarm": {
+#                     "status": alarm_status,
+#                     "severity": alarm_severity,
+#                     "message": alarm_message,
+#                 },
+#             },
+#             timestamp=pv_timestamp_s,
+#         )
+#     )
+#     # Second update, with unchanged alarm
+#     context.call_monitor_callback_with_fake_pv_update(
+#         NTScalar(pv_type, valueAlarm=True).wrap(
+#             {
+#                 "value": pv_value,
+#                 "alarm": {
+#                     "status": alarm_status,
+#                     "severity": alarm_severity,
+#                     "message": alarm_message,
+#                 },
+#             },
+#             timestamp=pv_timestamp_s,
+#         )
+#     )
+#
+#     assert producer.messages_published == 2
+#     pv_update_output = deserialise_f142(producer.published_payload)
+#     assert pv_update_output.alarm_status == AlarmStatus.NO_CHANGE
+#     assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
+#
+#     pva_update_handler.stop()
