@@ -80,6 +80,20 @@ def parse_args():
         env_var="OUTPUT_BROKER",
     )
     parser.add_argument(
+        "--storage-topic",
+        required=False,
+        help="<host[:port][/topic]> Kafka broker/topic for storage of the "
+        "last known forwarding details",
+        type=str,
+        env_var="STORAGE_TOPIC",
+    )
+    parser.add_argument(
+        "-s",
+        "--skip-retrieval",
+        action="store_true",
+        help="Ignore the stored configuration on startup",
+    )
+    parser.add_argument(
         "--graylog-logger-address",
         required=False,
         help="<host:port> Log to Graylog",

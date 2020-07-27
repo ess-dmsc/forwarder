@@ -1,12 +1,9 @@
 from forwarder.update_handlers.create_update_handler import create_update_handler
-from forwarder.parse_config_update import (
-    CommandType,
-    Channel,
-    ConfigUpdate,
-)
+from forwarder.parse_config_update import CommandType, Channel, ConfigUpdate
 from typing import Optional, Dict
 from logging import Logger
 from forwarder.status_reporter import StatusReporter
+from forwarder.configuration_store import ConfigurationStore
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from forwarder.kafka.kafka_producer import KafkaProducer
@@ -67,7 +64,9 @@ def _unsubscribe_from_pv(
         return (
             True
             if not field_in_remove_request
-            or fnmatch.fnmatch(field_in_existing_channel, field_in_remove_request)  # type: ignore
+            or fnmatch.fnmatch(
+                field_in_existing_channel, field_in_remove_request
+            )  # type: ignore
             else False
         )
 
@@ -111,6 +110,7 @@ def handle_configuration_change(
     pva_ctx: PvaContext,
     logger: Logger,
     status_reporter: StatusReporter,
+    configuration_store: ConfigurationStore,
 ):
     """
     Add or remove update handlers according to the requested change in configuration
@@ -136,3 +136,4 @@ def handle_configuration_change(
                 elif configuration_change.command_type == CommandType.REMOVE:
                     _unsubscribe_from_pv(channel, update_handlers, logger)
     status_reporter.report_status()
+    configuration_store.save_configuration(update_handlers)

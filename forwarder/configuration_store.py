@@ -1,13 +1,16 @@
-import json
-import os
-import socket
 import time
 from typing import Dict
 from unittest import mock
 from confluent_kafka import TopicPartition
-from streaming_data_types import deserialise_x5f2, serialise_x5f2
-
-from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
+from streaming_data_types.forwarder_config_update_rf5k import (
+    serialise_rf5k,
+    StreamInfo,
+    Protocol,
+)
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+from forwarder.parse_config_update import EpicsProtocol
 
 
 class ConfigurationStore:
@@ -18,28 +21,28 @@ class ConfigurationStore:
 
     def save_configuration(self, update_handlers: Dict):
         streams = []
-        for name, update_handler in update_handlers.items():
-            channel = {
-                "channel": name,
-                "converter": {
-                    "topic": update_handler.output_topic,
-                    "schema": update_handler.schema,
-                },
-            }
+        for channel, update_handler in update_handlers.items():
+            if channel.protocol == EpicsProtocol.CA:
+                stream = StreamInfo(
+                    channel.name,
+                    channel.schema,
+                    channel.output_topic,
+                    Protocol.Protocol.CA,
+                )
+            else:
+                stream = StreamInfo(
+                    channel.name,
+                    channel.schema,
+                    channel.output_topic,
+                    Protocol.Protocol.PVA,
+                )
 
-            if isinstance(update_handler, CAUpdateHandler):
-                channel["channel_provider_type"] = "ca"
-
-            streams.append(channel)
-        message = serialise_x5f2(
-            "forwarder",
-            "",
-            "",
-            socket.gethostname(),
-            os.getpid(),
-            0,
-            json.dumps(streams),
-        )
+            streams.append(stream)
+        if streams:
+            message = serialise_rf5k(UpdateType.ADD, streams)
+        else:
+            # No streams so store a "blank" config
+            message = serialise_rf5k(UpdateType.REMOVEALL, streams)
         self._producer.produce(self._topic, bytes(message), int(time.time() * 1000))
 
     def retrieve_configuration(self):
@@ -52,9 +55,7 @@ class ConfigurationStore:
         msg = self._consumer.consume(timeout=2)
 
         if msg:
-            d = deserialise_x5f2(msg[~0].value())
-            config_msg = {"cmd": "add", "streams": json.loads(d.status_json)}
-            return json.dumps(config_msg).encode("utf-8")
+            return msg[~0].value()
         else:
             raise RuntimeError("Could not retrieve stored configuration")
 

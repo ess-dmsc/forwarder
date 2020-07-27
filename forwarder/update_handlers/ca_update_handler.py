@@ -37,6 +37,7 @@ class CAUpdateHandler:
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
+        self._schema = schema
         (self._pv,) = context.get_pvs(pv_name)
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
@@ -59,6 +60,14 @@ class CAUpdateHandler:
                 milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
             )
             self._repeating_timer.start()
+
+    @property
+    def output_topic(self):
+        return self._output_topic
+
+    @property
+    def schema(self):
+        return self._schema
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         if self._output_type is None:
