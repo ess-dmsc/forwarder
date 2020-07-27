@@ -3,7 +3,7 @@ from forwarder.parse_config_update import CommandType, Channel, ConfigUpdate
 from typing import Optional, Dict
 from logging import Logger
 from forwarder.status_reporter import StatusReporter
-from forwarder.configuration_store import ConfigurationStore
+from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from forwarder.kafka.kafka_producer import KafkaProducer
@@ -108,7 +108,7 @@ def handle_configuration_change(
     pva_ctx: PvaContext,
     logger: Logger,
     status_reporter: StatusReporter,
-    configuration_store: ConfigurationStore,
+    configuration_store: ConfigurationStore = NullConfigurationStore,
 ):
     """
     Add or remove update handlers according to the requested change in configuration
