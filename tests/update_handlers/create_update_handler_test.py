@@ -1,8 +1,10 @@
 from forwarder.update_handlers.create_update_handler import create_update_handler
 from forwarder.parse_config_update import Channel, EpicsProtocol
 from tests.kafka.fake_producer import FakeProducer
-from tests.test_helpers.p4p_fakes import FakeContext
+from tests.test_helpers.p4p_fakes import FakeContext as FakePVAContext
+from tests.test_helpers.ca_fakes import FakeContext as FakeCAContext
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
+from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 import logging
 import pytest
 
@@ -55,9 +57,17 @@ def test_create_update_handler_throws_if_protocol_not_specified():
 
 def test_pva_handler_created_when_pva_protocol_specified():
     producer = FakeProducer()
-    context = FakeContext()
+    context = FakePVAContext()
     channel_with_pva_protocol = Channel(
         "name", EpicsProtocol.PVA, "output_topic", "f142"
     )
     handler = create_update_handler(producer, None, context, channel_with_pva_protocol, 20000)  # type: ignore
     assert isinstance(handler, PVAUpdateHandler)
+
+
+def test_ca_handler_created_when_ca_protocol_specified():
+    producer = FakeProducer()
+    context = FakeCAContext()
+    channel_with_ca_protocol = Channel("name", EpicsProtocol.CA, "output_topic", "f142")
+    handler = create_update_handler(producer, context, None, channel_with_ca_protocol, 20000)  # type: ignore
+    assert isinstance(handler, CAUpdateHandler)
