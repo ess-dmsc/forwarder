@@ -11,6 +11,7 @@ from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.update_handlers.create_update_handler import UpdateHandler
+import fnmatch
 
 
 def _subscribe_to_pv(
@@ -60,12 +61,24 @@ def _unsubscribe_from_pv(
             else False
         )
 
+    def _wildcard_match_channel_field(
+        field_in_remove_request: Optional[str], field_in_existing_channel: Optional[str]
+    ) -> bool:
+        return (
+            True
+            if not field_in_remove_request
+            or fnmatch.fnmatch(field_in_existing_channel, field_in_remove_request)  # type: ignore
+            else False
+        )
+
     channels_to_remove = []
     for channel in update_handlers.keys():
         matching_fields = (
-            _match_channel_field(remove_channel.name, channel.name),
+            _wildcard_match_channel_field(remove_channel.name, channel.name),
             _match_channel_field(remove_channel.schema, channel.schema),
-            _match_channel_field(remove_channel.output_topic, channel.output_topic),
+            _wildcard_match_channel_field(
+                remove_channel.output_topic, channel.output_topic
+            ),
         )
         if all(matching_fields):
             channels_to_remove.append(channel)

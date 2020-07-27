@@ -45,6 +45,21 @@ This sets where the data is forwarded to as it is not configurable separately fo
 see [C++ Forwarder features not replicated here](#c++-forwarder-features-not-replicated-here). 
 
 
+## Configuring EPICS PVs to be forwarded
+
+Adding or remvoing PVs to be forwarded is done by publishing configuration change messages to the configuration 
+topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
+[this schema](). Support for serialising and deserialising these messages in python in available in the
+[ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
+
+Note that when removing configured streams, not all fields in the `Stream` table of the schema need to be populated.
+Missing or empty strings in the channel name, output topic and schema fields match all stream configurations.
+At least one field must be populated; to remove all configurations a REMOVEALL configuration change can be used instead.
+
+Single-character "? and multi-character "*" wildcards are allowed to be used in the channel name and output topic fields.
+In conjunction with naming conventions for EPICS channel names and Kafka topics this can be used to carry out operations
+such as clearing all configured streams for a particular instrument. 
+
 ## Docker
 
 To build a docker image
