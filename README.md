@@ -2,6 +2,7 @@
 
 
 # Forwarder
+Forwards EPICS PVs to Apache Kafka. Part of the ESS data streaming pipeline.
 
 ## Installing dependencies
 
@@ -13,7 +14,107 @@ repository. They can be installed from a terminal by running
 pip install -r requirements.txt
 ```
 
-### Development dependencies
+## Usage
+To run with minimal settings:
+```
+forwarder_launch.py --config-topic some_server:9092/some_config_topic --status-topic some_server:9092/some_status_topic --output-broker some_other_server:9092
+```
+
+For help:
+```
+forwarder_launch.py --help
+```
+
+Required arguments:
+    * config-topic - Kafka broker/topic to listen for commands relating to PVs to be forwarded on
+    * status-topic - Kafka broker/topic to publish regular status updates on
+    * output-broker - Kafka broker to forward PV data into
+
+Optional arguments:
+    * storage-topic - Kafka broker/topic for storage of the current forwarding details; these will be reapplied when the forwarder is restarted
+    * skip-retrieval - do not reapply stored forwarding details on start-up
+    * graylog-logger-address - Graylog logger instance to log to
+    * log-file - name of the file to log to
+    * pv-update-period - period for forward PVs values even if the value hasn't changed (milliseconds)
+    * service-id - identifier for this particular instance of the Forwarder
+    * fake-pv-period - period for random generated PV updates when channel_provider_type is set to 'fake' (milliseconds)
+
+Arguments can also be specified in a configuration file
+```
+forwarder_launch --config-file my_config.conf
+```
+The configuration file consists of 'key=value' pairs, e.g.
+```
+output-broker=localhost:9092
+pv-update-period=1000
+```
+
+## Configuring EPICS PVs to be forwarded
+
+Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration
+topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
+the rf5k schema which can be found [here](https://github.com/ess-dmsc/streaming-data-types/blob/master/schemas/rf5k_forwarder_config.fbs).
+Support for serialising and deserialising these messages in Python in available in the
+[ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
+
+The schema essential takes two parameters: the type of configuration change (UpdateType) and the corresponding streams.
+
+A stream contains of the name of the PV to be forwarded, the EPICS protocol for reading the PV, the Kafka topic to write to and
+the FlatBuffers schema to encode the PV value with.
+
+There are three choices for the UpdateType of the configuration message:
+    * ADD - add the specified streams to the existing set of streams
+    * REMOVE - remove the specified streams from the set of streams
+    * REMOVEALL - remove all streams
+
+Note that when removing (using REMOVE) configured streams, not all fields in the `Stream` table of the schema need to be populated.
+Missing or empty strings in the channel name, output topic and schema fields match all stream configurations.
+At least one field must be populated though.
+Single-character "?"" and multi-character "*" wildcards are allowed to be used in the channel name and output topic fields.
+In conjunction with naming conventions for EPICS channel names and Kafka topics this can be used to carry out operations
+such as clearing all configured streams for a particular instrument.
+
+### A Python example
+To use for real, replace CONFIG_BROKER, CONFIG_TOPIC and STREAMS with values corresponding to the real system.
+
+```python
+from confluent_kafka import Producer
+from streaming_data_types.forwarder_config_update_rf5k import (
+    serialise_rf5k,
+    StreamInfo,
+    Protocol,
+)
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+
+CONFIG_BROKER = "some_kafka_broker:9092"
+
+CONFIG_TOPIC = "TEST_forwarderConfig"
+
+STREAMS = [
+    StreamInfo("IOC:PV1", "f142", "some_topic", Protocol.Protocol.PVA),
+    StreamInfo("IOC:PV2", "f142", "some_other_topic", Protocol.Protocol.CA),
+    StreamInfo("IOC:PV3", "f142", "some_other_topic", Protocol.Protocol.PVA),
+]
+
+producer = Producer({"bootstrap.servers": CONFIG_BROKER})
+
+# Add new streams
+producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, STREAMS))
+
+# Remove one stream
+# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, STREAMS[:-1]))
+
+# Remove all the streams at once
+# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+
+producer.flush()
+```
+
+# Developer information
+
+## Development dependencies
 
 Development dependencies (including all runtime dependencies) can be installed by using the following command
 
@@ -32,33 +133,6 @@ To test the hooks run
 pre-commit run --all-files
 ```
 This command can also be used to run the hooks manually.
-
-## Running the application
-
-Run the python script `forwarder_launch.py`.
-For run options do
-```
-forwarder_launch.py --help
-```
-Optional arguments match the C++ codebase with the exception of the additional `--output-broker` option.
-This sets where the data is forwarded to as it is not configurable separately for each EPICS channel,
-see [C++ Forwarder features not replicated here](#c++-forwarder-features-not-replicated-here).
-
-
-## Configuring EPICS PVs to be forwarded
-
-Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration
-topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
-[this schema](). Support for serialising and deserialising these messages in python in available in the
-[ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
-
-Note that when removing configured streams, not all fields in the `Stream` table of the schema need to be populated.
-Missing or empty strings in the channel name, output topic and schema fields match all stream configurations.
-At least one field must be populated; to remove all configurations a REMOVEALL configuration change can be used instead.
-
-Single-character "? and multi-character "*" wildcards are allowed to be used in the channel name and output topic fields.
-In conjunction with naming conventions for EPICS channel names and Kafka topics this can be used to carry out operations
-such as clearing all configured streams for a particular instrument.
 
 ## Docker
 
