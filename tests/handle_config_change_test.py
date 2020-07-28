@@ -395,9 +395,7 @@ def test_configuration_stored_when_channels_removed(update_handlers,):
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(
-        CommandType.REMOVE, (test_channel_1,),
-    )
+    config_update = ConfigUpdate(CommandType.REMOVE, (test_channel_1,),)
 
     config_store = mock.create_autospec(ConfigurationStore)
 
@@ -411,9 +409,7 @@ def test_configuration_stored_when_all_channels_removed(update_handlers,):
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(
-        CommandType.REMOVE_ALL, None,
-    )
+    config_update = ConfigUpdate(CommandType.REMOVE_ALL, None,)
 
     config_store = mock.create_autospec(ConfigurationStore)
 
@@ -427,9 +423,7 @@ def test_configuration_not_stored_when_command_is_malformed(update_handlers,):
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(
-        CommandType.MALFORMED, None,
-    )
+    config_update = ConfigUpdate(CommandType.MALFORMED, None,)
 
     config_store = mock.create_autospec(ConfigurationStore)
 
