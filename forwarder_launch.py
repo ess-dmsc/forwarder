@@ -76,7 +76,7 @@ if __name__ == "__main__":
                 )
             except RuntimeError as error:
                 logger.error(
-                    "Could not retrieve stored configuration in start-up: " f"{error}"
+                    "Could not retrieve stored configuration on start-up: " f"{error}"
                 )
     else:
         configuration_store = NullConfigurationStore
