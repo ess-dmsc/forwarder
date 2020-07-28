@@ -37,14 +37,6 @@ class FakeUpdateHandler:
         )
         self._repeating_timer.start()
 
-    @property
-    def output_topic(self):
-        return self._output_topic
-
-    @property
-    def schema(self):
-        return self._schema
-
     def _timer_callback(self):
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
