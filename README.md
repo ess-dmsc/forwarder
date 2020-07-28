@@ -15,7 +15,7 @@ pip install -r requirements.txt
 
 ### Development dependencies
 
-Development dependencies (including all runtime dependencies) can be installed by using the following command 
+Development dependencies (including all runtime dependencies) can be installed by using the following command
 
 ```
 pip install -r requirements-dev.txt
@@ -42,12 +42,12 @@ forwarder_launch.py --help
 ```
 Optional arguments match the C++ codebase with the exception of the additional `--output-broker` option.
 This sets where the data is forwarded to as it is not configurable separately for each EPICS channel,
-see [C++ Forwarder features not replicated here](#c++-forwarder-features-not-replicated-here). 
+see [C++ Forwarder features not replicated here](#c++-forwarder-features-not-replicated-here).
 
 
 ## Configuring EPICS PVs to be forwarded
 
-Adding or remvoing PVs to be forwarded is done by publishing configuration change messages to the configuration 
+Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration
 topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
 [this schema](). Support for serialising and deserialising these messages in python in available in the
 [ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
@@ -58,7 +58,7 @@ At least one field must be populated; to remove all configurations a REMOVEALL c
 
 Single-character "? and multi-character "*" wildcards are allowed to be used in the channel name and output topic fields.
 In conjunction with naming conventions for EPICS channel names and Kafka topics this can be used to carry out operations
-such as clearing all configured streams for a particular instrument. 
+such as clearing all configured streams for a particular instrument.
 
 ## Docker
 

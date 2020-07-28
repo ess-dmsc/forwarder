@@ -14,6 +14,7 @@ from forwarder.parse_commandline_args import parse_args, get_version
 from forwarder.handle_config_change import handle_configuration_change
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from forwarder.parse_config_update import Channel
+from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 
 
 if __name__ == "__main__":
@@ -51,6 +52,35 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
+    if args.storage_topic:
+        store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
+        configuration_store = ConfigurationStore(
+            create_producer(store_broker), create_consumer(store_broker), store_topic
+        )
+        if not args.skip_retrieval:
+            try:
+                restore_config_command = parse_config_update(
+                    configuration_store.retrieve_configuration()
+                )
+                handle_configuration_change(
+                    restore_config_command,
+                    args.fake_pv_period,
+                    args.pv_update_period,
+                    update_handlers,
+                    producer,
+                    ca_ctx,
+                    pva_ctx,
+                    logger,
+                    status_reporter,
+                    configuration_store,
+                )
+            except RuntimeError as error:
+                logger.error(
+                    "Could not retrieve stored configuration on start-up: " f"{error}"
+                )
+    else:
+        configuration_store = NullConfigurationStore
+
     # Metrics
     # use https://github.com/Jetsetter/graphyte ?
     # https://julien.danjou.info/atomic-lock-free-counters-in-python/
@@ -75,6 +105,7 @@ if __name__ == "__main__":
                     pva_ctx,
                     logger,
                     status_reporter,
+                    configuration_store,
                 )
 
     except KeyboardInterrupt:

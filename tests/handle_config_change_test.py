@@ -1,3 +1,4 @@
+from forwarder.configuration_store import ConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
 from tests.kafka.fake_producer import FakeProducer
 import logging
@@ -10,6 +11,7 @@ from forwarder.parse_config_update import (
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from typing import Dict, List
 import pytest
+from unittest import mock
 
 
 class StubStatusReporter:
@@ -369,3 +371,62 @@ def test_identical_configurations_are_not_added(update_handlers,):
         len(update_handlers) == 1
     ), "Only expect one channel to be added as others requested were identical"
     assert test_channel_1 in update_handlers.keys()
+
+
+def test_configuration_stored_when_channels_added(update_handlers,):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    channel_name = "test_channel"
+    test_channel_1 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
+    test_channel_2 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
+    test_channel_3 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
+    config_update = ConfigUpdate(
+        CommandType.ADD, (test_channel_1, test_channel_2, test_channel_3,),
+    )
+    config_store = mock.create_autospec(ConfigurationStore)
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, config_store)  # type: ignore
+
+    config_store.save_configuration.assert_called_once()
+
+
+def test_configuration_stored_when_channels_removed(update_handlers,):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
+    update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
+    config_update = ConfigUpdate(CommandType.REMOVE, (test_channel_1,),)
+
+    config_store = mock.create_autospec(ConfigurationStore)
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, config_store)  # type: ignore
+
+    config_store.save_configuration.assert_called_once()
+
+
+def test_configuration_stored_when_all_channels_removed(update_handlers,):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
+    update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
+    config_update = ConfigUpdate(CommandType.REMOVE_ALL, None,)
+
+    config_store = mock.create_autospec(ConfigurationStore)
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, config_store)  # type: ignore
+
+    config_store.save_configuration.assert_called_once()
+
+
+def test_configuration_not_stored_when_command_is_malformed(update_handlers,):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
+    update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
+    config_update = ConfigUpdate(CommandType.MALFORMED, None,)
+
+    config_store = mock.create_autospec(ConfigurationStore)
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, config_store)  # type: ignore
+
+    config_store.save_configuration.assert_not_called()

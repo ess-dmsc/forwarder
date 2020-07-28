@@ -45,7 +45,7 @@ class FakeUpdateHandler:
             # Otherwise 0D (scalar) is fine
             data = np.array(randint(0, 100)).astype(np.int32)
         self._message_publisher(
-            self._producer, self._output_topic, data, self._pv_name, time.time_ns(),
+            self._producer, self._output_topic, data, self._pv_name, time.time_ns()
         )
 
     def stop(self):
