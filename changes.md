@@ -6,3 +6,5 @@
 used in the output topic and channel name fields.
 
 - Can request Forwarder to store the current configuration and retrieve it when restarting.
+
+- Added more information to the README
