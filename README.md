@@ -57,7 +57,7 @@ the rf5k schema which can be found [here](https://github.com/ess-dmsc/streaming-
 Support for serialising and deserialising these messages in Python in available in the
 [ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
 
-The schema essential takes two parameters: the type of configuration change (UpdateType) and the corresponding streams.
+The schema takes two parameters: the type of configuration change (UpdateType) and the corresponding streams.
 
 A stream contains of the name of the PV to be forwarded, the EPICS protocol for reading the PV, the Kafka topic to write to and
 the FlatBuffers schema to encode the PV value with.
