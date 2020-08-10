@@ -39,7 +39,7 @@ def test_uri_with_port_after_broker_is_included_in_broker_output():
     assert topic == test_topic
 
 
-def test_tdct_publisher_converts_relative_timestamp_converted_to_absolute():
+def test_tdct_publisher_converts_relative_timestamp_to_absolute():
     producer = FakeProducer()
     # These are the values that would be in the array in the PV update
     input_relative_timestamps = np.array([1, 2, 3]).astype(np.uint32)
