@@ -219,7 +219,7 @@ def docker_compose_forwarding(request):
     options["--file"] = ["compose/docker-compose-forwarding.yml"]
 
     build_and_run(
-        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_forwarding.ini", "forwarder_tests.log"
     )
 
 
@@ -236,7 +236,7 @@ def docker_compose_idle_updates(request):
     options["--file"] = ["compose/docker-compose-idle-updates.yml"]
 
     build_and_run(
-        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_idle_updates.ini", "forwarder_tests.log"
     )
 
 
@@ -252,6 +252,46 @@ def docker_compose_lr(request):
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
 
+    build_and_run(options, request, "forwarder_config_lr.ini", "forwarder_tests.log")
+
+
+@pytest.fixture(scope="module")
+def docker_compose_storage(request):
+    """
+    :type request: _pytest.python.FixtureRequest
+    """
+    from streaming_data_types.forwarder_config_update_rf5k import (
+        serialise_rf5k,
+        StreamInfo,
+        Protocol,
+    )
+    from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+        UpdateType,
+    )
+
+    from .helpers.PVs import PVSTR, PVLONG
+
+    print("Started preparing test environment...", flush=True)
+
+    # Push old configuration into kafka
+    conf = {
+        "bootstrap.servers": "localhost:9092",
+        "metadata.request.timeout.ms": "10000",
+    }
+    producer = Producer(**conf)
+
+    stream_1 = StreamInfo(PVSTR, "f142", "some_topic_1", Protocol.Protocol.CA)
+    stream_2 = StreamInfo(PVLONG, "tdct", "some_topic_2", Protocol.Protocol.PVA)
+    message = serialise_rf5k(UpdateType.ADD, [stream_1, stream_2])
+
+    producer.produce("TEST_forwarderStorage", message)
+    producer.flush()
+
+    # Options must be given as long form
+    options = common_options
+    options["--project-name"] = "forwarderStorage"
+    options["--file"] = ["compose/docker-compose-forwarding.yml"]
+
     build_and_run(
-        options, request, "forwarder_config_lr.ini", "forwarder_tests.log",
+        options, request, "forwarder_config_storage.ini", "forwarder_tests.log"
     )
