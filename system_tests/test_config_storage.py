@@ -6,7 +6,7 @@ from streaming_data_types.status_x5f2 import deserialise_x5f2
 
 def test_on_starting_stored_config_is_retrieved(docker_compose_storage):
     cons = create_consumer("latest")
-    status_topic = "TEST_forwarderStatus"
+    status_topic = "TEST_forwarderStorageStatus"
     cons.subscribe([status_topic])
 
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
