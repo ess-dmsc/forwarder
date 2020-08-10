@@ -49,8 +49,7 @@ def parse_args():
     _print_version_if_requested()
 
     parser = configargparse.ArgumentParser(
-        description="Writes NeXus files in a format specified with a json template.\n"
-        "Writer modules can be used to populate the file from Kafka topics."
+        description="Forwards EPICS PVs to Apache Kafka. Part of the ESS data streaming pipeline."
     )
     parser.add_argument(
         "--version",
