@@ -289,7 +289,7 @@ def docker_compose_storage(request):
     # Options must be given as long form
     options = common_options
     options["--project-name"] = "forwarderStorage"
-    options["--file"] = ["compose/docker-compose-forwarding.yml"]
+    options["--file"] = ["compose/docker-compose-storage.yml"]
 
     build_and_run(
         options, request, "forwarder_config_storage.ini", "forwarder_tests.log"
