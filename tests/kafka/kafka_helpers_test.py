@@ -41,6 +41,8 @@ def test_uri_with_port_after_broker_is_included_in_broker_output():
 
 def test_tdct_publisher_converts_relative_timestamp_converted_to_absolute():
     producer = FakeProducer()
+    # These are the values that would be in the array in the PV update,
+    # I assume here that they are in nanoseconds
     input_relative_timestamps = np.array([1, 2, 3]).astype(np.uint32)
     reference_timestamp = 10
     publish_tdct_message(
