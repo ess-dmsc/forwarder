@@ -41,9 +41,9 @@ def test_uri_with_port_after_broker_is_included_in_broker_output():
 
 def test_tdct_publisher_converts_relative_timestamp_converted_to_absolute():
     producer = FakeProducer()
-    # These are the values that would be in the array in the PV update,
-    # I assume here that they are in nanoseconds
+    # These are the values that would be in the array in the PV update
     input_relative_timestamps = np.array([1, 2, 3]).astype(np.uint32)
+    # This is the timestamp of the PV update
     reference_timestamp = 10
     publish_tdct_message(
         producer,  # type: ignore
@@ -57,4 +57,4 @@ def test_tdct_publisher_converts_relative_timestamp_converted_to_absolute():
     published_data = deserialise_tdct(producer.published_payload)
     assert np.array_equal(
         published_data.timestamps, input_relative_timestamps + reference_timestamp
-    )
+    ), "Expected the relative timestamps from the EPICS update to have been converted to unix timestamps"
