@@ -26,18 +26,18 @@ forwarder_launch.py --help
 ```
 
 Required arguments:
-    * config-topic - Kafka broker/topic to listen for commands relating to PVs to be forwarded on
-    * status-topic - Kafka broker/topic to publish regular status updates on
-    * output-broker - Kafka broker to forward PV data into
+ * config-topic - Kafka broker/topic to listen for commands relating to PVs to be forwarded on
+ * status-topic - Kafka broker/topic to publish regular status updates on
+ * output-broker - Kafka broker to forward PV data into
 
 Optional arguments:
-    * storage-topic - Kafka broker/topic for storage of the current forwarding details; these will be reapplied when the forwarder is restarted
-    * skip-retrieval - do not reapply stored forwarding details on start-up
-    * graylog-logger-address - Graylog logger instance to log to
-    * log-file - name of the file to log to
-    * pv-update-period - period for forward PVs values even if the value hasn't changed (milliseconds)
-    * service-id - identifier for this particular instance of the Forwarder
-    * fake-pv-period - period for random generated PV updates when channel_provider_type is set to 'fake' (milliseconds)
+ * storage-topic - Kafka broker/topic for storage of the current forwarding details; these will be reapplied when the forwarder is restarted
+ * skip-retrieval - do not reapply stored forwarding details on start-up
+ * graylog-logger-address - Graylog logger instance to log to
+ * log-file - name of the file to log to
+ * pv-update-period - period for forward PVs values even if the value hasn't changed (milliseconds)
+ * service-id - identifier for this particular instance of the Forwarder
+ * fake-pv-period - period for random generated PV updates when channel_provider_type is set to 'fake' (milliseconds)
 
 Arguments can also be specified in a configuration file
 ```
@@ -63,9 +63,9 @@ A stream contains the name of the PV to be forwarded, the EPICS protocol for rea
 the FlatBuffers schema to encode the PV value with.
 
 There are three choices for the UpdateType of the configuration message:
-    * ADD - add the specified streams to the existing set of streams
-    * REMOVE - remove the specified streams from the set of streams
-    * REMOVEALL - remove all streams
+ * ADD - add the specified streams to the existing set of streams
+ * REMOVE - remove the specified streams from the set of streams
+ * REMOVEALL - remove all streams
 
 Note that when removing (using REMOVE) configured streams, not all fields in the `Stream` table of the schema need to be populated.
 Missing or empty strings in the channel name, output topic and schema fields match all stream configurations.
