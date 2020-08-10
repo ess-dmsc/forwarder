@@ -7,6 +7,16 @@ import docker
 from time import sleep
 from subprocess import Popen
 import warnings
+from streaming_data_types.forwarder_config_update_rf5k import (
+    serialise_rf5k,
+    StreamInfo,
+    Protocol,
+)
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+
+from .helpers.PVs import PVSTR, PVLONG
 
 
 LOCAL_BUILD = "--local-build"
@@ -260,17 +270,6 @@ def docker_compose_storage(request):
     """
     :type request: _pytest.python.FixtureRequest
     """
-    from streaming_data_types.forwarder_config_update_rf5k import (
-        serialise_rf5k,
-        StreamInfo,
-        Protocol,
-    )
-    from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
-        UpdateType,
-    )
-
-    from .helpers.PVs import PVSTR, PVLONG
-
     print("Started preparing test environment...", flush=True)
 
     # Push old configuration into kafka
