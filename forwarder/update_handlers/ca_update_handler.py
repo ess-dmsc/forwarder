@@ -61,6 +61,14 @@ class CAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
+        # Skip PV updates with empty values
+        try:
+            if response.data.size == 0:
+                return
+        except AttributeError:
+            # Enum values for example don't have .size, just continue
+            pass
+
         if self._output_type is None:
             if not self._try_to_determine_type(response):
                 return

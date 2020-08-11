@@ -67,6 +67,14 @@ class PVAUpdateHandler:
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: Value):
+        # Skip PV updates with empty values
+        try:
+            if response.value.size == 0:
+                return
+        except AttributeError:
+            # Enum values for example don't have .size, just continue
+            pass
+
         timestamp = (
             response.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + response.timeStamp.nanoseconds

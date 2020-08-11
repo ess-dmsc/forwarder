@@ -92,7 +92,7 @@ def publish_tdct_message(
     """
     Publish an tdct message to a given topic.
     Currently the tdct does not contain alarms, but if it turns out to be the long term solution
-    for getting chopper timestamps into Kafka they we will likely add alarms to the schema
+    for getting chopper timestamps into Kafka we will likely add alarms to the schema
 
     :param producer: Kafka producer to publish update with
     :param topic: Name of topic to publish to
@@ -101,9 +101,14 @@ def publish_tdct_message(
     :param timestamp_ns: Timestamp for value (nanoseconds after unix epoch)
     :param unused: Allow other args to be passed to match signature of other publish_*_message functions
     """
+    # Timestamps in the data array are nanoseconds relative to the EPICS update timestamp
+    # Convert to absolute (relative to unix epoch)
+    unix_epoch_timestamps_ns = data + timestamp_ns
     producer.produce(
         topic,
-        serialise_tdct(name=source_name, timestamps=data),
+        serialise_tdct(
+            name=source_name, timestamps=unix_epoch_timestamps_ns.astype(np.uint64)
+        ),
         key=source_name,
         timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
     )

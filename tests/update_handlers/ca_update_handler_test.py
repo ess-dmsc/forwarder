@@ -3,12 +3,14 @@ from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from tests.test_helpers.ca_fakes import FakeContext
 from cmath import isclose
 from streaming_data_types.logdata_f142 import deserialise_f142
+from streaming_data_types.timestamps_tdct import deserialise_tdct
 import pytest
 from caproto import ReadNotifyResponse, ChannelType, TimeStamp
 import numpy as np
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from time import sleep
+from typing import List
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -278,5 +280,88 @@ def test_update_handler_publishes_enum_update():
     pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == enum_string_value
     assert pv_update_output.source_name == pv_source_name
+
+    update_handler.stop()
+
+
+def test_empty_update_is_not_forwarded():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_value = [1, 2, 3]
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    pv_source_name = "chopper"
+
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
+    metadata = (0, 0, TimeStamp(4, 0))
+
+    # First update, with non-empty timestamp array
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            len(pv_value),
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    # Second update, with empty timestamp array
+    # We think empty array PV updates may occur for chopper timestamp PVs when the chopper is not rotating
+    empty_pv_value: List = []
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([empty_pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert (
+        producer.messages_published == 1
+    ), "Expected only the one PV update with non-empty value array to have been published"
+    pv_update_output = deserialise_tdct(producer.published_payload)
+    assert (
+        pv_update_output.timestamps.size > 0
+    ), "Expected the published PV update not to be empty"
+
+    update_handler.stop()
+
+
+def test_empty_update_is_not_cached():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    # We think empty array PV updates may occur for chopper timestamp PVs when the chopper is not rotating
+    empty_pv_value: List = []
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    pv_source_name = "chopper"
+
+    # Set an update period to enable PV update caching, so that we can test
+    auto_update_period = 5000
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct", auto_update_period)  # type: ignore
+    metadata = (0, 0, TimeStamp(4, 0))
+
+    # Update with empty timestamp array
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([empty_pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            len(empty_pv_value),
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    assert (
+        update_handler._cached_update is None
+    ), "Expected the empty update not to have been cached"
 
     update_handler.stop()

@@ -3,12 +3,14 @@ from tests.test_helpers.p4p_fakes import FakeContext
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from p4p.nt import NTScalar, NTEnum
 from streaming_data_types.logdata_f142 import deserialise_f142
+from streaming_data_types.timestamps_tdct import deserialise_tdct
 from cmath import isclose
 import numpy as np
 import pytest
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from time import sleep
+from typing import List
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -226,5 +228,61 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.alarm_status == AlarmStatus.NO_CHANGE
     assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
+
+    pva_update_handler.stop()
+
+
+def test_empty_update_is_not_forwarded():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_source_name = "source_name"
+    pv_value = [1, 2, 3]
+    pv_type = "ai"
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
+
+    # First update with non-empty value
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
+
+    # Second update, with empty value
+    empty_pv_value: List = []
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            empty_pv_value, timestamp=pv_timestamp_s
+        )
+    )
+
+    assert (
+        producer.messages_published == 1
+    ), "Expected only the one PV update with non-empty value array to have been published"
+    pv_update_output = deserialise_tdct(producer.published_payload)
+    assert (
+        pv_update_output.timestamps.size > 0
+    ), "Expected the published PV update not to be empty"
+
+    pva_update_handler.stop()
+
+
+def test_empty_update_is_not_cached():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_source_name = "source_name"
+    pv_value: List = []
+    pv_type = "ai"
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
+
+    assert (
+        pva_update_handler._cached_update is None
+    ), "Expected the empty update not to have been cached"
 
     pva_update_handler.stop()
