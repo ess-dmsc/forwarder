@@ -301,7 +301,7 @@ def test_empty_update_is_not_forwarded():
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
             pv_caproto_type,
-            1,
+            len(pv_value),
             1,
             1,
             metadata=metadata,
@@ -327,7 +327,7 @@ def test_empty_update_is_not_forwarded():
     ), "Expected only the one PV update with non-empty value array to have been published"
     pv_update_output = deserialise_tdct(producer.published_payload)
     assert (
-        pv_update_output.timestamps
+        pv_update_output.timestamps.size > 0
     ), "Expected the published PV update not to be empty"
 
     update_handler.stop()
@@ -353,7 +353,7 @@ def test_empty_update_is_not_cached():
         ReadNotifyResponse(
             np.array([empty_pv_value]).astype(pv_numpy_type),
             pv_caproto_type,
-            1,
+            len(empty_pv_value),
             1,
             1,
             metadata=metadata,
