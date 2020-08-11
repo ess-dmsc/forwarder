@@ -58,3 +58,46 @@ def test_tdct_publisher_converts_relative_timestamp_to_absolute():
     assert np.array_equal(
         published_data.timestamps, input_relative_timestamps + reference_timestamp
     ), "Expected the relative timestamps from the EPICS update to have been converted to unix timestamps"
+
+
+def test_tdct_publisher_handles_negative_relative_timestamps():
+    producer = FakeProducer()
+    # These are the values that would be in the array in the PV update
+    input_relative_timestamps = np.array([-3, -2, -1]).astype(np.uint32)
+    # This is the timestamp of the PV update
+    reference_timestamp = 10
+    publish_tdct_message(
+        producer,  # type: ignore
+        "test_topic",
+        input_relative_timestamps,
+        "test_source",
+        reference_timestamp,
+    )
+
+    assert producer.published_payload is not None
+    published_data = deserialise_tdct(producer.published_payload)
+    assert np.array_equal(
+        published_data.timestamps, input_relative_timestamps + reference_timestamp
+    ), "Expected the relative timestamps from the EPICS update to have been converted to unix timestamps"
+
+
+def test_tdct_publisher_publishes_successfully_when_there_is_only_a_single_chopper_timestamp():
+    producer = FakeProducer()
+    # These are the values that would be in the array in the PV update
+    input_relative_timestamps = np.array(1).astype(np.uint32)
+    # This is the timestamp of the PV update
+    reference_timestamp = 10
+    publish_tdct_message(
+        producer,  # type: ignore
+        "test_topic",
+        input_relative_timestamps,
+        "test_source",
+        reference_timestamp,
+    )
+
+    assert producer.published_payload is not None
+    published_data = deserialise_tdct(producer.published_payload)
+    assert np.array_equal(
+        published_data.timestamps,
+        np.atleast_1d(input_relative_timestamps + reference_timestamp),
+    ), "Expected the relative timestamps from the EPICS update to have been converted to unix timestamps"

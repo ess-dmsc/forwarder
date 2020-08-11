@@ -103,10 +103,12 @@ def publish_tdct_message(
     """
     # Timestamps in the data array are nanoseconds relative to the EPICS update timestamp
     # Convert to absolute (relative to unix epoch)
-    unix_epoch_timestamps_ns = data.astype(np.uint64) + timestamp_ns
+    unix_epoch_timestamps_ns = data + timestamp_ns
     producer.produce(
         topic,
-        serialise_tdct(name=source_name, timestamps=unix_epoch_timestamps_ns),
+        serialise_tdct(
+            name=source_name, timestamps=unix_epoch_timestamps_ns.astype(np.uint64)
+        ),
         key=source_name,
         timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
     )
