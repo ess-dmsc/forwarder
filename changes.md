@@ -10,3 +10,9 @@ used in the output topic and channel name fields.
 - Added more information to the README.
 
 - Added system test for stored config.
+
+- Empty PV updates are not forwarded and are not cached to send in periodic updates.
+This was added to address the issue of empty chopper timestamp updates when a chopper is not spinning.
+
+- Chopper timestamps to be forwarded with tdct schema are now assumed to be in nanoseconds and relative
+to the EPICS update timestamp, they are converted to nanosecond-precision unix timestamps when forwarded. 

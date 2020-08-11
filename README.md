@@ -74,6 +74,12 @@ Single-character "?"" and multi-character "*" wildcards are allowed to be used i
 In conjunction with naming conventions for EPICS channel names and Kafka topics this can be used to carry out operations
 such as clearing all configured streams for a particular instrument.
 
+Empty PV updates are not forwarded and are not cached to send in periodic updates.
+This addresses, for example, the case of empty chopper timestamp updates when a chopper is not spinning.
+
+Chopper timestamps to be forwarded with `tdct` schema are assumed to be in nanoseconds and relative
+to the EPICS update timestamp, they are converted to nanosecond-precision unix timestamps when forwarded. 
+
 ### A Python example
 To use for real, replace CONFIG_BROKER, CONFIG_TOPIC and STREAMS with values corresponding to the real system.
 
