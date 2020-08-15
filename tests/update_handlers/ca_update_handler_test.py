@@ -4,6 +4,7 @@ from tests.test_helpers.ca_fakes import FakeContext
 from cmath import isclose
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
+from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
 import pytest
 from caproto import ReadNotifyResponse, ChannelType, TimeStamp
 import numpy as np
@@ -11,6 +12,9 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from time import sleep
 from typing import List
+from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
+    EventType as ConnectionEventType,
+)
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -363,5 +367,31 @@ def test_empty_update_is_not_cached():
     assert (
         update_handler._cached_update is None
     ), "Expected the empty update not to have been cached"
+
+    update_handler.stop()
+
+
+@pytest.mark.parametrize(
+    "state_string,state_enum",
+    [
+        ("connected", ConnectionEventType.CONNECTED),
+        ("disconnected", ConnectionEventType.DISCONNECTED),
+        ("destroyed", ConnectionEventType.DESTROYED),
+        ("some_unrecognised", ConnectionEventType.UNKNOWN),
+    ],
+)
+def test_hanlder_publishes_connection_state_change(state_string, state_enum):
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+
+    context.call_connection_state_callback_with_fake_state_change(state_string)
+
+    assert producer.published_payload is not None
+    pv_update_output = deserialise_ep00(producer.published_payload)
+    assert pv_update_output.type == state_enum
+    assert pv_update_output.source_name == pv_source_name
 
     update_handler.stop()
