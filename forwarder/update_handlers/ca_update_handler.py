@@ -10,8 +10,11 @@ from forwarder.epics_to_serialisable_types import (
     ca_alarm_status_to_f142,
 )
 from caproto.threading.client import Context as CAContext
+from caproto.threading.client import PV
 from typing import Optional, Tuple, Any
 from forwarder.update_handlers.schema_publishers import schema_publishers
+import time
+from forwarder.kafka.kafka_helpers import publish_connection_status_message
 
 
 def _seconds_to_nanoseconds(time_seconds: float) -> int:
@@ -37,7 +40,9 @@ class CAUpdateHandler:
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
-        (self._pv,) = context.get_pvs(pv_name)
+        (self._pv,) = context.get_pvs(
+            pv_name, connection_state_callback=self._connection_state_callback
+        )
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
         sub.add_callback(self._monitor_callback)
@@ -100,6 +105,15 @@ class CAUpdateHandler:
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
+
+    def _connection_state_callback(self, pv: PV, state: str):
+        publish_connection_status_message(
+            self._producer,
+            self._output_topic,
+            self._pv.name,
+            _seconds_to_nanoseconds(time.time()),
+            state,
+        )
 
     def _try_to_determine_type(self, response: ReadNotifyResponse) -> bool:
         """

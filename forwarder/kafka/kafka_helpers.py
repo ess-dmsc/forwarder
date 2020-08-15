@@ -6,7 +6,11 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
 import numpy as np
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
+from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
+    EventType as ConnectionStatusEventType,
+)
+from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
 
 
 def create_producer(broker_address: str) -> KafkaProducer:
@@ -110,5 +114,26 @@ def publish_tdct_message(
             name=source_name, timestamps=unix_epoch_timestamps_ns.astype(np.uint64)
         ),
         key=source_name,
+        timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
+    )
+
+
+_state_str_to_enum: Dict[str, ConnectionStatusEventType] = {
+    "connected": ConnectionStatusEventType.CONNECTED,
+    "disconnected": ConnectionStatusEventType.DISCONNECTED,
+    "destroyed": ConnectionStatusEventType.DESTROYED,
+}
+
+
+def publish_connection_status_message(
+    producer: KafkaProducer, topic: str, pv_name: str, timestamp_ns: int, state: str
+):
+    producer.produce(
+        topic,
+        serialise_ep00(
+            timestamp_ns,
+            _state_str_to_enum.get(state, ConnectionStatusEventType.UNKNOWN),
+            pv_name,
+        ),
         timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
     )
