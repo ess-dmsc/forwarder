@@ -14,11 +14,10 @@ from caproto.threading.client import PV
 from typing import Optional, Tuple, Any
 from forwarder.update_handlers.schema_publishers import schema_publishers
 import time
-from forwarder.kafka.kafka_helpers import publish_connection_status_message
-
-
-def _seconds_to_nanoseconds(time_seconds: float) -> int:
-    return int(time_seconds * 1_000_000_000)
+from forwarder.kafka.kafka_helpers import (
+    publish_connection_status_message,
+    seconds_to_nanoseconds,
+)
 
 
 class CAUpdateHandler:
@@ -79,7 +78,7 @@ class CAUpdateHandler:
                 return
 
         with self._cache_lock:
-            timestamp = _seconds_to_nanoseconds(response.metadata.timestamp)
+            timestamp = seconds_to_nanoseconds(response.metadata.timestamp)
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
             if (
@@ -111,7 +110,7 @@ class CAUpdateHandler:
             self._producer,
             self._output_topic,
             self._pv.name,
-            _seconds_to_nanoseconds(time.time()),
+            seconds_to_nanoseconds(time.time()),
             state,
         )
 

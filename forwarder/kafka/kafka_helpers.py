@@ -6,11 +6,12 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
 import numpy as np
-from typing import Optional, Tuple, Dict
+from typing import Optional, Tuple, Dict, Union
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType as ConnectionStatusEventType,
 )
 from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
+from p4p.client.raw import Disconnected, RemoteError
 
 
 def create_producer(broker_address: str) -> KafkaProducer:
@@ -118,15 +119,21 @@ def publish_tdct_message(
     )
 
 
-_state_str_to_enum: Dict[str, ConnectionStatusEventType] = {
+_state_str_to_enum: Dict[Union[str, Exception], ConnectionStatusEventType] = {
     "connected": ConnectionStatusEventType.CONNECTED,
     "disconnected": ConnectionStatusEventType.DISCONNECTED,
     "destroyed": ConnectionStatusEventType.DESTROYED,
+    Disconnected: ConnectionStatusEventType.DISCONNECTED,
+    RemoteError: ConnectionStatusEventType.DISCONNECTED,
 }
 
 
 def publish_connection_status_message(
-    producer: KafkaProducer, topic: str, pv_name: str, timestamp_ns: int, state: str
+    producer: KafkaProducer,
+    topic: str,
+    pv_name: str,
+    timestamp_ns: int,
+    state: Union[str, Exception],
 ):
     producer.produce(
         topic,
@@ -137,3 +144,7 @@ def publish_connection_status_message(
         ),
         timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
     )
+
+
+def seconds_to_nanoseconds(time_seconds: float) -> int:
+    return int(time_seconds * 1_000_000_000)
