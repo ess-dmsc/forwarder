@@ -2,7 +2,7 @@ from p4p.client.thread import Context as PVAContext
 from p4p import Value
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.application_logger import get_logger
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 from threading import Lock, Event
 from forwarder.update_handlers.schema_publishers import schema_publishers
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
@@ -13,6 +13,12 @@ from forwarder.epics_to_serialisable_types import (
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 import numpy as np
+from forwarder.kafka.kafka_helpers import (
+    publish_connection_status_message,
+    seconds_to_nanoseconds,
+)
+from p4p.client.thread import Cancelled, Disconnected, RemoteError
+import time
 
 
 def _get_alarm_status(response):
@@ -44,7 +50,9 @@ class PVAUpdateHandler:
         self._output_topic = output_topic
 
         request = context.makeRequest("field(value,timeStamp,alarm)")
-        self._sub = context.monitor(pv_name, self._monitor_callback, request=request)
+        self._sub = context.monitor(
+            pv_name, self._monitor_callback, request=request, notify_disconnect=True
+        )
         self._pv_name = pv_name
 
         self._cached_update: Optional[Tuple[Value, int]] = None
@@ -66,7 +74,24 @@ class PVAUpdateHandler:
             )
             self._repeating_timer.start()
 
-    def _monitor_callback(self, response: Value):
+    def _monitor_callback(self, response: Union[Value, Exception]):
+        if isinstance(response, Exception):
+            # "Cancelled" occurs when we unsubscribe, we don't want to publish that as a connection state change
+            # We are only interested loss of communication with the server
+            if not isinstance(response, Cancelled):
+                if isinstance(response, (Disconnected, RemoteError)):
+                    connection_state = "disconnected"
+                else:
+                    connection_state = "unrecognised_connection_exception"
+                publish_connection_status_message(
+                    self._producer,
+                    self._output_topic,
+                    self._pv_name,
+                    seconds_to_nanoseconds(time.time()),
+                    connection_state,
+                )
+            return
+
         # Skip PV updates with empty values
         try:
             if response.value.size == 0:
