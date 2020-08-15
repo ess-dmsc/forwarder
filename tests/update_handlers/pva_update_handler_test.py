@@ -4,6 +4,7 @@ from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from p4p.nt import NTScalar, NTEnum
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
+from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
 from cmath import isclose
 import numpy as np
 import pytest
@@ -11,6 +12,10 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from time import sleep
 from typing import List
+from p4p.client.thread import Cancelled, Disconnected, RemoteError
+from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
+    EventType as ConnectionEventType,
+)
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -284,5 +289,46 @@ def test_empty_update_is_not_cached():
     assert (
         pva_update_handler._cached_update is None
     ), "Expected the empty update not to have been cached"
+
+    pva_update_handler.stop()
+
+
+@pytest.mark.parametrize(
+    "exception,state_enum",
+    [
+        (RemoteError(), ConnectionEventType.DISCONNECTED),
+        (Disconnected(), ConnectionEventType.DISCONNECTED),
+        (Exception("some unrecognised exception"), ConnectionEventType.UNKNOWN),
+    ],
+)
+def test_handler_publishes_connection_state_change(exception, state_enum):
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(exception)
+
+    assert producer.published_payload is not None
+    connect_state_output = deserialise_ep00(producer.published_payload)
+    assert connect_state_output.type == state_enum
+    assert connect_state_output.source_name == pv_source_name
+
+    pva_update_handler.stop()
+
+
+def test_handler_does_not_publish_connection_state_change_for_cancelled_state():
+    producer = FakeProducer()
+    context = FakeContext()
+
+    pv_source_name = "source_name"
+
+    pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    context.call_monitor_callback_with_fake_pv_update(Cancelled())
+    # "Cancelled" occurs when we intentionally disconnect the client,
+    # we don't log this to Kafka as a connection state change
+
+    assert producer.published_payload is None
 
     pva_update_handler.stop()

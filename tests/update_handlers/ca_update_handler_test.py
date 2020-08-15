@@ -380,7 +380,7 @@ def test_empty_update_is_not_cached():
         ("some_unrecognised", ConnectionEventType.UNKNOWN),
     ],
 )
-def test_hanlder_publishes_connection_state_change(state_string, state_enum):
+def test_handler_publishes_connection_state_change(state_string, state_enum):
     producer = FakeProducer()
     context = FakeContext()
 
@@ -390,8 +390,8 @@ def test_hanlder_publishes_connection_state_change(state_string, state_enum):
     context.call_connection_state_callback_with_fake_state_change(state_string)
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_ep00(producer.published_payload)
-    assert pv_update_output.type == state_enum
-    assert pv_update_output.source_name == pv_source_name
+    connect_state_output = deserialise_ep00(producer.published_payload)
+    assert connect_state_output.type == state_enum
+    assert connect_state_output.source_name == pv_source_name
 
     update_handler.stop()
