@@ -16,3 +16,5 @@ This was added to address the issue of empty chopper timestamp updates when a ch
 
 - Chopper timestamps to be forwarded with tdct schema are now assumed to be in nanoseconds and relative
 to the EPICS update timestamp, they are converted to nanosecond-precision unix timestamps when forwarded. 
+
+- Connection state changes with the EPICS server are published to Kafka using the ep00 schema
