@@ -3,6 +3,7 @@ import configargparse
 from os import getpid
 from socket import gethostname
 import configparser
+from pathlib import Path
 
 
 class VersionArgParser(configargparse.ArgumentParser):
@@ -24,7 +25,8 @@ def get_version() -> str:
     Gets the current version from the setup.cfg file
     """
     config = configparser.ConfigParser()
-    config.read("setup.cfg")
+    path = Path(__file__).parent.parent / "setup.cfg"
+    config.read(path)
     return str(config["metadata"]["version"])
 
 
