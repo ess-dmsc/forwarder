@@ -65,7 +65,8 @@ def test_parse_streams_skips_stream_info_if_add_config_and_schema_not_specified(
 def test_parse_streams_skips_stream_info_if_add_config_and_topic_not_specified():
     empty_topic = ""
     message = serialise_rf5k(
-        UpdateType.ADD, [StreamInfo("test_channel", "f142", empty_topic, Protocol.PVA)],
+        UpdateType.ADD,
+        [StreamInfo("test_channel", "f142", empty_topic, Protocol.PVA)],
     )
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
@@ -128,7 +129,8 @@ def test_remove_config_is_valid_with_all_channel_info_specified():
 def test_remove_config_is_valid_if_channel_name_not_specified_but_schema_is():
     test_schema = "f142"
     message = serialise_rf5k(
-        UpdateType.REMOVE, [StreamInfo("", test_schema, "", Protocol.PVA)],
+        UpdateType.REMOVE,
+        [StreamInfo("", test_schema, "", Protocol.PVA)],
     )
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
@@ -139,7 +141,8 @@ def test_remove_config_is_valid_if_channel_name_not_specified_but_schema_is():
 def test_remove_config_is_valid_if_channel_name_not_specified_but_topic_is():
     test_topic = "output_topic"
     message = serialise_rf5k(
-        UpdateType.REMOVE, [StreamInfo("", "", test_topic, Protocol.PVA)],
+        UpdateType.REMOVE,
+        [StreamInfo("", "", test_topic, Protocol.PVA)],
     )
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
@@ -148,7 +151,10 @@ def test_remove_config_is_valid_if_channel_name_not_specified_but_topic_is():
 
 
 def test_parse_streams_skips_stream_info_if_remove_config_and_channel_name_schema_and_topic_not_specified():
-    message = serialise_rf5k(UpdateType.REMOVE, [StreamInfo("", "", "", Protocol.PVA)],)
+    message = serialise_rf5k(
+        UpdateType.REMOVE,
+        [StreamInfo("", "", "", Protocol.PVA)],
+    )
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
     assert not streams
