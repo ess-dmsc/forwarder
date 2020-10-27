@@ -104,6 +104,8 @@ class CAUpdateHandler:
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
+            if self._repeating_timer is not None:
+                self._repeating_timer.reset()
 
     def _connection_state_callback(self, pv: PV, state: str):
         publish_connection_status_message(
