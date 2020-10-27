@@ -23,7 +23,7 @@ class KafkaProducer:
         self._producer.flush(max_wait_to_publish_producer_queue)
 
     def produce(
-        self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None
+        self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None,
     ):
         def ack(err, _):
             if err:

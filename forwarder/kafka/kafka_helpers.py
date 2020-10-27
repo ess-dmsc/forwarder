@@ -67,7 +67,7 @@ def publish_f142_message(
     """
     if alarm_status is None:
         f142_message = serialise_f142(
-            value=data, source_name=source_name, timestamp_unix_ns=timestamp_ns
+            value=data, source_name=source_name, timestamp_unix_ns=timestamp_ns,
         )
     else:
         f142_message = serialise_f142(
@@ -126,7 +126,7 @@ _state_str_to_enum: Dict[Union[str, Exception], ConnectionStatusEventType] = {
 
 
 def publish_connection_status_message(
-    producer: KafkaProducer, topic: str, pv_name: str, timestamp_ns: int, state: str
+    producer: KafkaProducer, topic: str, pv_name: str, timestamp_ns: int, state: str,
 ):
     producer.produce(
         topic,

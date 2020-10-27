@@ -22,9 +22,7 @@ def test_update_handler_throws_if_schema_not_recognised():
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
     with pytest.raises(ValueError):
-        CAUpdateHandler(
-            producer, context, "source_name", "output_topic", non_existing_schema
-        )  # type: ignore
+        CAUpdateHandler(producer, context, "source_name", "output_topic", non_existing_schema)  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -41,9 +39,7 @@ def test_update_handler_publishes_float_update(
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
@@ -74,9 +70,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_caproto_type, pv_numpy
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
@@ -120,9 +114,7 @@ def test_update_handler_publishes_floatarray_update(
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
@@ -155,9 +147,7 @@ def test_update_handler_publishes_alarm_update():
     alarm_status = 6  # AlarmStatus.LOW
     alarm_severity = 1  # AlarmSeverity.MINOR
 
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     metadata = (alarm_status, alarm_severity, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
@@ -191,9 +181,7 @@ def test_update_handler_publishes_periodic_update():
     pv_source_name = "source_name"
 
     update_period_ms = 10
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142", update_period_ms
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142", update_period_ms)  # type: ignore
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -230,9 +218,7 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     alarm_status = 6  # AlarmStatus.LOW
     alarm_severity = 1  # AlarmSeverity.MINOR
 
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
     metadata = (alarm_status, alarm_severity, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -270,15 +256,13 @@ def test_update_handler_publishes_enum_update():
 
     pv_caproto_type = ChannelType.TIME_ENUM
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     # Nothing gets published when ENUM type update is received, the handler will resubscribe using STRING
     # type as the string is more useful to forwarder to the filewriter than the enum int
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(np.array([0]), pv_caproto_type, 1, 1, 1, metadata=metadata)
+        ReadNotifyResponse(np.array([0]), pv_caproto_type, 1, 1, 1, metadata=metadata,)
     )
     # Second update, with STRING type
     enum_string_value = "ENUM_STRING"
@@ -313,9 +297,7 @@ def test_empty_update_is_not_forwarded():
     pv_numpy_type = np.int32
     pv_source_name = "chopper"
 
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "tdct"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
     metadata = (0, 0, TimeStamp(4, 0))
 
     # First update, with non-empty timestamp array
@@ -367,9 +349,7 @@ def test_empty_update_is_not_cached():
 
     # Set an update period to enable PV update caching, so that we can test
     auto_update_period = 5000
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "tdct", auto_update_period
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct", auto_update_period)  # type: ignore
     metadata = (0, 0, TimeStamp(4, 0))
 
     # Update with empty timestamp array
@@ -405,9 +385,7 @@ def test_handler_publishes_connection_state_change(state_string, state_enum):
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(
-        producer, context, pv_source_name, "output_topic", "f142"
-    )  # type: ignore
+    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
     context.call_connection_state_callback_with_fake_state_change(state_string)
 
