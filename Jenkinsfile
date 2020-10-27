@@ -68,8 +68,7 @@ builders = pipeline_builder.createBuilders { container ->
     container.sh """
       export PATH=/opt/miniconda/bin:$PATH
       cd ${project}
-      python -m mypy .
-    """
+    """ // python -m mypy .
   } // stage
 
   pipeline_builder.stage("${container.key}: Test") {
