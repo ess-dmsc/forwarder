@@ -20,7 +20,14 @@ if __name__ == "__main__":
         "forwarder_config",
         serialise_rf5k(
             UpdateType.ADD,
-            [StreamInfo("SIMPLE:ENUM", "f142", "ca_data", Protocol.CA,)],
+            [
+                StreamInfo(
+                    "SIMPLE:ENUM",
+                    "f142",
+                    "ca_data",
+                    Protocol.CA,
+                )
+            ],
         ),
         int(time.time() * 1000),
     )

@@ -135,6 +135,8 @@ class PVAUpdateHandler:
                     timestamp,
                 )
             self._cached_update = (response, timestamp)
+            if self._repeating_timer is not None:
+                self._repeating_timer.reset()
 
     def _try_to_determine_type(self, response):
         try:
