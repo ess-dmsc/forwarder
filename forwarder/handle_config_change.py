@@ -64,7 +64,9 @@ def _unsubscribe_from_pv(
         return (
             True
             if not field_in_remove_request
-            or fnmatch.fnmatch(field_in_existing_channel, field_in_remove_request)  # type: ignore
+            or fnmatch.fnmatch(
+                field_in_existing_channel, field_in_remove_request
+            )  # type: ignore
             else False
         )
 

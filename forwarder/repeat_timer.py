@@ -12,11 +12,12 @@ class RepeatTimer(Timer):
         self._lock = Lock()
         self._interval_time = timedelta(seconds=interval)
         self._trigger_time = datetime.now() + self._interval_time
-    
+
     def _calculate_new_wait_time(self, current_time: datetime) -> float:
         if current_time > self._trigger_time:
-            self._trigger_time = self._trigger_time + self._interval_time *\
-                                 ((current_time - self._trigger_time) // self._interval_time + 1)
+            self._trigger_time = self._trigger_time + self._interval_time * (
+                (current_time - self._trigger_time) // self._interval_time + 1
+            )
         return (self._trigger_time - datetime.now()).total_seconds()
 
     def run(self):
@@ -32,4 +33,3 @@ class RepeatTimer(Timer):
     def reset(self):
         with self._lock:
             self._trigger_time += self._interval_time
-
