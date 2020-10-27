@@ -93,7 +93,8 @@ def test_update_handlers_are_removed_when_remove_config_update_is_handled(
     channel_name_1 = "test_channel_1"
     channel_name_2 = "test_channel_2"
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(channel_name_1, EpicsProtocol.NONE, None, None),),
+        CommandType.REMOVE,
+        (Channel(channel_name_1, EpicsProtocol.NONE, None, None),),
     )
 
     update_handlers[Channel(channel_name_1, EpicsProtocol.NONE, None, None)] = StubUpdateHandler()  # type: ignore
@@ -105,7 +106,9 @@ def test_update_handlers_are_removed_when_remove_config_update_is_handled(
     ), "Expected handler for channel_name_1 to have been removed, leaving only channel_name_2"
 
 
-def test_update_handlers_can_be_removed_by_topic(update_handlers,):
+def test_update_handlers_can_be_removed_by_topic(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -116,7 +119,8 @@ def test_update_handlers_can_be_removed_by_topic(update_handlers,):
     update_handlers[Channel("", EpicsProtocol.NONE, topic_name_1, None)] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, topic_name_1, None),),
+        CommandType.REMOVE,
+        (Channel(None, EpicsProtocol.NONE, topic_name_1, None),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -126,7 +130,9 @@ def test_update_handlers_can_be_removed_by_topic(update_handlers,):
     ), "Expected handlers for topic_1 to have been removed, leaving only one for topic_2"
 
 
-def test_update_handlers_can_be_removed_by_schema(update_handlers,):
+def test_update_handlers_can_be_removed_by_schema(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -137,7 +143,8 @@ def test_update_handlers_can_be_removed_by_schema(update_handlers,):
     update_handlers[Channel("", EpicsProtocol.NONE, "", schema_1)] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, None, schema_1),),
+        CommandType.REMOVE,
+        (Channel(None, EpicsProtocol.NONE, None, schema_1),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -147,7 +154,9 @@ def test_update_handlers_can_be_removed_by_schema(update_handlers,):
     ), "Expected handlers for schema_1 to have been removed, leaving only one for schema_2"
 
 
-def test_update_handlers_can_be_removed_by_schema_and_topic(update_handlers,):
+def test_update_handlers_can_be_removed_by_schema_and_topic(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -171,7 +180,9 @@ def test_update_handlers_can_be_removed_by_schema_and_topic(update_handlers,):
     assert test_channel_3 not in update_handlers.keys()
 
 
-def test_update_handlers_can_be_removed_by_name_and_topic(update_handlers,):
+def test_update_handlers_can_be_removed_by_name_and_topic(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -185,14 +196,19 @@ def test_update_handlers_can_be_removed_by_name_and_topic(update_handlers,):
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     # Only the handler with the channel matching provided name AND topic should be removed
-    config_update = ConfigUpdate(CommandType.REMOVE, (test_channel_3,),)
+    config_update = ConfigUpdate(
+        CommandType.REMOVE,
+        (test_channel_3,),
+    )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
     assert len(update_handlers) == 2
     assert test_channel_3 not in update_handlers.keys()
 
 
-def test_update_handlers_can_be_removed_by_name_and_schema(update_handlers,):
+def test_update_handlers_can_be_removed_by_name_and_schema(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -206,7 +222,10 @@ def test_update_handlers_can_be_removed_by_name_and_schema(update_handlers,):
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     # Only the handler with the channel matching provided name AND schema should be removed
-    config_update = ConfigUpdate(CommandType.REMOVE, (test_channel_3,),)
+    config_update = ConfigUpdate(
+        CommandType.REMOVE,
+        (test_channel_3,),
+    )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
     assert len(update_handlers) == 2
@@ -225,7 +244,8 @@ def test_single_character_wildcard_can_be_used_to_remove_channels_by_topic(
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, "topic_?", None),),
+        CommandType.REMOVE,
+        (Channel(None, EpicsProtocol.NONE, "topic_?", None),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -245,7 +265,8 @@ def test_multicharacter_wildcard_can_be_used_to_remove_channels_by_topic(
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, "*_topic", None),),
+        CommandType.REMOVE,
+        (Channel(None, EpicsProtocol.NONE, "*_topic", None),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -265,7 +286,8 @@ def test_single_character_wildcard_can_be_used_to_remove_channels_by_name(
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel("channel_?", EpicsProtocol.NONE, None, None),),
+        CommandType.REMOVE,
+        (Channel("channel_?", EpicsProtocol.NONE, None, None),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -287,7 +309,8 @@ def test_multicharacter_wildcard_can_be_used_to_remove_channels_by_name(
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel("*_channel", EpicsProtocol.NONE, None, None),),
+        CommandType.REMOVE,
+        (Channel("*_channel", EpicsProtocol.NONE, None, None),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -295,7 +318,9 @@ def test_multicharacter_wildcard_can_be_used_to_remove_channels_by_name(
     assert test_channel_3 in update_handlers.keys()
 
 
-def test_wildcard_cannot_be_used_to_remove_channels_by_schema(update_handlers,):
+def test_wildcard_cannot_be_used_to_remove_channels_by_schema(
+    update_handlers,
+):
     # No wildcard matching on schemas because ? and * are allowed characters in schema identifiers
 
     status_reporter = StubStatusReporter()
@@ -307,7 +332,8 @@ def test_wildcard_cannot_be_used_to_remove_channels_by_schema(update_handlers,):
     update_handlers[test_channel_3] = StubUpdateHandler()  # type: ignore
 
     config_update = ConfigUpdate(
-        CommandType.REMOVE, (Channel(None, EpicsProtocol.NONE, None, "f?42"),),
+        CommandType.REMOVE,
+        (Channel(None, EpicsProtocol.NONE, None, "f?42"),),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -345,7 +371,12 @@ def test_can_add_multiple_channels_with_same_name_if_protocol_topic_or_schema_ar
     test_channel_2 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic_2", "f142")
     test_channel_3 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "tdct")
     config_update = ConfigUpdate(
-        CommandType.ADD, (test_channel_1, test_channel_2, test_channel_3,),
+        CommandType.ADD,
+        (
+            test_channel_1,
+            test_channel_2,
+            test_channel_3,
+        ),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -355,7 +386,9 @@ def test_can_add_multiple_channels_with_same_name_if_protocol_topic_or_schema_ar
     assert test_channel_3 in update_handlers.keys()
 
 
-def test_identical_configurations_are_not_added(update_handlers,):
+def test_identical_configurations_are_not_added(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     channel_name = "test_channel"
@@ -363,7 +396,12 @@ def test_identical_configurations_are_not_added(update_handlers,):
     test_channel_2 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
     test_channel_3 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
     config_update = ConfigUpdate(
-        CommandType.ADD, (test_channel_1, test_channel_2, test_channel_3,),
+        CommandType.ADD,
+        (
+            test_channel_1,
+            test_channel_2,
+            test_channel_3,
+        ),
     )
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
@@ -373,7 +411,9 @@ def test_identical_configurations_are_not_added(update_handlers,):
     assert test_channel_1 in update_handlers.keys()
 
 
-def test_configuration_stored_when_channels_added(update_handlers,):
+def test_configuration_stored_when_channels_added(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     channel_name = "test_channel"
@@ -381,7 +421,12 @@ def test_configuration_stored_when_channels_added(update_handlers,):
     test_channel_2 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
     test_channel_3 = Channel(channel_name, EpicsProtocol.FAKE, "output_topic", "f142")
     config_update = ConfigUpdate(
-        CommandType.ADD, (test_channel_1, test_channel_2, test_channel_3,),
+        CommandType.ADD,
+        (
+            test_channel_1,
+            test_channel_2,
+            test_channel_3,
+        ),
     )
     config_store = mock.create_autospec(ConfigurationStore)
 
@@ -390,12 +435,17 @@ def test_configuration_stored_when_channels_added(update_handlers,):
     config_store.save_configuration.assert_called_once()
 
 
-def test_configuration_stored_when_channels_removed(update_handlers,):
+def test_configuration_stored_when_channels_removed(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(CommandType.REMOVE, (test_channel_1,),)
+    config_update = ConfigUpdate(
+        CommandType.REMOVE,
+        (test_channel_1,),
+    )
 
     config_store = mock.create_autospec(ConfigurationStore)
 
@@ -404,12 +454,17 @@ def test_configuration_stored_when_channels_removed(update_handlers,):
     config_store.save_configuration.assert_called_once()
 
 
-def test_configuration_stored_when_all_channels_removed(update_handlers,):
+def test_configuration_stored_when_all_channels_removed(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(CommandType.REMOVE_ALL, None,)
+    config_update = ConfigUpdate(
+        CommandType.REMOVE_ALL,
+        None,
+    )
 
     config_store = mock.create_autospec(ConfigurationStore)
 
@@ -418,12 +473,17 @@ def test_configuration_stored_when_all_channels_removed(update_handlers,):
     config_store.save_configuration.assert_called_once()
 
 
-def test_configuration_not_stored_when_command_is_malformed(update_handlers,):
+def test_configuration_not_stored_when_command_is_malformed(
+    update_handlers,
+):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
-    config_update = ConfigUpdate(CommandType.MALFORMED, None,)
+    config_update = ConfigUpdate(
+        CommandType.MALFORMED,
+        None,
+    )
 
     config_store = mock.create_autospec(ConfigurationStore)
 

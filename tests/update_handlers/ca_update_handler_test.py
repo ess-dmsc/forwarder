@@ -262,7 +262,14 @@ def test_update_handler_publishes_enum_update():
     # type as the string is more useful to forwarder to the filewriter than the enum int
     metadata = (0, 0, TimeStamp(4, 0))
     context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(np.array([0]), pv_caproto_type, 1, 1, 1, metadata=metadata,)
+        ReadNotifyResponse(
+            np.array([0]),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
     )
     # Second update, with STRING type
     enum_string_value = "ENUM_STRING"

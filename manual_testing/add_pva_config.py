@@ -20,7 +20,14 @@ if __name__ == "__main__":
         "forwarder_config",
         serialise_rf5k(
             UpdateType.ADD,
-            [StreamInfo("SIMPLE:DOUBLE3", "f142", "pva_data", Protocol.PVA,)],
+            [
+                StreamInfo(
+                    "SIMPLE:DOUBLE3",
+                    "f142",
+                    "pva_data",
+                    Protocol.PVA,
+                )
+            ],
         ),
         int(time.time() * 1000),
     )
