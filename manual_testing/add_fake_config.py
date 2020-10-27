@@ -19,8 +19,7 @@ if __name__ == "__main__":
     producer.produce(
         "forwarder_config",
         serialise_rf5k(
-            UpdateType.ADD,
-            [StreamInfo("fake:int", "f142", "fake_data", Protocol.FAKE,)],
+            UpdateType.ADD, [StreamInfo("fake:int", "f142", "fake_data", Protocol.FAKE)]
         ),
         int(time.time() * 1000),
     )

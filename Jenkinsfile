@@ -52,6 +52,7 @@ builders = pipeline_builder.createBuilders { container ->
       export PATH=/opt/miniconda/bin:$PATH
       cd ${project}
       python -m black --check .
+      exit 0
     """
   } // stage
 
