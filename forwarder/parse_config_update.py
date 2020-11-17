@@ -27,6 +27,7 @@ class CommandType(Enum):
     MALFORMED = "malformed_config_update"
     REPEAT = "repeat_pv_values"
 
+
 class EpicsProtocol(Enum):
     PVA = "pva"
     CA = "ca"
@@ -81,7 +82,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
         return ConfigUpdate(CommandType.MALFORMED, None)
 
     try:
-        command_type = config_change_to_command_type[config_update.config_change]
+        command_type = config_change_to_command_type[
+            config_update.config_change
+        ]
     except KeyError:
         logger.warning(
             "Unrecogised configuration change type in configuration update message"
@@ -108,7 +111,11 @@ def _parse_streams(
     command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
     for stream in streams:
-        fields_present = (bool(stream.channel), bool(stream.schema), bool(stream.topic))
+        fields_present = (
+            bool(stream.channel),
+            bool(stream.schema),
+            bool(stream.topic),
+        )
         if command_type == CommandType.ADD and not all(fields_present):
             logger.warning(
                 f"All details must be given when adding a stream, but received ADD request for "
@@ -139,4 +146,6 @@ def _parse_streams(
             )
             continue
 
-        yield Channel(stream.channel, epics_protocol, stream.topic, stream.schema)
+        yield Channel(
+            stream.channel, epics_protocol, stream.topic, stream.schema
+        )
