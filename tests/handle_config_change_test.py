@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from forwarder.configuration_store import ConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
 from tests.kafka.fake_producer import FakeProducer
@@ -45,6 +47,45 @@ def update_handlers():
     # Clean up
     for _, handler in update_handlers.items():
         handler.stop()
+
+
+def test_repeat_config_update_handled(
+    update_handlers,
+):
+    config_update = ConfigUpdate(CommandType.REPEAT, None)
+
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+
+    with patch('forwarder.handle_config_change._repeat_all_pvs'
+               ) as _repeat_all_pvs_call:
+        handle_configuration_change(config_update, 20000, None, update_handlers,
+                                    producer, None, None, _logger,
+                                    status_reporter)
+        _repeat_all_pvs_call.assert_called_with(update_handlers)
+
+
+def test_repeat_config_update_triggers_message_repeat(
+    update_handlers,
+):
+    config_update = ConfigUpdate(CommandType.REPEAT, None)
+
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+
+    channel_1 = "test_channel_1"
+    channel_2 = "test_channel_2"
+
+    with patch('forwarder.update_handlers.ca_update_handler.CAUpdateHandler')\
+            as ca_update_handler:
+        update_handlers[Channel(channel_1, EpicsProtocol.CA, "topic_1",
+                                "f142")] = ca_update_handler()
+        update_handlers[Channel(channel_2, EpicsProtocol.CA, "topic_2",
+                                "f142")] = ca_update_handler()
+        handle_configuration_change(config_update, 20000, None, update_handlers,
+                                 producer, None, None, None, status_reporter)
+        for _, update_handler in update_handlers.items():
+            update_handler.publish_cached_update.assert_called()
 
 
 def test_no_change_to_empty_update_handlers_when_malformed_config_update_handled(

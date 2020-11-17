@@ -1,3 +1,5 @@
+import json
+
 from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
@@ -23,7 +25,7 @@ class CommandType(Enum):
     REMOVE = "stop_channel"
     REMOVE_ALL = "stop_all"
     MALFORMED = "malformed_config_update"
-
+    REPEAT = "repeat_pv_values"
 
 class EpicsProtocol(Enum):
     PVA = "pva"
@@ -63,8 +65,16 @@ config_protocol_to_epics_protocol = {
 
 def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
+        config_update = json.loads(config_update_payload.decode("utf-8"))
+        if config_update.get("command_type", False) == "repeat":
+            return ConfigUpdate(CommandType.REPEAT, None)
+    except (RuntimeError, json.JSONDecodeError):
+        pass
+
+    try:
         config_update = deserialise_rf5k(config_update_payload)
     except (RuntimeError, flatbuffer_struct.error):
+
         logger.warning(
             "Unable to deserialise payload of received configuration update message"
         )

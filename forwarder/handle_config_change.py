@@ -98,6 +98,11 @@ def _unsubscribe_from_all(
     logger.info("Unsubscribed from all PVs")
 
 
+def _repeat_all_pvs(update_handlers: Dict[Channel, UpdateHandler]):
+    for _, update_handler in update_handlers.items():
+        update_handler.publish_cached_update()
+
+
 def handle_configuration_change(
     configuration_change: ConfigUpdate,
     fake_pv_period: int,
@@ -117,6 +122,8 @@ def handle_configuration_change(
         _unsubscribe_from_all(update_handlers, logger)
     elif configuration_change.command_type == CommandType.MALFORMED:
         return
+    elif configuration_change.command_type == CommandType.REPEAT:
+        _repeat_all_pvs(update_handlers)
     else:
         if configuration_change.channels is not None:
             for channel in configuration_change.channels:
