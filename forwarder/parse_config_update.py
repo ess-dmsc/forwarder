@@ -2,6 +2,7 @@ from forwarder.application_logger import get_logger
 import attr
 from enum import Enum
 from typing import Tuple, Generator, Optional, List
+from streaming_data_types.exceptions import WrongSchemaException
 from streaming_data_types.forwarder_config_update_rf5k import (
     deserialise_rf5k,
     StreamInfo,
@@ -68,6 +69,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
         logger.warning(
             "Unable to deserialise payload of received configuration update message"
         )
+        return ConfigUpdate(CommandType.MALFORMED, None)
+    except WrongSchemaException:
+        logger.warning("Ignoring received message as it had the wrong schema")
         return ConfigUpdate(CommandType.MALFORMED, None)
 
     try:
