@@ -262,6 +262,7 @@ def docker_compose_lr(request):
     options = common_options
     options["--project-name"] = "lr"
     options["--file"] = ["compose/docker-compose-long-running.yml"]
+    options["--no-log-prefix"] = True
 
     build_and_run(options, request, "forwarder_config_lr.ini", "forwarder_tests.log")
 
