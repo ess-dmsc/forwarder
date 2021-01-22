@@ -104,6 +104,7 @@ common_options = {
     "--tail": "all",
     "--detach": True,
     "--build": False,
+    "--no-log-prefix": False,
 }
 
 
