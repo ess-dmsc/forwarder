@@ -29,6 +29,7 @@ from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
 from .helpers.f142_logdata.AlarmStatus import AlarmStatus
 import pytest
 from streaming_data_types.status_x5f2 import deserialise_x5f2
+from caproto._utils import CaprotoTimeoutError
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_STRING_VALUE = "test"
@@ -56,7 +57,15 @@ def setup_and_teardown_function(request):
     }
 
     for key, value in initial_values.items():
-        change_pv_value(key, value)
+        pv_set = False
+        attempts = 0
+        while not pv_set and attempts < 10:
+            try:
+                change_pv_value(key, value)
+            except CaprotoTimeoutError:
+                attempts += 1
+                continue
+            pv_set = True
 
     sleep(1)
 
