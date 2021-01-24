@@ -1,10 +1,8 @@
 import os.path
 import pytest
 from compose.cli.main import TopLevelCommand, project_from_options
-from confluent_kafka.admin import AdminClient
 from confluent_kafka import Producer
 import docker
-from time import sleep
 from subprocess import Popen
 import warnings
 from streaming_data_types.forwarder_config_update_rf5k import (
@@ -40,6 +38,25 @@ def pytest_addoption(parser):
     )
 
 
+def _create_topic(topic_name: str, partitions: int = 1, replicas: int = 1):
+    container = None
+    client = docker.from_env()
+    for item in client.containers.list():
+        if "_rpk_admin_1" in item.name:
+            container = item
+            break
+    if container is None:
+        raise Exception("rpk admin container not found")
+    exit_code, output = container.exec_run(
+        f"rpk api topic create {topic_name} --partitions {partitions} --replicas {replicas}",
+        privileged=True,
+    )
+    print("Creating topic using rpk: ")
+    print(output.decode("utf-8"), flush=True)
+
+    assert exit_code == 0, f"Failed to create topic {topic_name} in test setup"
+
+
 def wait_until_kafka_ready(docker_cmd, docker_options):
     print("Waiting for Kafka broker to be ready for system tests...", flush=True)
     conf = {
@@ -51,7 +68,6 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
     kafka_ready = False
 
     def delivery_callback(err, msg):
-        nonlocal n_polls
         nonlocal kafka_ready
         if not err:
             print("Kafka is ready!")
@@ -69,21 +85,33 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         docker_cmd.down(docker_options)  # Bring down containers cleanly
         raise Exception("Kafka broker was not ready after 100 seconds, aborting tests.")
 
-    client = AdminClient(conf)
-    topic_ready = False
-
-    n_polls = 0
-    while n_polls < 10 and not topic_ready:
-        if "TEST_forwarderConfig" in client.list_topics().topics.keys():
-            topic_ready = True
-            print("Topic is ready!", flush=True)
-            break
-        sleep(6)
-        n_polls += 1
-
-    if not topic_ready:
-        docker_cmd.down(docker_options)  # Bring down containers cleanly
-        raise Exception("Kafka topic was not ready after 60 seconds, aborting tests.")
+    _create_topic("TEST_forwarderConfig")
+    _create_topic("TEST_forwarderData_2_partitions", 2)
+    _create_topic("TEST_forwarderData_0")
+    _create_topic("TEST_forwarderData_1")
+    _create_topic("TEST_forwarderData_2")
+    _create_topic("TEST_forwarderData_change_config")
+    _create_topic("TEST_forwarderData_connection_status")
+    _create_topic("TEST_forwarderData_fake")
+    _create_topic("TEST_forwarderData_idle_updates")
+    _create_topic("TEST_forwarderStorage")
+    _create_topic("TEST_forwarderStorageStatus")
+    # client = AdminClient(conf)
+    # client.create_topics()
+    # topic_ready = False
+    #
+    # n_polls = 0
+    # while n_polls < 10 and not topic_ready:
+    #     if "TEST_forwarderConfig" in client.list_topics().topics.keys():
+    #         topic_ready = True
+    #         print("Topic is ready!", flush=True)
+    #         break
+    #     sleep(6)
+    #     n_polls += 1
+    #
+    # if not topic_ready:
+    #     docker_cmd.down(docker_options)  # Bring down containers cleanly
+    #     raise Exception("Kafka topic was not ready after 60 seconds, aborting tests.")
 
 
 common_options = {
