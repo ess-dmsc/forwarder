@@ -16,10 +16,10 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import
 )
 
 
-def test_parsing_returns_as_malformed_for_message_which_is_not_valid_rf5k_flatbuffer():
+def test_parsing_returns_as_invalid_for_message_which_is_not_valid_rf5k_flatbuffer():
     message = b"something_which_is_not_a_valid_rf5k_flatbuffer"
     config_update = parse_config_update(message)
-    assert config_update.command_type == CommandType.MALFORMED
+    assert config_update.command_type == CommandType.INVALID
 
 
 def test_parses_removeall_config_type():
@@ -28,16 +28,16 @@ def test_parses_removeall_config_type():
     assert config_update.command_type == CommandType.REMOVE_ALL
 
 
-def test_remove_config_type_with_no_streams_is_malformed():
+def test_remove_config_type_with_no_streams_is_invalid():
     message = serialise_rf5k(UpdateType.REMOVE, [])
     config_update = parse_config_update(message)
-    assert config_update.command_type == CommandType.MALFORMED
+    assert config_update.command_type == CommandType.INVALID
 
 
-def test_add_config_type_with_no_streams_is_malformed():
+def test_add_config_type_with_no_streams_is_invalid():
     message = serialise_rf5k(UpdateType.ADD, [])
     config_update = parse_config_update(message)
-    assert config_update.command_type == CommandType.MALFORMED
+    assert config_update.command_type == CommandType.INVALID
 
 
 def test_parse_streams_skips_stream_info_if_add_config_and_channel_not_specified():

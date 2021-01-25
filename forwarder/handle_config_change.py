@@ -116,7 +116,7 @@ def handle_configuration_change(
     """
     if configuration_change.command_type == CommandType.REMOVE_ALL:
         _unsubscribe_from_all(update_handlers, logger)
-    elif configuration_change.command_type == CommandType.MALFORMED:
+    elif configuration_change.command_type == CommandType.INVALID:
         return
     else:
         if configuration_change.channels is not None:
