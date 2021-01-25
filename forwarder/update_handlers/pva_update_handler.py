@@ -76,7 +76,8 @@ class PVAUpdateHandler:
 
     def _monitor_callback(self, response: Union[Value, Exception]):
         if isinstance(response, Exception):
-            # "Cancelled" occurs when we unsubscribe, we don't want to publish that as a connection state change
+            # "Cancelled" occurs when we unsubscribe, we don't want to publish that as a
+            # connection state change.
             # We are only interested loss of communication with the server
             if not isinstance(response, Cancelled):
                 if isinstance(response, (Disconnected, RemoteError)):
@@ -145,7 +146,8 @@ class PVAUpdateHandler:
                 if response.type()["value"].getID() == "enum_t":
                     is_enum = True
             except AttributeError:
-                # Attribute error raised because getID doesn't exist for scalar and scalar-array types.
+                # Attribute error raised because getID doesn't exist for scalar and
+                # scalar-array types.
                 # Array output types are prefixed by "a", we don't need this.
                 self._output_type = numpy_type_from_p4p_type[
                     response.type()["value"][-1]

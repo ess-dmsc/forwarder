@@ -47,23 +47,23 @@ def update_handlers():
         handler.stop()
 
 
-def test_no_change_to_empty_update_handlers_when_malformed_config_update_handled(
+def test_no_change_to_empty_update_handlers_when_invalid_config_update_handled(
     update_handlers,
 ):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
-    config_update = ConfigUpdate(CommandType.MALFORMED, None)
+    config_update = ConfigUpdate(CommandType.INVALID, None)
 
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
     assert not update_handlers
 
 
-def test_no_change_to_update_handlers_when_malformed_config_update_handled(
+def test_no_change_to_update_handlers_when_invalid_config_update_handled(
     update_handlers,
 ):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
-    config_update = ConfigUpdate(CommandType.MALFORMED, None)
+    config_update = ConfigUpdate(CommandType.INVALID, None)
 
     existing_channel_name = "test_channel"
     update_handlers[Channel(existing_channel_name, EpicsProtocol.NONE, None, None)] = StubUpdateHandler()  # type: ignore
@@ -473,7 +473,7 @@ def test_configuration_stored_when_all_channels_removed(
     config_store.save_configuration.assert_called_once()
 
 
-def test_configuration_not_stored_when_command_is_malformed(
+def test_configuration_not_stored_when_command_is_invalid(
     update_handlers,
 ):
     status_reporter = StubStatusReporter()
@@ -481,7 +481,7 @@ def test_configuration_not_stored_when_command_is_malformed(
     test_channel_1 = Channel("test_channel", EpicsProtocol.FAKE, "output_topic", "f142")
     update_handlers[test_channel_1] = StubUpdateHandler()  # type: ignore
     config_update = ConfigUpdate(
-        CommandType.MALFORMED,
+        CommandType.INVALID,
         None,
     )
 

@@ -23,7 +23,8 @@ def _subscribe_to_pv(
 ):
     if new_channel in update_handlers.keys():
         logger.warning(
-            "Forwarder asked to subscribe to PV it is already has an identical configuration for"
+            "Forwarder asked to subscribe to PV it is already has an identical "
+            "configuration for"
         )
         return
 
@@ -115,7 +116,7 @@ def handle_configuration_change(
     """
     if configuration_change.command_type == CommandType.REMOVE_ALL:
         _unsubscribe_from_all(update_handlers, logger)
-    elif configuration_change.command_type == CommandType.MALFORMED:
+    elif configuration_change.command_type == CommandType.INVALID:
         return
     else:
         if configuration_change.channels is not None:
