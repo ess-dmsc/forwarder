@@ -1,14 +1,8 @@
-import os
 import logging
 import graypy
 from typing import Optional
 
-
 logger_name = "python-forwarder"
-
-ROOT_PATH = os.path.join(os.path.expanduser("~"), ".python-forwarder")
-if not os.path.isdir(ROOT_PATH):
-    os.makedirs(ROOT_PATH)
 
 
 def setup_logger(
@@ -18,8 +12,9 @@ def setup_logger(
 ) -> logging.Logger:
     if log_file_name is not None:
         logging.basicConfig(
-            filename=os.path.join(ROOT_PATH, log_file_name),
-            format="%(asctime)s - %(filename)s - %(levelname)s - %(message)s")
+            filename=log_file_name,
+            format="%(asctime)s - %(filename)s - %(levelname)s - %(message)s",
+        )
     else:
         logging.basicConfig()
     logger = logging.getLogger(logger_name)
