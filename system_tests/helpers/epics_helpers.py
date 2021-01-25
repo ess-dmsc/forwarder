@@ -10,7 +10,7 @@ def change_pv_value(pvname, value):
     :param value: PV value to change to
     :return: none
     """
-    response = epics_write(pvname, value, notify=True)
+    response = epics_write(pvname, value, notify=True, timeout=10)
     print(f"Updating PV {pvname} value to {value}")
     print(f"{response}\n", flush=True)
 
