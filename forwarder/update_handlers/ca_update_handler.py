@@ -128,7 +128,8 @@ class CAUpdateHandler:
                 self._pv.unsubscribe_all()
                 sub = self._pv.subscribe(data_type=ChannelType.TIME_STRING)
                 sub.add_callback(self._monitor_callback)
-                # Don't forward the current response; the monitor will restart with the new data type
+                # Don't forward the current response; the monitor will restart with the
+                # new data type
                 return False
             else:
                 self._output_type = numpy_type_from_caproto_type[response.data_type]
