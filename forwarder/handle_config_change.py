@@ -23,7 +23,8 @@ def _subscribe_to_pv(
 ):
     if new_channel in update_handlers.keys():
         logger.warning(
-            "Forwarder asked to subscribe to PV it is already has an identical configuration for"
+            "Forwarder asked to subscribe to PV it is already has an identical "
+            "configuration for"
         )
         return
 
