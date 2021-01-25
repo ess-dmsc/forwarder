@@ -23,7 +23,7 @@ class CommandType(Enum):
     ADD = "add"
     REMOVE = "stop_channel"
     REMOVE_ALL = "stop_all"
-    MALFORMED = "malformed_config_update"
+    INVALID = "invalid_config_update"
 
 
 class EpicsProtocol(Enum):
@@ -69,10 +69,10 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
         logger.warning(
             "Unable to deserialise payload of received configuration update message"
         )
-        return ConfigUpdate(CommandType.MALFORMED, None)
+        return ConfigUpdate(CommandType.INVALID, None)
     except WrongSchemaException:
         logger.warning("Ignoring received message as it had the wrong schema")
-        return ConfigUpdate(CommandType.MALFORMED, None)
+        return ConfigUpdate(CommandType.INVALID, None)
 
     try:
         command_type = config_change_to_command_type[config_update.config_change]
@@ -80,7 +80,7 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
         logger.warning(
             "Unrecogised configuration change type in configuration update message"
         )
-        return ConfigUpdate(CommandType.MALFORMED, None)
+        return ConfigUpdate(CommandType.INVALID, None)
 
     if command_type == CommandType.REMOVE_ALL:
         return ConfigUpdate(CommandType.REMOVE_ALL, None)
@@ -93,7 +93,7 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
             "Configuration update message requests adding or removing streams "
             "but does not contain valid details of streams"
         )
-        return ConfigUpdate(CommandType.MALFORMED, None)
+        return ConfigUpdate(CommandType.INVALID, None)
 
     return ConfigUpdate(command_type, parsed_streams)
 
