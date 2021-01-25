@@ -7,4 +7,4 @@ graypy
 numpy == 1.19.1
 attrs
 ConfigArgParse
-ess-streaming-data-types >= 0.9.6
+ess-streaming-data-types == 0.9.6
