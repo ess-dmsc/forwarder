@@ -40,7 +40,12 @@ class StatusReporter:
         status_json = json.dumps(
             {
                 "streams": [
-                    {"channel_name": channel.name}
+                    {
+                        "channel_name": channel.name,
+                        "protocol": channel.protocol.name,
+                        "output_topic": channel.output_topic,
+                        "schema": channel.schema,
+                    }
                     for channel in self._update_handlers.keys()
                 ]
             }
