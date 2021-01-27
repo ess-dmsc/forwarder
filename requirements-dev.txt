@@ -4,6 +4,7 @@
 pre-commit
 pytest
 pytest-cov
+wheel
 # Pin to match versions in precommit hooks
 black==20.8b1
 flake8==3.8.4
