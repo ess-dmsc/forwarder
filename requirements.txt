@@ -3,6 +3,7 @@ p4p == 3.5.2
 confluent_kafka == 1.5.0
 flatbuffers == 1.12
 graypy == 2.1.0
+graphyte == 1.6.0
 numpy == 1.19.1
 attrs == 20.3.0
 ConfigArgParse == 1.2.3
