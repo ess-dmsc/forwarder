@@ -54,6 +54,13 @@ class PVAUpdateHandler:
         self._repeating_timer = None
         self._cache_lock = Lock()
 
+        try:
+            self._message_publisher = schema_publishers[schema]
+        except KeyError:
+            raise ValueError(
+                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
+            )
+
         request = context.makeRequest("field(value,timeStamp,alarm)")
         self._sub = context.monitor(
             self._pv_name,
@@ -61,13 +68,6 @@ class PVAUpdateHandler:
             request=request,
             notify_disconnect=True,
         )
-
-        try:
-            self._message_publisher = schema_publishers[schema]
-        except KeyError:
-            raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
-            )
 
         if periodic_update_ms is not None:
             self._repeating_timer = RepeatTimer(
