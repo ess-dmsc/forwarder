@@ -57,7 +57,10 @@ class PVAUpdateHandler:
 
         request = context.makeRequest("field(value,timeStamp,alarm)")
         self._sub = context.monitor(
-            pv_name, self._monitor_callback, request=request, notify_disconnect=True
+            self._pv_name,
+            self._monitor_callback,
+            request=request,
+            notify_disconnect=True,
         )
 
         try:
