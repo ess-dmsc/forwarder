@@ -5,5 +5,5 @@ flatbuffers == 1.12
 graypy == 2.1.0
 numpy == 1.19.1
 attrs == 19.3.0
-ConfigArgParse == 1.2.1
+ConfigArgParse == 1.2.3
 ess-streaming-data-types == 0.9.6
