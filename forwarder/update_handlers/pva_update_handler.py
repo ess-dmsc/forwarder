@@ -3,7 +3,7 @@ from p4p import Value
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.application_logger import get_logger
 from typing import Optional, Tuple, Union
-from threading import Lock, Event
+from threading import Lock
 from forwarder.update_handlers.schema_publishers import schema_publishers
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.epics_to_serialisable_types import (
@@ -51,7 +51,6 @@ class PVAUpdateHandler:
         self._pv_name = pv_name
         self._cached_update: Optional[Tuple[Value, int]] = None
         self._output_type = None
-        self._stop_timer_flag = Event()
         self._repeating_timer = None
         self._cache_lock = Lock()
 
