@@ -10,13 +10,13 @@ It uses Docker containers to create containerised instances of Kafka and other c
 
 * Install Docker
 
-* Install the requirements using pip: `pip install -r system-tests/requirements.txt`
+* Install the requirements using pip: `pip install -r system_tests/requirements.txt`
 
 * Stop and remove any containers that may interfere with the system tests, e.g IOC containers, Kafka containers and 
 containers from previous runs. To stop and remove all containers use `docker stop $(docker ps -a -q) && docker 
 rm $(docker ps -a -q)`
 
-* Run `pytest -s .` from the `system-tests/` directory
+* Run `pytest -s .` from the `system_tests/` directory
 
 * Wait
 
@@ -45,7 +45,7 @@ In some tests, command messages in `JSON` form are sent to kafka to change the c
 
 Most tests poll from Kafka to check against PV values and in some cases consume everything from the status topic.
 
-Log files are placed in the `logs` folder in `system-tests` provided that the `ini` file is using `--log-file` and the docker-compose file mounts the `logs` directory.
+Log files are placed in the `logs` folder in `system_tests` provided that the `ini` file is using `--log-file` and the docker-compose file mounts the `logs` directory.
 
 ### Developer notes
 
