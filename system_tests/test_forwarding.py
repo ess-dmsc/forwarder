@@ -246,18 +246,60 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
 
     status_msg = deserialise_x5f2(status_msg)
     status_json = json.loads(status_msg.status_json)
-    names_of_channels_being_forwarded = {
-        stream["channel_name"] for stream in status_json["streams"]
-    }
-    expected_names_of_channels_being_forwarded = {PVSTR, PVLONG}
 
+    info_of_channels_being_forwarded = {
+        (
+            stream["channel_name"],
+            stream["protocol"],
+            stream["output_topic"],
+            stream["schema"],
+        )
+        for stream in status_json["streams"]
+    }
+    expected_info_of_channels_being_forwarded = {
+        (PVSTR, "CA", data_topic, "f142"),
+        (PVLONG, "CA", data_topic, "f142"),
+    }
     assert (
-        expected_names_of_channels_being_forwarded == names_of_channels_being_forwarded
+        expected_info_of_channels_being_forwarded == info_of_channels_being_forwarded
     ), (
-        f"Expect these channels to be configured as forwarded: {expected_names_of_channels_being_forwarded}, "
-        f"but status message report these as forwarded: {names_of_channels_being_forwarded}"
+        f"Expect these channels to be configured as forwarded: "
+        f"{expected_info_of_channels_being_forwarded}, "
+        f"but status message report these as forwarded: "
+        f"{info_of_channels_being_forwarded}"
     )
 
+    # Test for same channel being forwarded to different topic
+    pvs = [PVLONG]
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "some_topic", Protocol.PVA)
+    prod.add_config(pvs)
+
+    status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
+    status_msg = deserialise_x5f2(status_msg)
+    status_json = json.loads(status_msg.status_json)
+
+    info_of_channels_being_forwarded = {
+        (
+            stream["channel_name"],
+            stream["protocol"],
+            stream["output_topic"],
+            stream["schema"],
+        )
+        for stream in status_json["streams"]
+    }
+    expected_info_of_channels_being_forwarded = {
+        (PVSTR, "CA", data_topic, "f142"),
+        (PVLONG, "CA", data_topic, "f142"),
+        (PVLONG, "PVA", "some_topic", "f142"),
+    }
+    assert (
+        expected_info_of_channels_being_forwarded == info_of_channels_being_forwarded
+    ), (
+        f"Expect these channels to be configured as forwarded: "
+        f"{expected_info_of_channels_being_forwarded}, "
+        f"but status message report these as forwarded: "
+        f"{info_of_channels_being_forwarded}"
+    )
     cons.close()
 
 
