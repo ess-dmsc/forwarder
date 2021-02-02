@@ -49,17 +49,16 @@ class PVAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
         self._pv_name = pv_name
-
-        request = context.makeRequest("field(value,timeStamp,alarm)")
-        self._sub = context.monitor(
-            pv_name, self._monitor_callback, request=request, notify_disconnect=True
-        )
-
         self._cached_update: Optional[Tuple[Value, int]] = None
         self._output_type = None
         self._stop_timer_flag = Event()
         self._repeating_timer = None
         self._cache_lock = Lock()
+
+        request = context.makeRequest("field(value,timeStamp,alarm)")
+        self._sub = context.monitor(
+            pv_name, self._monitor_callback, request=request, notify_disconnect=True
+        )
 
         try:
             self._message_publisher = schema_publishers[schema]
