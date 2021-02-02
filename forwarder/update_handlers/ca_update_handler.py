@@ -39,13 +39,6 @@ class CAUpdateHandler:
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
-        (self._pv,) = context.get_pvs(
-            pv_name, connection_state_callback=self._connection_state_callback
-        )
-        # Subscribe with "data_type='time'" to get timestamp and alarm fields
-        sub = self._pv.subscribe(data_type="time")
-        sub.add_callback(self._monitor_callback)
-
         self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
         self._output_type = None
         self._repeating_timer = None
@@ -57,6 +50,13 @@ class CAUpdateHandler:
             raise ValueError(
                 f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
             )
+
+        (self._pv,) = context.get_pvs(
+            pv_name, connection_state_callback=self._connection_state_callback
+        )
+        # Subscribe with "data_type='time'" to get timestamp and alarm fields
+        sub = self._pv.subscribe(data_type="time")
+        sub.add_callback(self._monitor_callback)
 
         if periodic_update_ms is not None:
             self._repeating_timer = RepeatTimer(
