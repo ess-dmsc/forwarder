@@ -102,6 +102,13 @@ def parse_args():
         env_var="GRAYLOG_LOGGER_ADDRESS",
     )
     parser.add_argument(
+        "--graphite-server",
+        default="localhost",
+        required=False,
+        help="Graphite server address",
+        type=str,
+    )
+    parser.add_argument(
         "--log-file", required=False, help="Log filename", type=str, env_var="LOG_FILE"
     )
     parser.add_argument(
