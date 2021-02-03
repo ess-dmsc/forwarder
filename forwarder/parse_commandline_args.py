@@ -103,7 +103,6 @@ def parse_args():
     )
     parser.add_argument(
         "--graphite-server",
-        default="localhost",
         required=False,
         help="Graphite metrics server address (Carbon)",
         # Does it need to be <host>:<port>
