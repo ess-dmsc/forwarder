@@ -1,42 +1,27 @@
-from functools import wraps
-from threading import Thread
-import time
-from typing import Dict
-
 import graphyte
-
-from forwarder.update_handlers.create_update_handler import UpdateHandler
-from forwarder.parse_config_update import Channel
-
-
-def run_in_thread(original):
-    @wraps(original)
-    def wrapper(*args, **kwargs):
-        t = Thread(target=original, args=args, kwargs=kwargs, daemon=True)
-        t.start()
-        return t
-
-    return wrapper
 
 
 class StatisticsReporter:
     def __init__(
         self,
         graphyte_server: str,
-        update_handlers: Dict[Channel, UpdateHandler],
-        update_interval: float = 10.0,
+        logger,
+        prefix: str = "throughput",
+        update_interval_s: int = 10,
     ):
-
-        self._update_handlers = update_handlers
-        self._update_interval = update_interval
         self._graphyte_server = graphyte_server
+        self._logger = logger
+        self._update_interval_s = update_interval_s
+        self._last_update_s = 0
 
-        self._sender = graphyte.Sender(self._graphyte_server, prefix="throughput")
+        self._sender = graphyte.Sender(self._graphyte_server, prefix=prefix)
+        print("Hello World ", self._sender)
 
-        self._running = False
+    def send_pv_numbers(self, number, timestamp):
+        if timestamp > self._last_update_s + self._update_interval_s:
+            try:
+                self._sender.send("number_pvs", number, timestamp)
+            except Exception as ex:
+                self._logger.error(f"Could not send statistic: {ex}")
 
-    @run_in_thread
-    def start(self):
-        while not self._running:
-            self._sender.send("number_pvs", len(self._update_handlers.keys()))
-            time.sleep(self._update_interval)
+            self._last_update_s = int(timestamp)
