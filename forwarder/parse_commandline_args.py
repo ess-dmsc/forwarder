@@ -102,10 +102,9 @@ def parse_args():
         env_var="GRAYLOG_LOGGER_ADDRESS",
     )
     parser.add_argument(
-        "--graphite-server",
+        "--grafana-carbon-address",
         required=False,
-        help="Graphite metrics server address (Carbon)",
-        # Does it need to be <host>:<port>
+        help="<host:port> Address to the Grafana (Carbon) metrics server",
         type=str,
     )
     parser.add_argument(
