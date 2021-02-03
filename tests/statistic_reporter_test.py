@@ -19,7 +19,6 @@ def test_that_warning_logged_on_send_exception(caplog):
 
 
 def test_that_send_called_only_after_update_intervals():
-
     statistics_reporter = StatisticsReporter("localhost", logger)
     statistics_reporter._sender = MagicMock()
 
