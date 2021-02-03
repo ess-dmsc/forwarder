@@ -22,7 +22,7 @@ def test_that_send_called_only_after_update_intervals():
     statistics_reporter = StatisticsReporter("localhost", logger)
     statistics_reporter._sender = MagicMock()
 
-    # test if first message is sent
+    # test that first message is sent
     t1 = int(time.time())
     statistics_reporter.send_pv_numbers(2, t1)
     assert t1 == statistics_reporter._last_update_s
