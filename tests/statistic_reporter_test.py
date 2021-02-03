@@ -28,16 +28,14 @@ class TestStatisticReporter(unittest.TestCase):
 
         # Wait for update_interval / 2 seconds
         # Test that message is not sent
-        time.sleep(self.instance._update_interval_s / 2.0)
-        t2 = int(time.time())
+        t2 = t1 + self.instance._update_interval_s // 2
         self.instance.send_pv_numbers(2, t2)
         self.instance._sender.send.assert_called_once()
         self.assertNotEqual(t2, self.instance._last_update_s)
 
         # wait for another update_interval / 2 seconds + 2 seconds
         # test that message gets sent
-        time.sleep(self.instance._update_interval_s / 2.0 + 2)
-        t3 = int(time.time())
+        t3 = t2 + self.instance._update_interval_s // 2 + 2
         self.instance.send_pv_numbers(2, t3)
         self.assertEqual(self.instance._sender.send.call_count, 2)
         self.assertEqual(t3, self.instance._last_update_s)
