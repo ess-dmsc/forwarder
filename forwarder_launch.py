@@ -10,6 +10,7 @@ from forwarder.kafka.kafka_helpers import (
 from forwarder.application_logger import setup_logger
 from forwarder.parse_config_update import parse_config_update
 from forwarder.status_reporter import StatusReporter
+from forwarder.statistics_reporter import StatisticsReporter
 from forwarder.parse_commandline_args import parse_args, get_version
 from forwarder.handle_config_change import handle_configuration_change
 from forwarder.update_handlers.create_update_handler import UpdateHandler
@@ -52,6 +53,12 @@ if __name__ == "__main__":
         logger,
     )
     status_reporter.start()
+
+    graphite_server = args.graphite_server
+    statistic_reporter = StatisticsReporter(
+        graphite_server, update_handlers, update_interval=1.0
+    )
+    statistic_reporter_t = statistic_reporter.start()
 
     if args.storage_topic:
         store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
@@ -114,6 +121,8 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
+        statistic_reporter._running = True
+        statistic_reporter_t.join()
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()
