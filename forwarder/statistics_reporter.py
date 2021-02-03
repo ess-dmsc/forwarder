@@ -6,7 +6,7 @@ class StatisticsReporter:
         self,
         graphyte_server: str,
         logger,
-        prefix: str = "forwarder.throughput",
+        prefix: str = "throughput",
         update_interval_s: int = 10,
     ):
         self._graphyte_server = graphyte_server

@@ -56,10 +56,14 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
-    graphite_server = args.graphite_server
+    grafana_carbon_address = args.grafana_carbon_address
     statistic_reporter = None
-    if graphite_server:
-        statistic_reporter = StatisticsReporter(graphite_server, logger)
+    if grafana_carbon_address:
+        statistic_reporter = StatisticsReporter(
+            grafana_carbon_address,
+            logger,
+            prefix=f"forwarder.{args.service_id.replace(' ', '')}.throughput",
+        )
 
     if args.storage_topic:
         store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
