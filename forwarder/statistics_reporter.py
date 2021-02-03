@@ -15,7 +15,6 @@ class StatisticsReporter:
         self._last_update_s = 0
 
         self._sender = graphyte.Sender(self._graphyte_server, prefix=prefix)
-        print("Hello World ", self._sender)
 
     def send_pv_numbers(self, number, timestamp):
         if timestamp > self._last_update_s + self._update_interval_s:

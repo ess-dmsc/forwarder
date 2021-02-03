@@ -1,6 +1,6 @@
+import time
 import unittest
 from unittest.mock import MagicMock
-import time
 
 from forwarder.application_logger import setup_logger
 from forwarder.statistics_reporter import StatisticsReporter
