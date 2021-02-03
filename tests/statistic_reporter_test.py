@@ -1,41 +1,43 @@
+import logging
 import time
-import unittest
 from unittest.mock import MagicMock
 
-from forwarder.application_logger import setup_logger
 from forwarder.statistics_reporter import StatisticsReporter
 
 
-class TestStatisticReporter(unittest.TestCase):
-    def setUp(self):
-        logger = setup_logger()
-        self.instance = StatisticsReporter("localhost", logger)
-        self.instance._sender = MagicMock()
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
-    def test_send_pv_numbers_exception(self):
-        # Test that logger logs when
-        # graphyte.Sender.send() method raises Exception
-        self.instance._sender.send.side_effect = ValueError
-        with self.assertLogs("python-forwarder") as cm:
-            self.instance.send_pv_numbers("NOTINTORFLOAT", time.time())
-        self.assertIn("ERROR:python-forwarder:Could not send statistic: ", cm.output)
 
-    def test_send_pv_numbers(self):
-        # test if first message is sent
-        t1 = int(time.time())
-        self.instance.send_pv_numbers(2, t1)
-        self.assertEqual(t1, self.instance._last_update_s)
+def test_that_warning_logged_on_send_exception(caplog):
+    statistics_reporter = StatisticsReporter("localhost", logger)
+    statistics_reporter._sender = MagicMock()
+    statistics_reporter._sender.send.side_effect = ValueError
+    with caplog.at_level(logging.WARNING):
+        statistics_reporter.send_pv_numbers("NOTINTORFLOAT", time.time())
+    assert "Could not send statistic: " in caplog.text
 
-        # Wait for update_interval / 2 seconds
-        # Test that message is not sent
-        t2 = t1 + self.instance._update_interval_s // 2
-        self.instance.send_pv_numbers(2, t2)
-        self.instance._sender.send.assert_called_once()
-        self.assertNotEqual(t2, self.instance._last_update_s)
 
-        # wait for another update_interval / 2 seconds + 2 seconds
-        # test that message gets sent
-        t3 = t2 + self.instance._update_interval_s // 2 + 2
-        self.instance.send_pv_numbers(2, t3)
-        self.assertEqual(self.instance._sender.send.call_count, 2)
-        self.assertEqual(t3, self.instance._last_update_s)
+def test_that_send_called_only_after_update_intervals():
+
+    statistics_reporter = StatisticsReporter("localhost", logger)
+    statistics_reporter._sender = MagicMock()
+
+    # test if first message is sent
+    t1 = int(time.time())
+    statistics_reporter.send_pv_numbers(2, t1)
+    assert t1 == statistics_reporter._last_update_s
+
+    # Wait for update_interval / 2 seconds
+    # Test that message is not sent
+    t2 = t1 + statistics_reporter._update_interval_s // 2
+    statistics_reporter.send_pv_numbers(2, t2)
+    statistics_reporter._sender.send.assert_called_once()
+    assert t2 != statistics_reporter._last_update_s
+
+    # wait for another update_interval / 2 seconds + 2 seconds
+    # test that message gets sent
+    t3 = t2 + statistics_reporter._update_interval_s // 2 + 2
+    statistics_reporter.send_pv_numbers(2, t3)
+    assert statistics_reporter._sender.send.call_count == 2
+    assert t3 == statistics_reporter._last_update_s
