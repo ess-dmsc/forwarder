@@ -57,7 +57,9 @@ if __name__ == "__main__":
     status_reporter.start()
 
     graphite_server = args.graphite_server
-    statistic_reporter = StatisticsReporter(graphite_server, logger)
+    statistic_reporter = None
+    if graphite_server:
+        statistic_reporter = StatisticsReporter(graphite_server, logger)
 
     if args.storage_topic:
         store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
@@ -94,7 +96,9 @@ if __name__ == "__main__":
 
     try:
         while True:
-            statistic_reporter.send_pv_numbers(len(update_handlers), time.time())
+            if statistic_reporter:
+                statistic_reporter.send_pv_numbers(len(update_handlers), time.time())
+
             msg = consumer.poll(timeout=0.5)
             if msg is None:
                 continue
