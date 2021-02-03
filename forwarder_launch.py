@@ -1,3 +1,5 @@
+import time
+
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 from typing import Dict
@@ -55,10 +57,7 @@ if __name__ == "__main__":
     status_reporter.start()
 
     graphite_server = args.graphite_server
-    statistic_reporter = StatisticsReporter(
-        graphite_server, update_handlers, update_interval=1.0
-    )
-    statistic_reporter_t = statistic_reporter.start()
+    statistic_reporter = StatisticsReporter(graphite_server, logger)
 
     if args.storage_topic:
         store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
@@ -95,6 +94,7 @@ if __name__ == "__main__":
 
     try:
         while True:
+            statistic_reporter.send_pv_numbers(len(update_handlers), time.time())
             msg = consumer.poll(timeout=0.5)
             if msg is None:
                 continue
@@ -121,8 +121,6 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
-        statistic_reporter._running = True
-        statistic_reporter_t.join()
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()
