@@ -1,4 +1,4 @@
-import graphyte
+import graphyte  # type: ignore
 
 
 class StatisticsReporter:
