@@ -4,8 +4,6 @@ import ecdcpipeline.PipelineBuilder
 
 project = "forwarder"
 
-python = "python3.6"
-
 container_build_nodes = [
   'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
 ]
