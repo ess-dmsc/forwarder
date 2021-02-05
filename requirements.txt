@@ -1,6 +1,6 @@
 caproto == 0.7.1
 p4p == 3.5.2
-confluent_kafka == 1.5.0
+confluent_kafka == 1.6.0
 flatbuffers == 1.12
 graypy == 2.1.0
 graphyte == 1.6.0
