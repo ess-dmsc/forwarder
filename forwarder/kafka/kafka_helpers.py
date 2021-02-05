@@ -49,7 +49,7 @@ def _nanoseconds_to_milliseconds(time_ns: int) -> int:
 def publish_f142_message(
     producer: KafkaProducer,
     topic: str,
-    data: np.array,
+    data: np.ndarray,
     source_name: str,
     timestamp_ns: int,
     alarm_status: Optional[AlarmStatus] = None,
@@ -90,7 +90,7 @@ def publish_f142_message(
 def publish_tdct_message(
     producer: KafkaProducer,
     topic: str,
-    data: np.array,
+    data: np.ndarray,
     source_name: str,
     timestamp_ns: int,
     *unused,
