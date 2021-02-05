@@ -120,7 +120,9 @@ def get_system_tests_pipeline() {
           }  // stage
           stage("System tests: Install requirements") {
             sh """
-            ${python} -m venv test_env
+            export PATH=/opt/miniconda/bin:$PATH
+            python --version
+            python -m venv test_env
             source test_env/bin/activate
             which python
             pwd
