@@ -6,7 +6,7 @@ Forwards EPICS PVs to Apache Kafka. Part of the ESS data streaming pipeline.
 
 ## Installing dependencies
 
-Python 3.6 or higher is required. https://www.python.org/downloads/
+Python 3.7 or higher is required. https://www.python.org/downloads/
 
 Runtime Python dependencies are listed in requirements.txt at the root of the
 repository. They can be installed from a terminal by running
@@ -78,7 +78,7 @@ Empty PV updates are not forwarded and are not cached to send in periodic update
 This addresses, for example, the case of empty chopper timestamp updates when a chopper is not spinning.
 
 Chopper timestamps to be forwarded with `tdct` schema are assumed to be in nanoseconds and relative
-to the EPICS update timestamp, they are converted to nanosecond-precision unix timestamps when forwarded. 
+to the EPICS update timestamp, they are converted to nanosecond-precision unix timestamps when forwarded.
 
 ### A Python example
 To use for real, replace CONFIG_BROKER, CONFIG_TOPIC and STREAMS with values corresponding to the real system.
