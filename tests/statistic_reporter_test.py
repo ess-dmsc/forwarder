@@ -23,20 +23,18 @@ def test_that_send_called_only_after_update_intervals():
     statistics_reporter._sender = MagicMock()
 
     # test that first message is sent
-    t1 = int(time.time())
-    statistics_reporter.send_pv_numbers(2, t1)
-    assert t1 == statistics_reporter._last_update_s
+    first_msg_time = int(time.time())
+    statistics_reporter.send_pv_numbers(2, first_msg_time)
+    assert first_msg_time == statistics_reporter._last_update_s
 
-    # Wait for update_interval / 2 seconds
-    # Test that message is not sent
-    t2 = t1 + statistics_reporter._update_interval_s // 2
-    statistics_reporter.send_pv_numbers(2, t2)
+    # Test that message is not sent before update_interval time is complete
+    second_msg_time = first_msg_time + statistics_reporter._update_interval_s // 2
+    statistics_reporter.send_pv_numbers(2, second_msg_time)
     statistics_reporter._sender.send.assert_called_once()
-    assert t2 != statistics_reporter._last_update_s
+    assert second_msg_time != statistics_reporter._last_update_s
 
-    # wait for another update_interval / 2 seconds + 2 seconds
-    # test that message gets sent
-    t3 = t2 + statistics_reporter._update_interval_s // 2 + 2
-    statistics_reporter.send_pv_numbers(2, t3)
+    # Test that message gets sent after update_interval time is complete
+    third_msg_time = second_msg_time + statistics_reporter._update_interval_s // 2 + 2
+    statistics_reporter.send_pv_numbers(2, third_msg_time)
     assert statistics_reporter._sender.send.call_count == 2
-    assert t3 == statistics_reporter._last_update_s
+    assert third_msg_time == statistics_reporter._last_update_s
