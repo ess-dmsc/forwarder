@@ -234,47 +234,20 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
 
     data_topic = "TEST_forwarderData_change_config"
     status_topic = "TEST_forwarderStatus"
-    pvs = [PVSTR, PVLONG]
+    # Send first command
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
-    prod.add_config(pvs)
+    prod.add_config([PVSTR, PVLONG])
+    # Send second command with PVLONG channel to different topic
+    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "some_topic", Protocol.PVA)
+    prod.add_config([PVLONG])
 
     sleep(2)
     cons.subscribe([status_topic])
     sleep(5)
 
+    # Poll for the latest message
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
 
-    status_msg = deserialise_x5f2(status_msg)
-    status_json = json.loads(status_msg.status_json)
-
-    info_of_channels_being_forwarded = {
-        (
-            stream["channel_name"],
-            stream["protocol"],
-            stream["output_topic"],
-            stream["schema"],
-        )
-        for stream in status_json["streams"]
-    }
-    expected_info_of_channels_being_forwarded = {
-        (PVSTR, "CA", data_topic, "f142"),
-        (PVLONG, "CA", data_topic, "f142"),
-    }
-    assert (
-        expected_info_of_channels_being_forwarded == info_of_channels_being_forwarded
-    ), (
-        f"Expect these channels to be configured as forwarded: "
-        f"{expected_info_of_channels_being_forwarded}, "
-        f"but status message report these as forwarded: "
-        f"{info_of_channels_being_forwarded}"
-    )
-
-    # Test for same channel being forwarded to different topic
-    pvs = [PVLONG]
-    prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "some_topic", Protocol.PVA)
-    prod.add_config(pvs)
-
-    status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
     status_msg = deserialise_x5f2(status_msg)
     status_json = json.loads(status_msg.status_json)
 
@@ -300,6 +273,7 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
         f"but status message report these as forwarded: "
         f"{info_of_channels_being_forwarded}"
     )
+
     cons.close()
 
 
