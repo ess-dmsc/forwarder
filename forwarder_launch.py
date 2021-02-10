@@ -32,7 +32,13 @@ if __name__ == "__main__":
         # command was issued
         folder = osp.dirname(args.log_file)
         if folder and not osp.exists(folder):
-            print(f"Log folder {folder} does not exist. Please create it first!")
+            # Create logger with console, log error and exit
+            logger = setup_logger(
+                level=args.verbosity, graylog_logger_address=args.graylog_logger_address
+            )
+            logger.error(
+                f"Log folder '{folder}' does not exist. Please create it first!"
+            )
             sys.exit()
 
     logger = setup_logger(
@@ -40,6 +46,7 @@ if __name__ == "__main__":
         log_file_name=args.log_file,
         graylog_logger_address=args.graylog_logger_address,
     )
+
     version = get_version()
     logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
 
