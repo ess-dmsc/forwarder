@@ -30,7 +30,7 @@ numpy_type_from_p4p_type = {
     "B": np.uint8,
     "b": np.int8,
     "s": np.unicode_,
-    "?": np.bool,
+    "?": np.bool8,
 }
 
 epics_alarm_severity_to_f142 = {
