@@ -40,7 +40,7 @@ class CAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
         self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
-        self._output_type = None
+        self._output_type: Any = None
         self._repeating_timer = None
         self._cache_lock = Lock()
 

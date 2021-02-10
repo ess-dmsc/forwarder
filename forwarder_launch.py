@@ -1,8 +1,10 @@
+import os.path as osp
+import sys
 import time
+from typing import Dict
 
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
-from typing import Dict
 
 from forwarder.kafka.kafka_helpers import (
     create_producer,
@@ -23,11 +25,28 @@ from forwarder.configuration_store import ConfigurationStore, NullConfigurationS
 if __name__ == "__main__":
     args = parse_args()
 
+    if args.log_file:
+        # Assumes log_file to be a str like /foo/bar/file_name.txt
+        # or just the filename file_name.txt.
+        # In the latter case will create in the directory where the
+        # command was issued
+        folder = osp.dirname(args.log_file)
+        if folder and not osp.exists(folder):
+            # Create logger with console, log error and exit
+            logger = setup_logger(
+                level=args.verbosity, graylog_logger_address=args.graylog_logger_address
+            )
+            logger.error(
+                f"Log folder '{folder}' does not exist. Please create it first!"
+            )
+            sys.exit()
+
     logger = setup_logger(
         level=args.verbosity,
         log_file_name=args.log_file,
         graylog_logger_address=args.graylog_logger_address,
     )
+
     version = get_version()
     logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
 
