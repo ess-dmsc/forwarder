@@ -1,6 +1,5 @@
 import os.path as osp
 import sys
-import time
 from typing import Dict
 
 from caproto.threading.client import Context as CaContext
@@ -49,7 +48,6 @@ if __name__ == "__main__":
 
     version = get_version()
     logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
-
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
@@ -80,9 +78,11 @@ if __name__ == "__main__":
     if grafana_carbon_address:
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
+            update_handlers,
             logger,
             prefix=f"forwarder.{args.service_id.replace(' ', '')}.throughput",
         )
+        statistic_reporter.start()
 
     if args.storage_topic:
         store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
@@ -119,9 +119,6 @@ if __name__ == "__main__":
 
     try:
         while True:
-            if statistic_reporter:
-                statistic_reporter.send_pv_numbers(len(update_handlers), time.time())
-
             msg = consumer.poll(timeout=0.5)
             if msg is None:
                 continue
@@ -148,6 +145,9 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
+        if statistic_reporter:
+            statistic_reporter.stop()
+
         for _, handler in update_handlers.items():
             handler.stop()
         consumer.close()
