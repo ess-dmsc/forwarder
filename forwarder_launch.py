@@ -83,7 +83,7 @@ if __name__ == "__main__":
             update_handlers,
             update_message_queue,
             logger,
-            prefix=f"forwarder.{args.service_id.replace(' ', '')}.throughput",
+            prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
         )
         statistic_reporter.start()
 
