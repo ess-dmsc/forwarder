@@ -1,4 +1,5 @@
 from logging import Logger
+from queue import Queue
 import time
 from typing import Dict
 
@@ -14,12 +15,14 @@ class StatisticsReporter:
         self,
         graphyte_server: str,
         update_handlers: Dict[Channel, UpdateHandler],
+        update_message_queue: Queue,
         logger: Logger,
         prefix: str = "throughput",
         update_interval_s: int = 10,
     ):
         self._graphyte_server = graphyte_server
         self._update_handlers = update_handlers
+        self._update_message_queue = update_message_queue
         self._logger = logger
 
         self._sender = graphyte.Sender(self._graphyte_server, prefix=prefix)
