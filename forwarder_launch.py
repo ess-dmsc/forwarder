@@ -1,4 +1,5 @@
 import os.path as osp
+from queue import Queue
 import sys
 from typing import Dict
 
@@ -55,6 +56,7 @@ if __name__ == "__main__":
     # handlers active for identical configurations: serialising updates from
     # same pv with same schema and publishing to same topic
     update_handlers: Dict[Channel, UpdateHandler] = {}
+    update_message_queue: Queue = Queue(maxsize=0)
 
     # Kafka
     producer = create_producer(args.output_broker)
@@ -79,6 +81,7 @@ if __name__ == "__main__":
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
+            update_message_queue,
             logger,
             prefix=f"forwarder.{args.service_id.replace(' ', '')}.throughput",
         )
