@@ -58,4 +58,5 @@ class StatisticsReporter:
 
     def stop(self):
         self._updates_counter.clear()
-        self._repeating_timer.cancel()
+        if self._repeating_timer:
+            self._repeating_timer.cancel()
