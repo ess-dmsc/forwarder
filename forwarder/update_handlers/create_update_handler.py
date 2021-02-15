@@ -61,5 +61,6 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             fake_pv_period_ms,
+            update_msg_queue,
         )
     raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")
