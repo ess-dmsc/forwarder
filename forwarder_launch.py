@@ -108,6 +108,7 @@ if __name__ == "__main__":
                     logger,
                     status_reporter,
                     configuration_store,
+                    update_message_queue,
                 )
             except RuntimeError as error:
                 logger.error(
@@ -141,6 +142,7 @@ if __name__ == "__main__":
                     logger,
                     status_reporter,
                     configuration_store,
+                    update_message_queue,
                 )
 
     except KeyboardInterrupt:
