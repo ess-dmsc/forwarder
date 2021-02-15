@@ -2,7 +2,7 @@ from collections import Counter
 from logging import Logger
 from queue import Queue, Empty
 import time
-from typing import Dict, List
+from typing import Dict
 
 import graphyte  # type: ignore
 
@@ -26,7 +26,7 @@ class StatisticsReporter:
         self._update_msg_queue = update_msg_queue
         self._logger = logger
 
-        self._total_updates: List[str] = []
+        self._updates_counter: Counter = Counter()
         self._sender = graphyte.Sender(self._graphyte_server, prefix=prefix)
         self._repeating_timer = RepeatTimer(update_interval_s, self.send_statistics)
 
@@ -35,18 +35,21 @@ class StatisticsReporter:
 
     def send_statistics(self):
         # Clear the _update_message_queue
+        updates = []
         while not self._update_msg_queue.empty():
             try:
-                self._total_updates.append(self._update_msg_queue.get_nowait())
+                updates.append(self._update_msg_queue.get_nowait())
             except Empty:
                 continue
             self._update_msg_queue.task_done()
+
+        self._updates_counter.update(updates)
 
         timestamp = time.time()
         number_pvs = len(self._update_handlers.keys())
         try:
             self._sender.send("number_pvs", number_pvs, timestamp)
-            for channel, counts in Counter(self._total_updates).items():
+            for channel, counts in self._updates_counter.items():
                 print(channel, counts)
                 self._sender.send(channel, counts, timestamp)
 
@@ -54,5 +57,5 @@ class StatisticsReporter:
             self._logger.error(f"Could not send statistic: {ex}")
 
     def stop(self):
-        self._total_updates.clear()
+        self._updates_counter.clear()
         self._repeating_timer.cancel()
