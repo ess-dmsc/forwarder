@@ -1,9 +1,12 @@
+from queue import Queue
+from typing import Optional, Union
+
+from caproto.threading.client import Context as CAContext
+from p4p.client.thread import Context as PVAContext
+
 from forwarder.parse_config_update import EpicsProtocol
 from forwarder.parse_config_update import Channel as ConfigChannel
 from forwarder.kafka.kafka_producer import KafkaProducer
-from typing import Optional, Union
-from caproto.threading.client import Context as CAContext
-from p4p.client.thread import Context as PVAContext
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
@@ -19,6 +22,7 @@ def create_update_handler(
     channel: ConfigChannel,
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
+    update_msg_queue: Optional[Queue] = None,
 ) -> UpdateHandler:
     if not channel.name:
         raise RuntimeError("PV name not specified when adding handler for channel")
@@ -38,6 +42,7 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             periodic_update_ms,
+            update_msg_queue,
         )
     elif channel.protocol == EpicsProtocol.CA:
         return CAUpdateHandler(

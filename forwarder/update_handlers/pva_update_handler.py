@@ -1,3 +1,4 @@
+from queue import Queue
 from p4p.client.thread import Context as PVAContext
 from p4p import Value
 from forwarder.kafka.kafka_producer import KafkaProducer
@@ -19,6 +20,7 @@ from forwarder.kafka.kafka_helpers import (
 )
 from p4p.client.thread import Cancelled, Disconnected, RemoteError
 import time
+from forwarder.parse_config_update import EpicsProtocol
 
 
 def _get_alarm_status(response):
@@ -44,11 +46,13 @@ class PVAUpdateHandler:
         output_topic: str,
         schema: str,
         periodic_update_ms: Optional[int] = None,
+        update_msg_queue: Optional[Queue] = None,
     ):
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
         self._pv_name = pv_name
+        self._update_msg_queue = update_msg_queue
         self._cached_update: Optional[Tuple[Value, int]] = None
         self._output_type: Any = None
         self._repeating_timer = None
@@ -139,6 +143,11 @@ class PVAUpdateHandler:
             self._cached_update = (response, timestamp)
             if self._repeating_timer is not None:
                 self._repeating_timer.reset()
+
+        if self._update_msg_queue is not None:
+            self._update_msg_queue.put(
+                f"{self._pv_name}-{EpicsProtocol.PVA.name}".replace(".", "-")
+            )
 
     def _try_to_determine_type(self, response):
         try:
