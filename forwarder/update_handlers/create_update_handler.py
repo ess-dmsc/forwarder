@@ -52,6 +52,7 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             periodic_update_ms,
+            update_msg_queue,
         )
     elif channel.protocol == EpicsProtocol.FAKE:
         return FakeUpdateHandler(
