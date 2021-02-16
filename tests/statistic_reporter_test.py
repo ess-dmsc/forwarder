@@ -25,25 +25,7 @@ def test_that_warning_logged_on_send_exception(caplog):
 
 
 @patch("forwarder.statistics_reporter.time")
-def test_that_send_statistics_sends_correct_number_pvs(mock_time):
-    timestamp = 100000
-    mock_time.time.return_value = timestamp
-
-    update_handler: Dict = {}
-    statistics_reporter = StatisticsReporter(
-        "localhost", update_handler, queue.Queue(), logger
-    )
-    statistics_reporter._sender = MagicMock()
-
-    statistics_reporter.send_statistics()
-    calls = [
-        call("number_pvs", len(update_handler.keys()), timestamp),
-        call("total_updates", 0, timestamp),
-    ]
-    statistics_reporter._sender.send.assert_has_calls(calls)
-
-
-def test_that_send_statistics_sends_correct_update_msgs():
+def test_that_send_statistics_sends_correct_messages(mock_time):
     def worker(q):
         msgs = [
             "pv_name-pva",
@@ -56,12 +38,17 @@ def test_that_send_statistics_sends_correct_update_msgs():
         for msg in msgs:
             q.put(msg)
 
+    timestamp = 100000
+    mock_time.time.return_value = timestamp
+
     update_msg_queue: queue.Queue = queue.Queue()
+
     update_handler: Dict = {}
     statistics_reporter = StatisticsReporter(
         "localhost", update_handler, update_msg_queue, logger
     )
     statistics_reporter._sender = MagicMock()
+
     t1 = Thread(target=worker, args=(update_msg_queue,))
     t2 = Thread(target=statistics_reporter.send_statistics)
 
@@ -69,9 +56,18 @@ def test_that_send_statistics_sends_correct_update_msgs():
     t2.start()
     t1.join()
     t2.join()
-
+    # Test that channel _updates_counter records correct num updates
     assert statistics_reporter._updates_counter == {
         "pv_name-pva": 3,
         "pv_name-ca": 2,
         "pv_name-fake": 1,
     }
+    # Test that calls to graphite server are made with correct arguments
+    calls = [
+        call("number_pvs", len(update_handler.keys()), timestamp),
+        call("pv_name-pva", 3, timestamp),
+        call("pv_name-ca", 2, timestamp),
+        call("pv_name-fake", 1, timestamp),
+        call("total_updates", 6, timestamp),
+    ]
+    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)

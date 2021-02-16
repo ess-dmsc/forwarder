@@ -19,7 +19,7 @@ class StatisticsReporter:
         update_msg_queue: Queue,
         logger: Logger,
         prefix: str = "throughput",
-        update_interval_s: int = 1,
+        update_interval_s: int = 10,
     ):
         self._graphyte_server = graphyte_server
         self._update_handlers = update_handlers
