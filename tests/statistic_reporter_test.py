@@ -2,7 +2,7 @@ import logging
 import queue
 from threading import Thread
 from typing import Dict
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, call
 
 from forwarder.statistics_reporter import StatisticsReporter
 
@@ -36,9 +36,11 @@ def test_that_send_statistics_sends_correct_number_pvs(mock_time):
     statistics_reporter._sender = MagicMock()
 
     statistics_reporter.send_statistics()
-    statistics_reporter._sender.send.assert_called_once_with(
-        "number_pvs", len(update_handler.keys()), timestamp
-    )
+    calls = [
+        call("number_pvs", len(update_handler.keys()), timestamp),
+        call("total_updates", 0, timestamp),
+    ]
+    statistics_reporter._sender.send.assert_has_calls(calls)
 
 
 def test_that_send_statistics_sends_correct_update_msgs():
