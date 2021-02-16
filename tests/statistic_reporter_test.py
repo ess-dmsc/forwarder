@@ -61,7 +61,7 @@ def test_that_send_statistics_sends_correct_update_msgs():
     statistics_reporter = StatisticsReporter(
         "localhost", update_handler, update_msg_queue, logger
     )
-
+    statistics_reporter._sender = MagicMock()
     t1 = Thread(target=worker, args=(update_msg_queue,))
     t2 = Thread(target=statistics_reporter.send_statistics)
 
