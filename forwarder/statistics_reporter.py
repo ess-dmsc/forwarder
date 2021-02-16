@@ -46,12 +46,16 @@ class StatisticsReporter:
         self._updates_counter.update(updates)
 
         timestamp = time.time()
-        number_pvs = len(self._update_handlers.keys())
         try:
-            self._sender.send("number_pvs", number_pvs, timestamp)
+            self._sender.send(
+                "number_pvs", len(self._update_handlers.keys()), timestamp
+            )
+
             for channel, counts in self._updates_counter.items():
-                print(channel, counts)
                 self._sender.send(channel, counts, timestamp)
+            self._sender.send(
+                "total_updates", sum(self._updates_counter.values()), timestamp
+            )
 
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
