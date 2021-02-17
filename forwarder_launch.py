@@ -20,6 +20,7 @@ from forwarder.handle_config_change import handle_configuration_change
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from forwarder.parse_config_update import Channel
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
+from forwarder.utils import Counter
 
 
 if __name__ == "__main__":
@@ -58,8 +59,14 @@ if __name__ == "__main__":
     update_handlers: Dict[Channel, UpdateHandler] = {}
     update_message_queue: Queue = Queue(maxsize=0)
 
+    grafana_carbon_address = args.grafana_carbon_address
+    update_message_counter = Counter()
+
     # Kafka
-    producer = create_producer(args.output_broker)
+    producer = create_producer(
+        args.output_broker,
+        counter=update_message_counter if grafana_carbon_address else None,
+    )
     config_broker, config_topic = get_broker_and_topic_from_uri(args.config_topic)
     consumer = create_consumer(config_broker)
     consumer.subscribe([config_topic])
@@ -75,14 +82,14 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
-    grafana_carbon_address = args.grafana_carbon_address
     statistic_reporter = None
     if grafana_carbon_address:
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
-            update_message_queue,
+            update_message_counter,
             logger,
+            update_interval_s=1,
             prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
         )
         statistic_reporter.start()

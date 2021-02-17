@@ -15,7 +15,8 @@ from forwarder.utils import Counter
 
 
 def create_producer(
-    broker_address: str, counter: Optional[Counter] = None
+    broker_address: str,
+    counter: Optional[Counter] = None,
 ) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
