@@ -18,7 +18,7 @@ class StatisticsReporter:
         update_msg_counter: Counter,
         logger: Logger,
         prefix: str = "throughput",
-        update_interval_s: int = 10,
+        update_interval_s: float = 10.0,
     ):
         self._graphyte_server = graphyte_server
         self._update_handlers = update_handlers
@@ -40,7 +40,6 @@ class StatisticsReporter:
             self._sender.send(
                 "total_updates", self._update_msg_counter.value, timestamp
             )
-
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
 
