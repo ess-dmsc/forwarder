@@ -1,4 +1,3 @@
-from queue import Queue
 from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_producer import KafkaProducer
 from caproto import ReadNotifyResponse, ChannelType
@@ -19,7 +18,6 @@ from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
 )
-from forwarder.parse_config_update import EpicsProtocol
 
 
 class CAUpdateHandler:
@@ -37,12 +35,10 @@ class CAUpdateHandler:
         output_topic: str,
         schema: str,
         periodic_update_ms: Optional[int] = None,
-        update_msg_queue: Optional[Queue] = None,
     ):
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
-        self._update_msg_queue = update_msg_queue
         self._pv_name = pv_name
         self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
         self._output_type: Any = None
@@ -111,11 +107,6 @@ class CAUpdateHandler:
             self._cached_update = (response, timestamp)
             if self._repeating_timer is not None:
                 self._repeating_timer.reset()
-
-        if self._update_msg_queue is not None:
-            self._update_msg_queue.put(
-                f"{self._pv_name}-{EpicsProtocol.CA.name}".replace(".", "-")
-            )
 
     def _connection_state_callback(self, pv: PV, state: str):
         publish_connection_status_message(

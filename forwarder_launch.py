@@ -1,5 +1,4 @@
 import os.path as osp
-from queue import Queue
 import sys
 from typing import Dict
 
@@ -57,7 +56,6 @@ if __name__ == "__main__":
     # handlers active for identical configurations: serialising updates from
     # same pv with same schema and publishing to same topic
     update_handlers: Dict[Channel, UpdateHandler] = {}
-    update_message_queue: Queue = Queue(maxsize=0)
 
     grafana_carbon_address = args.grafana_carbon_address
     update_message_counter = Counter()
@@ -115,7 +113,6 @@ if __name__ == "__main__":
                     logger,
                     status_reporter,
                     configuration_store,
-                    update_message_queue,
                 )
             except RuntimeError as error:
                 logger.error(
@@ -149,7 +146,6 @@ if __name__ == "__main__":
                     logger,
                     status_reporter,
                     configuration_store,
-                    update_message_queue,
                 )
 
     except KeyboardInterrupt:

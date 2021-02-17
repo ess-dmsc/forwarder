@@ -1,11 +1,8 @@
-from queue import Queue
-from typing import Optional
 from forwarder.kafka.kafka_producer import KafkaProducer
 import numpy as np
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 import time
 from forwarder.update_handlers.schema_publishers import schema_publishers
-from forwarder.parse_config_update import EpicsProtocol
 from random import randint
 
 
@@ -22,13 +19,11 @@ class FakeUpdateHandler:
         output_topic: str,
         schema: str,
         fake_pv_period_ms: int,
-        update_msg_queue: Optional[Queue] = None,
     ):
         self._producer = producer
         self._output_topic = output_topic
         self._pv_name = pv_name
         self._schema = schema
-        self._update_msg_queue = update_msg_queue
 
         try:
             self._message_publisher = schema_publishers[schema]
@@ -52,11 +47,6 @@ class FakeUpdateHandler:
         self._message_publisher(
             self._producer, self._output_topic, data, self._pv_name, time.time_ns()
         )
-
-        if self._update_msg_queue is not None:
-            self._update_msg_queue.put(
-                f"{self._pv_name}-{EpicsProtocol.FAKE.name}".replace(".", "-")
-            )
 
     def stop(self):
         """

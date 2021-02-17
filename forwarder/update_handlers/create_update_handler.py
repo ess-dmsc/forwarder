@@ -1,4 +1,3 @@
-from queue import Queue
 from typing import Optional, Union
 
 from caproto.threading.client import Context as CAContext
@@ -22,7 +21,6 @@ def create_update_handler(
     channel: ConfigChannel,
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
-    update_msg_queue: Optional[Queue] = None,
 ) -> UpdateHandler:
     if not channel.name:
         raise RuntimeError("PV name not specified when adding handler for channel")
@@ -42,7 +40,6 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             periodic_update_ms,
-            update_msg_queue,
         )
     elif channel.protocol == EpicsProtocol.CA:
         return CAUpdateHandler(
@@ -52,7 +49,6 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             periodic_update_ms,
-            update_msg_queue,
         )
     elif channel.protocol == EpicsProtocol.FAKE:
         return FakeUpdateHandler(
@@ -61,6 +57,5 @@ def create_update_handler(
             channel.output_topic,
             channel.schema,
             fake_pv_period_ms,
-            update_msg_queue,
         )
     raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")
