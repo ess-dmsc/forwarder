@@ -118,7 +118,7 @@ def get_system_tests_pipeline() {
           }  // stage
           stage("System tests: Install requirements") {
             sh """
-            export PATH=/opt/miniconda/bin:$PATH
+            export PATH=/opt/miniconda/bin
             python --version
             python -m venv test_env
             source test_env/bin/activate
