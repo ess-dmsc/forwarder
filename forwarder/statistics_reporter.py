@@ -32,14 +32,15 @@ class StatisticsReporter:
         self._repeating_timer.start()
 
     def send_statistics(self):
-        counts = self._update_msg_counter.value
-        print("Updates ", counts)
         timestamp = time.time()
         try:
             self._sender.send(
                 "number_pvs", len(self._update_handlers.keys()), timestamp
             )
-            self._sender.send("total_updates", counts, timestamp)
+            self._sender.send(
+                "total_updates", self._update_msg_counter.value, timestamp
+            )
+
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
 

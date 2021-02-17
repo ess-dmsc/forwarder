@@ -39,7 +39,6 @@ class CAUpdateHandler:
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
-        self._pv_name = pv_name
         self._cached_update: Optional[Tuple[ReadNotifyResponse, int]] = None
         self._output_type: Any = None
         self._repeating_timer = None
