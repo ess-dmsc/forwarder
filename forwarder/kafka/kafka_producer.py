@@ -2,11 +2,13 @@ import confluent_kafka
 from threading import Thread
 from forwarder.application_logger import setup_logger
 from typing import Optional
+from forwarder.utils import Counter
 
 
 class KafkaProducer:
-    def __init__(self, configs: dict):
+    def __init__(self, configs: dict, update_msg_counter: Optional[Counter] = None):
         self._producer = confluent_kafka.Producer(configs)
+        self._update_msg_counter = update_msg_counter
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
@@ -32,6 +34,11 @@ class KafkaProducer:
         def ack(err, _):
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
+            else:
+                # increment only for PVs related updates
+                # key is None when we send commands?
+                if self._update_msg_counter and key is not None:
+                    self._update_msg_counter.increment()
 
         self._producer.produce(
             topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms

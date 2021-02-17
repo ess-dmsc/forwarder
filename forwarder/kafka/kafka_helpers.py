@@ -11,14 +11,17 @@ from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import 
     EventType as ConnectionStatusEventType,
 )
 from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
+from forwarder.utils import Counter
 
 
-def create_producer(broker_address: str) -> KafkaProducer:
+def create_producer(
+    broker_address: str, counter: Optional[Counter] = None
+) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    return KafkaProducer(producer_config)
+    return KafkaProducer(producer_config, update_msg_counter=counter)
 
 
 def create_consumer(broker_address: str) -> Consumer:
