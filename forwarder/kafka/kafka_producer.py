@@ -1,7 +1,9 @@
-import confluent_kafka
 from threading import Thread
-from forwarder.application_logger import setup_logger
 from typing import Optional
+
+import confluent_kafka
+
+from forwarder.application_logger import setup_logger
 
 
 class KafkaProducer:

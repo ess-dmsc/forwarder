@@ -6,21 +6,19 @@ from typing import Dict
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 
+from forwarder.application_logger import setup_logger
+from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
+from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
-    create_producer,
     create_consumer,
+    create_producer,
     get_broker_and_topic_from_uri,
 )
-from forwarder.application_logger import setup_logger
-from forwarder.parse_config_update import parse_config_update
-from forwarder.status_reporter import StatusReporter
+from forwarder.parse_commandline_args import get_version, parse_args
+from forwarder.parse_config_update import Channel, parse_config_update
 from forwarder.statistics_reporter import StatisticsReporter
-from forwarder.parse_commandline_args import parse_args, get_version
-from forwarder.handle_config_change import handle_configuration_change
+from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import UpdateHandler
-from forwarder.parse_config_update import Channel
-from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
-
 
 if __name__ == "__main__":
     args = parse_args()

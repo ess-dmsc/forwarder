@@ -4,7 +4,6 @@ from unittest.mock import MagicMock
 
 from forwarder.statistics_reporter import StatisticsReporter
 
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 

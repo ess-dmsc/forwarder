@@ -1,14 +1,16 @@
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.kafka.kafka_producer import KafkaProducer
-from typing import Dict
-from streaming_data_types.status_x5f2 import serialise_x5f2
 import json
 import time
-from socket import gethostname
-from os import getpid
 from logging import Logger
-from forwarder.update_handlers.create_update_handler import UpdateHandler
+from os import getpid
+from socket import gethostname
+from typing import Dict
+
+from streaming_data_types.status_x5f2 import serialise_x5f2
+
+from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.parse_config_update import Channel
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.update_handlers.create_update_handler import UpdateHandler
 
 
 class StatusReporter:

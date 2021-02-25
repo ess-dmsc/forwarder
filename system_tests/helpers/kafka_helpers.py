@@ -1,8 +1,8 @@
-from confluent_kafka import TopicPartition
-from confluent_kafka import Consumer
 import uuid
+from typing import Optional, Tuple
+
+from confluent_kafka import Consumer, TopicPartition
 from pytictoc import TicToc
-from typing import Tuple, Optional
 
 
 class MsgErrorException(Exception):

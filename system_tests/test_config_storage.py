@@ -1,7 +1,9 @@
-from .helpers.kafka_helpers import create_consumer, poll_for_valid_message
-from .helpers.PVs import PVSTR, PVLONG
 import json
+
 from streaming_data_types.status_x5f2 import deserialise_x5f2
+
+from .helpers.kafka_helpers import create_consumer, poll_for_valid_message
+from .helpers.PVs import PVLONG, PVSTR
 
 
 def test_on_starting_stored_config_is_retrieved(docker_compose_storage):

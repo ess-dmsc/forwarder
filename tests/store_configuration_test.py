@@ -1,22 +1,23 @@
 from unittest import mock
+
 from confluent_kafka import Consumer
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
-    StreamInfo,
-    Protocol,
-)
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
-from forwarder.parse_config_update import (
-    parse_config_update,
-    config_change_to_command_type,
+from streaming_data_types.forwarder_config_update_rf5k import (
+    Protocol,
+    StreamInfo,
+    serialise_rf5k,
 )
 
 from forwarder.configuration_store import ConfigurationStore
-from forwarder.parse_config_update import Channel, EpicsProtocol
+from forwarder.parse_config_update import (
+    Channel,
+    EpicsProtocol,
+    config_change_to_command_type,
+    parse_config_update,
+)
 from tests.kafka.fake_producer import FakeProducer
-
 
 DUMMY_UPDATE_HANDLER = None
 

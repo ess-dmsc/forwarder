@@ -1,20 +1,22 @@
-from forwarder.application_logger import get_logger
-import attr
 from enum import Enum
-from typing import Tuple, Generator, Optional, List
+from typing import Generator, List, Optional, Tuple
+
+import attr
+from flatbuffers.packer import struct as flatbuffer_struct
 from streaming_data_types.exceptions import WrongSchemaException
-from streaming_data_types.forwarder_config_update_rf5k import (
-    deserialise_rf5k,
-    StreamInfo,
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
 )
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
-    Protocol,
+from streaming_data_types.forwarder_config_update_rf5k import (
+    StreamInfo,
+    deserialise_rf5k,
 )
+
+from forwarder.application_logger import get_logger
 from forwarder.update_handlers.schema_publishers import schema_publishers
-from flatbuffers.packer import struct as flatbuffer_struct
 
 logger = get_logger()
 

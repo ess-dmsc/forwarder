@@ -1,8 +1,9 @@
-from tests.kafka.fake_producer import FakeProducer
-from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
+import pytest
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
-import pytest
+
+from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
+from tests.kafka.fake_producer import FakeProducer
 
 
 def test_update_handler_throws_if_schema_not_recognised():
