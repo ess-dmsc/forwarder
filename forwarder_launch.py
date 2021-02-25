@@ -87,7 +87,6 @@ if __name__ == "__main__":
             update_handlers,
             update_message_counter,
             logger,
-            update_interval_s=1,
             prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
         )
         statistic_reporter.start()

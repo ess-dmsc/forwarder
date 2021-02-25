@@ -1,4 +1,4 @@
-from confluent_kafka import Consumer
+from confluent_kafka import Consumer, Producer
 from .kafka_producer import KafkaProducer
 from streaming_data_types.logdata_f142 import serialise_f142
 from streaming_data_types.timestamps_tdct import serialise_tdct
@@ -22,7 +22,8 @@ def create_producer(
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    return KafkaProducer(producer_config, update_msg_counter=counter)
+    producer = Producer(producer_config)
+    return KafkaProducer(producer, update_msg_counter=counter)
 
 
 def create_consumer(broker_address: str) -> Consumer:

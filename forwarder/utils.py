@@ -11,7 +11,7 @@ class Counter:
         self._read_lock = Lock()
 
     def increment(self):
-        """next is thread safe"""
+        # next is thread safe
         next(self._counter)
 
     @property

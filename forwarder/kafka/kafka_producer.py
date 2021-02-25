@@ -6,8 +6,12 @@ from forwarder.utils import Counter
 
 
 class KafkaProducer:
-    def __init__(self, configs: dict, update_msg_counter: Optional[Counter] = None):
-        self._producer = confluent_kafka.Producer(configs)
+    def __init__(
+        self,
+        producer: confluent_kafka.Producer,
+        update_msg_counter: Optional[Counter] = None,
+    ):
+        self._producer = producer
         self._update_msg_counter = update_msg_counter
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
@@ -36,7 +40,7 @@ class KafkaProducer:
                 self.logger.error(f"Message failed delivery: {err}")
             else:
                 # increment only for PVs related updates
-                # key is None when we send commands?
+                # key is None when we send commands.
                 if self._update_msg_counter and key is not None:
                     self._update_msg_counter.increment()
 

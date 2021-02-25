@@ -18,7 +18,7 @@ class StatisticsReporter:
         update_msg_counter: Counter,
         logger: Logger,
         prefix: str = "throughput",
-        update_interval_s: float = 10.0,
+        update_interval_s: int = 10,
     ):
         self._graphyte_server = graphyte_server
         self._update_handlers = update_handlers
