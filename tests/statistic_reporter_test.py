@@ -42,11 +42,9 @@ def test_statistic_reporter_sends_number_pvs():
 
 def test_statistic_reporter_sends_total_updates():
     update_msg_counter: Counter = Counter()
-    # This dictionary is of type Dict[Channel, UpdateHandler]
-    # StatisticReporter only uses len of this dictionary
     statistics_reporter = StatisticsReporter(
         "localhost", {}, update_msg_counter, logger
-    )  # type: ignore
+    )
     statistics_reporter._sender = MagicMock()
 
     update_msg_counter.increment()
