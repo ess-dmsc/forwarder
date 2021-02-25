@@ -6,12 +6,12 @@ from typing import Optional
 
 class KafkaProducer:
     def __init__(self, configs: dict):
+        self._missed_data_count = 0
         self._producer = confluent_kafka.Producer(configs)
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
         self.logger = setup_logger()
-        self._missed_data_count = 0
 
     def _poll_loop(self):
         while not self._cancelled:
