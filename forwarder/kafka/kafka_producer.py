@@ -11,6 +11,7 @@ class KafkaProducer:
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
         self.logger = setup_logger()
+        self._missed_data_count = 0
 
     def _poll_loop(self):
         while not self._cancelled:
@@ -38,9 +39,13 @@ class KafkaProducer:
                 topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms
             )
         except BufferError as e:
+            self._missed_data_count += 1
             self.logger.error(
                 "Producer message buffer is full. "
                 "Data loss occurred as messages are produced "
                 f"faster than are sent to the kafka broker: {e}"
+            )
+            self.logger.error(
+                f"Number of times this error occurred: {self._missed_data_count}"
             )
         self._producer.poll(0)
