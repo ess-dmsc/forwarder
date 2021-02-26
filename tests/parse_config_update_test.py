@@ -1,3 +1,6 @@
+from unittest.mock import patch
+
+from flatbuffers.packer import struct as flatbuffer_struct
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
@@ -14,10 +17,6 @@ from forwarder.parse_config_update import (
     CommandType,
     _parse_streams,
     parse_config_update,
-)
-from unittest.mock import patch
-from flatbuffers.packer import (
-    struct as flatbuffer_struct,
 )
 
 
@@ -176,8 +175,10 @@ def test_parse_streams_skips_stream_info_if_remove_config_and_schema_present_but
     assert not streams
 
 
-@patch("forwarder.parse_config_update.deserialise_rf5k",
-       side_effect=RuntimeError("Runtime Error"))
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=RuntimeError("Runtime Error"),
+)
 def test_parse_config_update_when_runtime_error_occurs(mock_func):
     test_channel_name = "test_channel"
     message = serialise_rf5k(
@@ -188,8 +189,10 @@ def test_parse_config_update_when_runtime_error_occurs(mock_func):
     assert config_update.command_type == CommandType.INVALID
 
 
-@patch("forwarder.parse_config_update.deserialise_rf5k",
-       side_effect=flatbuffer_struct.error("Flatbuffer Error"))
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=flatbuffer_struct.error("Flatbuffer Error"),
+)
 def test_parse_config_update_when_flatbuffer_struct_error_occurs(mock_func):
     test_channel_name = "test_channel"
     message = serialise_rf5k(
