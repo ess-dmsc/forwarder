@@ -1,11 +1,12 @@
-from streaming_data_types.forwarder_config_update_rf5k import serialise_rf5k, StreamInfo
+from typing import List
+
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
-from typing import List
+from streaming_data_types.forwarder_config_update_rf5k import StreamInfo, serialise_rf5k
 
 
 class ForwarderConfig:

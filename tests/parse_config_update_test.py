@@ -1,18 +1,19 @@
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
-    deserialise_rf5k,
-    StreamInfo,
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
 )
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
+from streaming_data_types.forwarder_config_update_rf5k import (
+    StreamInfo,
+    deserialise_rf5k,
+    serialise_rf5k,
+)
+
 from forwarder.parse_config_update import (
-    parse_config_update,
     CommandType,
     _parse_streams,
-)
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
-    Protocol,
+    parse_config_update,
 )
 from unittest.mock import patch
 from flatbuffers.packer import (

@@ -1,9 +1,12 @@
-from forwarder.kafka.kafka_helpers import get_broker_and_topic_from_uri
-from forwarder.kafka.kafka_helpers import publish_tdct_message
-from tests.kafka.fake_producer import FakeProducer
-from streaming_data_types.timestamps_tdct import deserialise_tdct
 import numpy as np
 import pytest
+from streaming_data_types.timestamps_tdct import deserialise_tdct
+
+from forwarder.kafka.kafka_helpers import (
+    get_broker_and_topic_from_uri,
+    publish_tdct_message,
+)
+from tests.kafka.fake_producer import FakeProducer
 
 
 def test_raises_exception_if_no_forward_slash_present():

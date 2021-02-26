@@ -1,24 +1,32 @@
-from confluent_kafka import Consumer
-from .kafka_producer import KafkaProducer
-from streaming_data_types.logdata_f142 import serialise_f142
-from streaming_data_types.timestamps_tdct import serialise_tdct
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
-from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 import uuid
+from typing import Dict, Optional, Tuple, Union
+
 import numpy as np
-from typing import Optional, Tuple, Dict, Union
+from confluent_kafka import Consumer, Producer
+from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType as ConnectionStatusEventType,
 )
-from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.logdata_f142 import serialise_f142
+from streaming_data_types.timestamps_tdct import serialise_tdct
+
+from forwarder.utils import Counter
+
+from .kafka_producer import KafkaProducer
 
 
-def create_producer(broker_address: str) -> KafkaProducer:
+def create_producer(
+    broker_address: str,
+    counter: Optional[Counter] = None,
+) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    return KafkaProducer(producer_config)
+    producer = Producer(producer_config)
+    return KafkaProducer(producer, update_msg_counter=counter)
 
 
 def create_consumer(broker_address: str) -> Consumer:

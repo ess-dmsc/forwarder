@@ -1,24 +1,27 @@
-from p4p.client.thread import Context as PVAContext
-from p4p import Value
-from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.application_logger import get_logger
-from typing import Optional, Tuple, Union, Any
+import time
 from threading import Lock
-from forwarder.update_handlers.schema_publishers import schema_publishers
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from typing import Any, Optional, Tuple, Union
+
+import numpy as np
+from p4p import Value
+from p4p.client.thread import Cancelled
+from p4p.client.thread import Context as PVAContext
+from p4p.client.thread import Disconnected, RemoteError
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+
+from forwarder.application_logger import get_logger
 from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_p4p_type,
     epics_alarm_severity_to_f142,
+    numpy_type_from_p4p_type,
     pva_alarm_message_to_f142_alarm_status,
 )
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
-import numpy as np
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
 )
-from p4p.client.thread import Cancelled, Disconnected, RemoteError
-import time
+from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.update_handlers.schema_publishers import schema_publishers
 
 
 def _get_alarm_status(response):

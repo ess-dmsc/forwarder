@@ -1,35 +1,37 @@
-from confluent_kafka import TopicPartition, Consumer
-from .helpers.producerwrapper import ProducerWrapper
+import json
+from time import sleep
+
+import numpy as np
+import pytest
+from caproto._utils import CaprotoTimeoutError
+from confluent_kafka import Consumer, TopicPartition
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
-from time import sleep
+from streaming_data_types.status_x5f2 import deserialise_x5f2
+
+from .helpers.epics_helpers import change_pv_value
+from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
+from .helpers.f142_logdata.AlarmStatus import AlarmStatus
 from .helpers.flatbuffer_helpers import (
+    check_expected_alarm_status,
     check_expected_value,
     check_multiple_expected_values,
-    check_expected_alarm_status,
 )
 from .helpers.kafka_helpers import (
     create_consumer,
-    poll_for_valid_message,
     get_last_available_status_message,
+    poll_for_valid_message,
 )
-from .helpers.epics_helpers import change_pv_value
+from .helpers.producerwrapper import ProducerWrapper
 from .helpers.PVs import (
     PVDOUBLE,
-    PVSTR,
-    PVLONG,
+    PVDOUBLE_WITH_ALARM_THRESHOLDS,
     PVENUM,
     PVFLOATARRAY,
-    PVDOUBLE_WITH_ALARM_THRESHOLDS,
+    PVLONG,
+    PVSTR,
 )
-import json
-import numpy as np
-from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
-from .helpers.f142_logdata.AlarmStatus import AlarmStatus
-import pytest
-from streaming_data_types.status_x5f2 import deserialise_x5f2
-from caproto._utils import CaprotoTimeoutError
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_STRING_VALUE = "test"

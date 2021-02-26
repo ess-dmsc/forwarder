@@ -1,17 +1,19 @@
+import logging
+from typing import Dict, List
+from unittest import mock
+
+import pytest
+
 from forwarder.configuration_store import ConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
-from tests.kafka.fake_producer import FakeProducer
-import logging
 from forwarder.parse_config_update import (
-    ConfigUpdate,
-    CommandType,
     Channel,
+    CommandType,
+    ConfigUpdate,
     EpicsProtocol,
 )
 from forwarder.update_handlers.create_update_handler import UpdateHandler
-from typing import Dict, List
-import pytest
-from unittest import mock
+from tests.kafka.fake_producer import FakeProducer
 
 
 class StubStatusReporter:

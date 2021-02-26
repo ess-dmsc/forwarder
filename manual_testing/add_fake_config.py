@@ -1,12 +1,14 @@
-from forwarder.kafka.kafka_helpers import create_producer
-from streaming_data_types.forwarder_config_update_rf5k import serialise_rf5k, StreamInfo
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
-    UpdateType,
-)
+import time
+
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
-import time
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+    UpdateType,
+)
+from streaming_data_types.forwarder_config_update_rf5k import StreamInfo, serialise_rf5k
+
+from forwarder.kafka.kafka_helpers import create_producer
 
 """
 "docker-compose up" first!
