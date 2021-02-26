@@ -1,40 +1,77 @@
 import logging
-import time
-from unittest.mock import MagicMock
+from typing import Dict
+from unittest.mock import MagicMock, call, ANY
 
 from forwarder.statistics_reporter import StatisticsReporter
-
+from forwarder.utils import Counter
+from forwarder.kafka.kafka_producer import KafkaProducer
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
 def test_that_warning_logged_on_send_exception(caplog):
-    statistics_reporter = StatisticsReporter("localhost", logger)
+    update_handler: Dict = {}
+    statistics_reporter = StatisticsReporter(
+        "localhost", update_handler, Counter(), logger
+    )
     statistics_reporter._sender = MagicMock()
     statistics_reporter._sender.send.side_effect = ValueError
+
     with caplog.at_level(logging.WARNING):
-        statistics_reporter.send_pv_numbers("NOTINTORFLOAT", time.time())
-    assert "Could not send statistic: " in caplog.text
+        statistics_reporter.send_statistics()
+
+    assert caplog.text != ""
 
 
-def test_that_send_called_only_after_update_intervals():
-    statistics_reporter = StatisticsReporter("localhost", logger)
+def test_statistic_reporter_sends_number_pvs():
+    update_msg_counter: Counter = Counter()
+    # This dictionary is of type Dict[Channel, UpdateHandler]
+    # StatisticReporter only uses len of this dictionary
+    update_handler = {"key1": "value1", "key2": "value2"}
+    statistics_reporter = StatisticsReporter("localhost", update_handler, update_msg_counter, logger)  # type: ignore
     statistics_reporter._sender = MagicMock()
 
-    # test that first message is sent
-    first_msg_time = int(time.time())
-    statistics_reporter.send_pv_numbers(2, first_msg_time)
-    assert first_msg_time == statistics_reporter._last_update_s
+    statistics_reporter.send_statistics()
 
-    # Test that message is not sent before update_interval time is complete
-    second_msg_time = first_msg_time + statistics_reporter._update_interval_s // 2
-    statistics_reporter.send_pv_numbers(2, second_msg_time)
-    statistics_reporter._sender.send.assert_called_once()
-    assert second_msg_time != statistics_reporter._last_update_s
+    calls = [
+        call("number_pvs", len(update_handler.keys()), ANY),
+    ]
+    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
 
-    # Test that message gets sent after update_interval time is complete
-    third_msg_time = second_msg_time + statistics_reporter._update_interval_s // 2 + 2
-    statistics_reporter.send_pv_numbers(2, third_msg_time)
-    assert statistics_reporter._sender.send.call_count == 2
-    assert third_msg_time == statistics_reporter._last_update_s
+
+def test_statistic_reporter_sends_total_updates():
+    update_msg_counter: Counter = Counter()
+    statistics_reporter = StatisticsReporter(
+        "localhost", {}, update_msg_counter, logger
+    )
+    statistics_reporter._sender = MagicMock()
+
+    update_msg_counter.increment()
+    update_msg_counter.increment()
+    update_msg_counter.increment()
+    statistics_reporter.send_statistics()
+
+    calls = [
+        call("total_updates", 3, ANY),
+    ]
+    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
+
+
+def test_producer_increments_counter_on_message():
+    class FakeProducer:
+        def produce(self, topic, payload, key, on_delivery, timestamp):
+            on_delivery(None, "IGNORED")
+
+        def flush(self, _):
+            pass
+
+        def poll(self, _):
+            pass
+
+    update_msg_counter: Counter = Counter()
+    kafka_producer = KafkaProducer(FakeProducer(), update_msg_counter)
+
+    kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
+    kafka_producer.close()
+    assert update_msg_counter.value == 1
