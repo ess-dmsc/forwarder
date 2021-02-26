@@ -11,4 +11,10 @@ repos:
 -   repo: https://github.com/pre-commit/mirrors-mypy.git
     rev: v0.790
     hooks:
-    -   id: mypy
+    - id: mypy
+-   repo: https://github.com/pycqa/isort
+    rev: 5.7.0
+    hooks:
+    - id: isort
+      args: ["--profile", "black"]
+

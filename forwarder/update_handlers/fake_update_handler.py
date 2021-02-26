@@ -1,9 +1,11 @@
-from forwarder.kafka.kafka_producer import KafkaProducer
-import numpy as np
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 import time
-from forwarder.update_handlers.schema_publishers import schema_publishers
 from random import randint
+
+import numpy as np
+
+from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.update_handlers.schema_publishers import schema_publishers
 
 
 class FakeUpdateHandler:

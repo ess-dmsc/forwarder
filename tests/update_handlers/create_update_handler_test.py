@@ -1,13 +1,14 @@
-from forwarder.update_handlers.create_update_handler import create_update_handler
-from forwarder.parse_config_update import Channel, EpicsProtocol
-from tests.kafka.fake_producer import FakeProducer
-from tests.test_helpers.p4p_fakes import FakeContext as FakePVAContext
-from tests.test_helpers.ca_fakes import FakeContext as FakeCAContext
-from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 import logging
+
 import pytest
 
+from forwarder.parse_config_update import Channel, EpicsProtocol
+from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
+from forwarder.update_handlers.create_update_handler import create_update_handler
+from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
+from tests.kafka.fake_producer import FakeProducer
+from tests.test_helpers.ca_fakes import FakeContext as FakeCAContext
+from tests.test_helpers.p4p_fakes import FakeContext as FakePVAContext
 
 _logger = logging.getLogger("stub_for_use_in_tests")
 _logger.addHandler(logging.NullHandler())

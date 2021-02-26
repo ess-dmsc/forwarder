@@ -1,21 +1,23 @@
-from tests.kafka.fake_producer import FakeProducer
-from tests.test_helpers.p4p_fakes import FakeContext
-from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from p4p.nt import NTScalar, NTEnum
-from streaming_data_types.logdata_f142 import deserialise_f142
-from streaming_data_types.timestamps_tdct import deserialise_tdct
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
 from cmath import isclose
-import numpy as np
-import pytest
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
-from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from time import sleep
 from typing import List
+
+import numpy as np
+import pytest
 from p4p.client.thread import Cancelled, Disconnected, RemoteError
+from p4p.nt import NTEnum, NTScalar
+from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType as ConnectionEventType,
 )
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.logdata_f142 import deserialise_f142
+from streaming_data_types.timestamps_tdct import deserialise_tdct
+
+from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
+from tests.kafka.fake_producer import FakeProducer
+from tests.test_helpers.p4p_fakes import FakeContext
 
 
 def test_update_handler_throws_if_schema_not_recognised():

@@ -1,10 +1,10 @@
 import logging
 from typing import Dict
-from unittest.mock import MagicMock, call, ANY
+from unittest.mock import ANY, MagicMock, call
 
+from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.statistics_reporter import StatisticsReporter
 from forwarder.utils import Counter
-from forwarder.kafka.kafka_producer import KafkaProducer
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
