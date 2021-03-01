@@ -201,7 +201,7 @@ def test_command_is_invalid_on_flatbuffer_struct_error(mock_func):
     assert config_update.command_type == CommandType.INVALID
 
 
-def test_command_is_invalid_when_invalid_update_type_is_specified():
+def test_command_is_invalid_if_invalid_update_type_is_specified():
     invalid_update_type = 9999
     message = serialise_rf5k(
         invalid_update_type,
