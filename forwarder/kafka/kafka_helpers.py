@@ -20,13 +20,18 @@ from .kafka_producer import KafkaProducer
 def create_producer(
     broker_address: str,
     counter: Optional[Counter] = None,
+    buffer_err_counter: Optional[Counter] = None,
 ) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
-    return KafkaProducer(producer, update_msg_counter=counter)
+    return KafkaProducer(
+        producer,
+        update_msg_counter=counter,
+        update_buffer_err_counter=buffer_err_counter,
+    )
 
 
 def create_consumer(broker_address: str) -> Consumer:

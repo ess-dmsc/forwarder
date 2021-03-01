@@ -12,9 +12,11 @@ class KafkaProducer:
         self,
         producer: confluent_kafka.Producer,
         update_msg_counter: Optional[Counter] = None,
+        update_buffer_err_counter: Optional[Counter] = None,
     ):
         self._producer = producer
         self._update_msg_counter = update_msg_counter
+        self._update_buffer_err_counter = update_buffer_err_counter
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
@@ -56,4 +58,6 @@ class KafkaProducer:
                 "Data loss occurred as messages are produced "
                 f"faster than are sent to the kafka broker: {e}"
             )
+            if self._update_buffer_err_counter:
+                self._update_buffer_err_counter.increment()
         self._producer.poll(0)
