@@ -179,11 +179,10 @@ def test_parse_streams_skips_stream_info_if_remove_config_and_schema_present_but
     "forwarder.parse_config_update.deserialise_rf5k",
     side_effect=RuntimeError("Runtime Error"),
 )
-def test_parse_config_update_when_runtime_error_occurs(mock_func):
-    test_channel_name = "test_channel"
+def test_command_is_invalid_on_runtime_error(mock_func):
     message = serialise_rf5k(
         UpdateType.ADD,
-        [StreamInfo(test_channel_name, "f142", "output_topic", Protocol.PVA)],
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
     )
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.INVALID
@@ -193,29 +192,27 @@ def test_parse_config_update_when_runtime_error_occurs(mock_func):
     "forwarder.parse_config_update.deserialise_rf5k",
     side_effect=flatbuffer_struct.error("Flatbuffer Error"),
 )
-def test_parse_config_update_when_flatbuffer_struct_error_occurs(mock_func):
-    test_channel_name = "test_channel"
+def test_command_is_invalid_on_flatbuffer_struct_error(mock_func):
     message = serialise_rf5k(
         UpdateType.ADD,
-        [StreamInfo(test_channel_name, "f142", "output_topic", Protocol.PVA)],
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
     )
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.INVALID
 
 
-def test_parse_config_update_when_invalid_update_type_is_provided():
-    invalid_update_type = UpdateType.REMOVEALL + 1
-    test_channel_name = "test_channel"
+def test_command_is_invalid_when_invalid_update_type_is_specified():
+    invalid_update_type = 9999
     message = serialise_rf5k(
         invalid_update_type,
-        [StreamInfo(test_channel_name, "f142", "output_topic", Protocol.PVA)],
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
     )
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.INVALID
 
 
-def test_parse_streams_when_invalid_protocol_is_provided():
-    invalid_protocol = Protocol.FAKE + 1
+def test_parse_streams_skips_stream_info_if_invalid_protocol_is_specified():
+    invalid_protocol = 9999
     message = serialise_rf5k(
         UpdateType.REMOVE,
         [StreamInfo("test_channel", "f142", "output_topic", invalid_protocol)],
