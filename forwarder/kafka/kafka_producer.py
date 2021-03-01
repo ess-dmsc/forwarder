@@ -52,12 +52,7 @@ class KafkaProducer:
             self._producer.produce(
                 topic, payload, key=key, on_delivery=ack, timestamp=timestamp_ms
             )
-        except BufferError as e:
-            self.logger.error(
-                "Producer message buffer is full. "
-                "Data loss occurred as messages are produced "
-                f"faster than are sent to the kafka broker: {e}"
-            )
+        except BufferError:
             if self._update_buffer_err_counter:
                 self._update_buffer_err_counter.increment()
         self._producer.poll(0)
