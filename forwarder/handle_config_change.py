@@ -1,14 +1,18 @@
-from forwarder.update_handlers.create_update_handler import create_update_handler
-from forwarder.parse_config_update import CommandType, Channel, ConfigUpdate
-from typing import Optional, Dict
+import fnmatch
 from logging import Logger
-from forwarder.status_reporter import StatusReporter
-from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
+from typing import Dict, Optional
+
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
+
+from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.update_handlers.create_update_handler import UpdateHandler
-import fnmatch
+from forwarder.parse_config_update import Channel, CommandType, ConfigUpdate
+from forwarder.status_reporter import StatusReporter
+from forwarder.update_handlers.create_update_handler import (
+    UpdateHandler,
+    create_update_handler,
+)
 
 
 def _subscribe_to_pv(

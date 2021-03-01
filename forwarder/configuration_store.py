@@ -1,15 +1,17 @@
 import time
 from typing import Dict
 from unittest import mock
+
 from confluent_kafka import TopicPartition
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
-    StreamInfo,
-    Protocol,
-)
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
+from streaming_data_types.forwarder_config_update_rf5k import (
+    Protocol,
+    StreamInfo,
+    serialise_rf5k,
+)
+
 from forwarder.parse_config_update import EpicsProtocol
 
 

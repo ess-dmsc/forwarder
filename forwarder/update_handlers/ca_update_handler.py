@@ -1,23 +1,25 @@
-from forwarder.application_logger import get_logger
-from forwarder.kafka.kafka_producer import KafkaProducer
-from caproto import ReadNotifyResponse, ChannelType
-import numpy as np
-from threading import Lock
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_caproto_type,
-    epics_alarm_severity_to_f142,
-    ca_alarm_status_to_f142,
-)
-from caproto.threading.client import Context as CAContext
-from caproto.threading.client import PV
-from typing import Optional, Tuple, Any
-from forwarder.update_handlers.schema_publishers import schema_publishers
 import time
+from threading import Lock
+from typing import Any, Optional, Tuple
+
+import numpy as np
+from caproto import ChannelType, ReadNotifyResponse
+from caproto.threading.client import PV
+from caproto.threading.client import Context as CAContext
+
+from forwarder.application_logger import get_logger
+from forwarder.epics_to_serialisable_types import (
+    ca_alarm_status_to_f142,
+    epics_alarm_severity_to_f142,
+    numpy_type_from_caproto_type,
+)
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
 )
+from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
+from forwarder.update_handlers.schema_publishers import schema_publishers
 
 
 class CAUpdateHandler:

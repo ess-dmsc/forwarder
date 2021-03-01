@@ -1,9 +1,10 @@
-import logging
-import configargparse
-from os import getpid
-from socket import gethostname
 import configparser
+import logging
+from os import getpid
 from pathlib import Path
+from socket import gethostname
+
+import configargparse
 
 
 class VersionArgParser(configargparse.ArgumentParser):

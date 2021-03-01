@@ -1,23 +1,23 @@
 import os.path
+import warnings
+from subprocess import Popen
+from time import sleep
+
+import docker
 import pytest
 from compose.cli.main import TopLevelCommand, project_from_options
-from confluent_kafka.admin import AdminClient
 from confluent_kafka import Producer
-import docker
-from time import sleep
-from subprocess import Popen
-import warnings
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
-    StreamInfo,
-    Protocol,
-)
+from confluent_kafka.admin import AdminClient
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
+from streaming_data_types.forwarder_config_update_rf5k import (
+    Protocol,
+    StreamInfo,
+    serialise_rf5k,
+)
 
-from .helpers.PVs import PVSTR, PVLONG
-
+from .helpers.PVs import PVLONG, PVSTR
 
 LOCAL_BUILD = "--local-build"
 WAIT_FOR_DEBUGGER_ATTACH = "--wait-to-attach-debugger"

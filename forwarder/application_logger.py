@@ -1,6 +1,7 @@
 import logging
-import graypy
 from typing import Optional
+
+import graypy
 
 logger_name = "python-forwarder"
 

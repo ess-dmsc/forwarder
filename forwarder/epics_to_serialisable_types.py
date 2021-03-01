@@ -1,7 +1,7 @@
 import numpy as np
 from caproto import ChannelType
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 
 # caproto can give us values of different dtypes even from the same EPICS channel,
 # for example it will use the smallest integer type it can for the particular value,

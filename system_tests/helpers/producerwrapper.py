@@ -1,10 +1,12 @@
-from .forwarderconfig import ForwarderConfig
-from confluent_kafka import Producer, Consumer, KafkaException
 import uuid
 from typing import List
+
+from confluent_kafka import Consumer, KafkaException, Producer
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
+
+from .forwarderconfig import ForwarderConfig
 
 
 class ProducerWrapper:
