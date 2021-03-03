@@ -97,3 +97,21 @@ def test_producer_increments_buffer_error_counter_on_buffer_error():
     kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
     kafka_producer.close()
     assert update_buffer_err_counter.value == 1
+
+
+def test_statistic_reporter_sends_data_loss_errors():
+    update_buffer_err_counter: Counter = Counter()
+    statistics_reporter = StatisticsReporter(
+        "localhost", {}, Counter(), update_buffer_err_counter, logger
+    )
+    statistics_reporter._sender = MagicMock()
+
+    update_buffer_err_counter.increment()
+    update_buffer_err_counter.increment()
+    update_buffer_err_counter.increment()
+    statistics_reporter.send_statistics()
+
+    calls = [
+        call("data_loss_errors", 3, ANY),
+    ]
+    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
