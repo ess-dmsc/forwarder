@@ -43,7 +43,7 @@ class StatisticsReporter:
                 "total_updates", self._update_msg_counter.value, timestamp
             )
             self._sender.send(
-                "total_buffer_errors", self._update_buffer_err_counter.value, timestamp
+                "data_loss_errors", self._update_buffer_err_counter.value, timestamp
             )
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
