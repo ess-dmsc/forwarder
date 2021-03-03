@@ -57,11 +57,15 @@ if __name__ == "__main__":
 
     grafana_carbon_address = args.grafana_carbon_address
     update_message_counter = Counter()
+    update_buffer_err_counter = Counter()
 
     # Kafka
     producer = create_producer(
         args.output_broker,
         counter=update_message_counter if grafana_carbon_address else None,
+        buffer_err_counter=update_buffer_err_counter
+        if grafana_carbon_address
+        else None,
     )
     config_broker, config_topic = get_broker_and_topic_from_uri(args.config_topic)
     consumer = create_consumer(config_broker)
@@ -84,6 +88,7 @@ if __name__ == "__main__":
             grafana_carbon_address,
             update_handlers,
             update_message_counter,
+            update_buffer_err_counter,
             logger,
             prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
         )

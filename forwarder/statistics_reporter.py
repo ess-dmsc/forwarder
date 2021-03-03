@@ -1,5 +1,5 @@
-from logging import Logger
 import time
+from logging import Logger
 from typing import Dict
 
 import graphyte  # type: ignore
@@ -16,6 +16,7 @@ class StatisticsReporter:
         graphyte_server: str,
         update_handlers: Dict[Channel, UpdateHandler],
         update_msg_counter: Counter,
+        update_buffer_err_counter: Counter,
         logger: Logger,
         prefix: str = "throughput",
         update_interval_s: int = 10,
@@ -23,6 +24,7 @@ class StatisticsReporter:
         self._graphyte_server = graphyte_server
         self._update_handlers = update_handlers
         self._update_msg_counter = update_msg_counter
+        self._update_buffer_err_counter = update_buffer_err_counter
         self._logger = logger
 
         self._sender = graphyte.Sender(self._graphyte_server, prefix=prefix)
@@ -39,6 +41,9 @@ class StatisticsReporter:
             )
             self._sender.send(
                 "total_updates", self._update_msg_counter.value, timestamp
+            )
+            self._sender.send(
+                "data_loss_errors", self._update_buffer_err_counter.value, timestamp
             )
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
