@@ -1,3 +1,7 @@
+from unittest.mock import patch
+
+from flatbuffers.packer import struct as flatbuffer_struct
+from streaming_data_types.exceptions import WrongSchemaException
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
@@ -166,6 +170,66 @@ def test_parse_streams_skips_stream_info_if_remove_config_and_schema_present_but
     message = serialise_rf5k(
         UpdateType.REMOVE,
         [StreamInfo("test_channel", nonexistent_schema, "output_topic", Protocol.PVA)],
+    )
+    config_message = deserialise_rf5k(message)
+    streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
+    assert not streams
+
+
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=RuntimeError("Runtime Error"),
+)
+def test_command_is_invalid_on_runtime_error(mock_func):
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.INVALID
+
+
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=flatbuffer_struct.error("Flatbuffer Error"),
+)
+def test_command_is_invalid_on_flatbuffer_struct_error(mock_func):
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.INVALID
+
+
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=WrongSchemaException("Wrong Schema Exception"),
+)
+def test_command_is_invalid_on_wrong_schema_exception(mock_func):
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.INVALID
+
+
+def test_command_is_invalid_if_invalid_update_type_is_specified():
+    invalid_update_type = 9999
+    message = serialise_rf5k(
+        invalid_update_type,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.INVALID
+
+
+def test_parse_streams_skips_stream_info_if_invalid_protocol_is_specified():
+    invalid_protocol = 9999
+    message = serialise_rf5k(
+        UpdateType.REMOVE,
+        [StreamInfo("test_channel", "f142", "output_topic", invalid_protocol)],
     )
     config_message = deserialise_rf5k(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))
