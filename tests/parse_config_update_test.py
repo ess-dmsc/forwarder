@@ -1,6 +1,7 @@
 from unittest.mock import patch
 
 from flatbuffers.packer import struct as flatbuffer_struct
+from streaming_data_types.exceptions import WrongSchemaException
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
@@ -193,6 +194,19 @@ def test_command_is_invalid_on_runtime_error(mock_func):
     side_effect=flatbuffer_struct.error("Flatbuffer Error"),
 )
 def test_command_is_invalid_on_flatbuffer_struct_error(mock_func):
+    message = serialise_rf5k(
+        UpdateType.ADD,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.INVALID
+
+
+@patch(
+    "forwarder.parse_config_update.deserialise_rf5k",
+    side_effect=WrongSchemaException("Wrong Schema Exception"),
+)
+def test_command_is_invalid_on_wrong_schema_exception(mock_func):
     message = serialise_rf5k(
         UpdateType.ADD,
         [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA)],
