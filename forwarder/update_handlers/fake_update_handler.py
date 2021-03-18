@@ -55,7 +55,9 @@ class FakeUpdateHandler:
         self._publish_message(self._message_publisher.serialise(update), time.time_ns())
 
     def _publish_message(self, message: bytes, timestamp_ns: int):
-        self._producer.produce(self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns))
+        self._producer.produce(
+            self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns)
+        )
 
     def stop(self):
         """

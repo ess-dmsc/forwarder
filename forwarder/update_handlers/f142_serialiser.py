@@ -38,12 +38,16 @@ class f142_Serialiser:
     def __init__(self, source_name: str):
         self._source_name = source_name
 
-    def serialise(self, update: Union[p4p.Value, ReadNotifyResponse], serialise_alarm: bool = True) -> Tuple[bytes, int]:
+    def serialise(
+        self, update: Union[p4p.Value, ReadNotifyResponse], serialise_alarm: bool = True
+    ) -> Tuple[bytes, int]:
         if isinstance(update, p4p.Value):
             alarm = _get_alarm_status(update)
             severity = epics_alarm_severity_to_f142[update.alarm.severity]
             value = _extract_pva_data(update)
-            timestamp = (update.timeStamp.secondsPastEpoch * 1_000_000_000) + update.timeStamp.nanoseconds
+            timestamp = (
+                update.timeStamp.secondsPastEpoch * 1_000_000_000
+            ) + update.timeStamp.nanoseconds
         elif isinstance(update, ReadNotifyResponse):
             alarm = ca_alarm_status_to_f142[update.metadata.status]
             severity = epics_alarm_severity_to_f142[update.metadata.severity]
@@ -52,4 +56,7 @@ class f142_Serialiser:
         extra_arguments = {}
         if serialise_alarm:
             extra_arguments = {"alarm_status": alarm, "alarm_severity": severity}
-        return serialise_f142(value, self._source_name, timestamp, **extra_arguments), timestamp
+        return (
+            serialise_f142(value, self._source_name, timestamp, **extra_arguments),
+            timestamp,
+        )

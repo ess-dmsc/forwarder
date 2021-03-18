@@ -11,7 +11,7 @@ from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
-    _nanoseconds_to_milliseconds
+    _nanoseconds_to_milliseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
@@ -79,11 +79,15 @@ class CAUpdateHandler:
                 self._cached_update is None
                 or response.metadata.status != self._cached_update[0].metadata.status
             ):
-                self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=True),
-                                      timestamp)
+                self._publish_message(
+                    self._message_serialiser.serialise(response, serialise_alarm=True),
+                    timestamp,
+                )
             else:
-                self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=False),
-                                      timestamp)
+                self._publish_message(
+                    self._message_serialiser.serialise(response, serialise_alarm=False),
+                    timestamp,
+                )
             self._cached_update = (response, timestamp)
             if self._repeating_timer is not None:
                 self._repeating_timer.reset()
@@ -101,11 +105,17 @@ class CAUpdateHandler:
         with self._cache_lock:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
-                self._publish_message(self._message_serialiser.serialise(self._cached_update[0], serialise_alarm=True),
-                                      self._cached_update[1])
+                self._publish_message(
+                    self._message_serialiser.serialise(
+                        self._cached_update[0], serialise_alarm=True
+                    ),
+                    self._cached_update[1],
+                )
 
     def _publish_message(self, message: bytes, timestamp_ns: int):
-        self._producer.produce(self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns))
+        self._producer.produce(
+            self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns)
+        )
 
     def stop(self):
         """

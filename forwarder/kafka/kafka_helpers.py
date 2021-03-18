@@ -63,11 +63,7 @@ _state_str_to_enum: Dict[Union[str, Exception], ConnectionStatusEventType] = {
 
 
 def publish_connection_status_message(
-    producer: KafkaProducer,
-    topic: str,
-    pv_name: str,
-    timestamp_ns: int,
-    state: str,
+    producer: KafkaProducer, topic: str, pv_name: str, timestamp_ns: int, state: str
 ):
     producer.produce(
         topic,
