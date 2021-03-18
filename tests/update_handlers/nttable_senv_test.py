@@ -10,13 +10,20 @@ def test_serialise_nttable():
     values = np.arange(-50, 50, dtype=np.int16)
     timestamps = np.arange(50, 150, dtype=np.uint64)
 
-    table = NTTable.buildType(columns=[
-        ('value', 'ah'),
-        ('timestamp', 'aL'),
-    ])
+    table = NTTable.buildType(
+        columns=[
+            ("value", "ah"),
+            ("timestamp", "aL"),
+        ]
+    )
 
-    update = Value(table, {"labels": ["value", "timestamp"],
-                           "value": {"value": values, "timestamp": timestamps}})
+    update = Value(
+        table,
+        {
+            "labels": ["value", "timestamp"],
+            "value": {"value": values, "timestamp": timestamps},
+        },
+    )
 
     pv_name = "some_pv"
     serialiser = nttable_senv_Serialiser(pv_name)
