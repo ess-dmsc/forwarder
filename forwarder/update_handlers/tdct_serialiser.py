@@ -19,6 +19,7 @@ def _extract_ca_data(update: ReadNotifyResponse):
     data_type = numpy_type_from_caproto_type[update.data_type]
     return np.squeeze(np.array(update.data)).astype(data_type)
 
+
 class tdct_Serialiser:
     def __init__(self, source_name: str):
         self._source_name = source_name
