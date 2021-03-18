@@ -49,8 +49,7 @@ class FakeUpdateHandler:
             update = NTScalar("ai").wrap(data)
         else:
             # Otherwise 0D (scalar) is fine
-            data = randint(0, 100)
-            update = NTScalar("i").wrap(data)
+            update = NTScalar("i").wrap(randint(0, 100))
 
         self._publish_message(self._message_publisher.serialise(update), time.time_ns())
 
