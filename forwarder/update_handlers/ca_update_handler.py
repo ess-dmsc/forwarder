@@ -1,18 +1,13 @@
 import time
 from threading import Lock
-from typing import Any, Optional, Tuple
+from typing import Optional, Tuple
 
-import numpy as np
-from caproto import ChannelType, ReadNotifyResponse
+from caproto import ReadNotifyResponse
 from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
 from forwarder.application_logger import get_logger
-from forwarder.epics_to_serialisable_types import (
-    ca_alarm_status_to_f142,
-    epics_alarm_severity_to_f142,
-    numpy_type_from_caproto_type,
-)
+
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
@@ -76,10 +71,6 @@ class CAUpdateHandler:
             # Enum values for example don't have .size, just continue
             pass
 
-        # if self._output_type is None:
-        #     if not self._try_to_determine_type(response):
-        #         return
-
         with self._cache_lock:
             timestamp = seconds_to_nanoseconds(response.metadata.timestamp)
             # If this is the first update or the alarm status has changed, then
@@ -88,26 +79,9 @@ class CAUpdateHandler:
                 self._cached_update is None
                 or response.metadata.status != self._cached_update[0].metadata.status
             ):
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     self._get_value(response),
-                #     self._pv.name,
-                #     timestamp,
-                #     ca_alarm_status_to_f142[response.metadata.status],
-                #     epics_alarm_severity_to_f142[response.metadata.severity],
-                # )
                 self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=True),
                                       timestamp)
             else:
-                # Otherwise FlatBuffers will use the default alarm status of "NO_CHANGE"
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     self._get_value(response),
-                #     self._pv.name,
-                #     timestamp,
-                # )
                 self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=False),
                                       timestamp)
             self._cached_update = (response, timestamp)
@@ -123,50 +97,12 @@ class CAUpdateHandler:
             state,
         )
 
-    # def _try_to_determine_type(self, response: ReadNotifyResponse) -> bool:
-    #     """
-    #     If False is returned then don't continue with forwarding the current response
-    #     That means determining the type failed, or the monitor was restarted
-    #     """
-    #     try:
-    #         if response.data_type == ChannelType.TIME_ENUM:
-    #             # We forward enum as string
-    #             # Resubscribe using ChannelType.TIME_STRING as the data type
-    #             self._pv.unsubscribe_all()
-    #             sub = self._pv.subscribe(data_type=ChannelType.TIME_STRING)
-    #             sub.add_callback(self._monitor_callback)
-    #             # Don't forward the current response; the monitor will restart with the
-    #             # new data type
-    #             return False
-    #         else:
-    #             self._output_type = numpy_type_from_caproto_type[response.data_type]
-    #     except KeyError:
-    #         self._logger.error(
-    #             f"Don't know what numpy dtype to use for channel type {ChannelType(response.data_type)}"
-    #         )
-    #         return False
-    #     return True
-
-    # def _get_value(self, response: ReadNotifyResponse) -> Any:
-    #     return np.squeeze(response.data).astype(self._output_type)
-
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
                 self._publish_message(self._message_serialiser.serialise(self._cached_update[0], serialise_alarm=True),
                                       self._cached_update[1])
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     self._get_value(self._cached_update[0]),
-                #     self._pv.name,
-                #     self._cached_update[1],
-                #     ca_alarm_status_to_f142[self._cached_update[0].metadata.status],
-                #     epics_alarm_severity_to_f142[
-                #         self._cached_update[0].metadata.severity
-                #     ],
-                # )
 
     def _publish_message(self, message: bytes, timestamp_ns: int):
         self._producer.produce(self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns))

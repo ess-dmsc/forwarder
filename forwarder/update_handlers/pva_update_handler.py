@@ -1,20 +1,13 @@
 import time
 from threading import Lock
-from typing import Any, Optional, Tuple, Union
+from typing import Optional, Tuple, Union
 
-import numpy as np
 from p4p import Value
 from p4p.client.thread import Cancelled
 from p4p.client.thread import Context as PVAContext
 from p4p.client.thread import Disconnected, RemoteError
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 
 from forwarder.application_logger import get_logger
-from forwarder.epics_to_serialisable_types import (
-    epics_alarm_severity_to_f142,
-    numpy_type_from_p4p_type,
-    pva_alarm_message_to_f142_alarm_status,
-)
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
@@ -23,14 +16,6 @@ from forwarder.kafka.kafka_helpers import (
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
-
-
-# def _get_alarm_status(response):
-#     try:
-#         alarm_status = pva_alarm_message_to_f142_alarm_status[response.alarm.message]
-#     except Exception:
-#         alarm_status = AlarmStatus.UDF
-#     return alarm_status
 
 
 class PVAUpdateHandler:
@@ -54,7 +39,6 @@ class PVAUpdateHandler:
         self._output_topic = output_topic
         self._pv_name = pv_name
         self._cached_update: Optional[Tuple[Value, int]] = None
-        # self._output_type: Any = None
         self._repeating_timer = None
         self._cache_lock = Lock()
 
@@ -109,8 +93,6 @@ class PVAUpdateHandler:
         timestamp = (
             response.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + response.timeStamp.nanoseconds
-        # if self._output_type is None:
-        #     self._try_to_determine_type(response)
 
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
@@ -120,74 +102,17 @@ class PVAUpdateHandler:
                 or response.alarm.message != self._cached_update[0].alarm.message
             ):
                 self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=True), timestamp)
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     np.squeeze(np.array(self._get_value(response))).astype(
-                #         self._output_type
-                #     ),
-                #     self._pv_name,
-                #     timestamp,
-                #     _get_alarm_status(response),
-                #     epics_alarm_severity_to_f142[response.alarm.severity],
-                # )
             else:
                 self._publish_message(self._message_serialiser.serialise(response, serialise_alarm=False), timestamp)
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     np.squeeze(np.array(self._get_value(response))).astype(
-                #         self._output_type
-                #     ),
-                #     self._pv_name,
-                #     timestamp,
-                # )
             self._cached_update = (response, timestamp)
             if self._repeating_timer is not None:
                 self._repeating_timer.reset()
-
-    # def _try_to_determine_type(self, response):
-    #     try:
-    #         is_enum = False
-    #         try:
-    #             if response.type()["value"].getID() == "enum_t":
-    #                 is_enum = True
-    #         except AttributeError:
-    #             # Attribute error raised because getID doesn't exist for scalar and
-    #             # scalar-array types.
-    #             # Array output types are prefixed by "a", we don't need this.
-    #             self._output_type = numpy_type_from_p4p_type[
-    #                 response.type()["value"][-1]
-    #             ]
-    #
-    #         if is_enum:
-    #             # We forward enum as string
-    #             self._output_type = np.unicode_
-    #             self._get_value = lambda resp: resp.value.choices[resp.value.index]
-    #         else:
-    #             self._get_value = lambda resp: resp.value
-    #     except KeyError:
-    #         self._logger.error(
-    #             f"Don't know what numpy dtype to use for channel type {type(response)}"
-    #         )
 
     def publish_cached_update(self):
         with self._cache_lock:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
                 self._publish_message(self._message_serialiser.serialise(self._cached_update[0], serialise_alarm=True), self._cached_update[1])
-                # self._publish_message()
-                # self._message_publisher(
-                #     self._producer,
-                #     self._output_topic,
-                #     np.squeeze(
-                #         np.array(self._get_value(self._cached_update[0]))
-                #     ).astype(self._output_type),
-                #     self._pv_name,
-                #     self._cached_update[1],
-                #     _get_alarm_status(self._cached_update[0]),
-                #     epics_alarm_severity_to_f142[self._cached_update[0].alarm.severity],
-                # )
 
     def _publish_message(self, message: bytes, timestamp_ns: int):
         self._producer.produce(self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns))
