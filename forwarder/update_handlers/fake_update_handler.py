@@ -5,7 +5,10 @@ import numpy as np
 
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_publishers import schema_publishers
+from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
+
+from p4p.nt import NTScalar
 
 
 class FakeUpdateHandler:
@@ -28,10 +31,10 @@ class FakeUpdateHandler:
         self._schema = schema
 
         try:
-            self._message_publisher = schema_publishers[schema]
+            self._message_publisher = schema_serialisers[schema](self._pv_name)
         except KeyError:
             raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
+                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
             )
 
         self._repeating_timer = RepeatTimer(
@@ -43,12 +46,16 @@ class FakeUpdateHandler:
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
             data = np.array([randint(0, 100)]).astype(np.int32)
+            update = NTScalar("ai").wrap(data)
         else:
             # Otherwise 0D (scalar) is fine
-            data = np.array(randint(0, 100)).astype(np.int32)
-        self._message_publisher(
-            self._producer, self._output_topic, data, self._pv_name, time.time_ns()
-        )
+            data = randint(0, 100)
+            update = NTScalar("i").wrap(data)
+
+        self._publish_message(self._message_publisher.serialise(update), time.time_ns())
+
+    def _publish_message(self, message: bytes, timestamp_ns: int):
+        self._producer.produce(self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns))
 
     def stop(self):
         """
