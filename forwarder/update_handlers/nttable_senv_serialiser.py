@@ -21,13 +21,14 @@ class nttable_senv_Serialiser:
             raise RuntimeError(
                 f'Unable to process EPICS updates of type: "{update.getID()}".'
             )
-        column_headers = update.value.keys()
+        column_headers = update.labels
         if "value" not in column_headers or "timestamp" not in column_headers:
             raise RuntimeError(
                 f'Unable to find required columns ("value", "timestamp") in NTTable. Found the columns {column_headers} instead.'
             )
-        values = update.value.value
-        timestamps = update.value.timestamp
+        tables = update.value.items()
+        values = tables[column_headers.index("value")][1]
+        timestamps = tables[column_headers.index("timestamp")][1]
         self._msg_counter += 1
         origin_timestamp = timestamps[0]
         message_timestamp = datetime.fromtimestamp(origin_timestamp / 1e9)

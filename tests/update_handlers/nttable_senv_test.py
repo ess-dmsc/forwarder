@@ -12,8 +12,8 @@ def test_serialise_nttable():
 
     table = NTTable.buildType(
         columns=[
-            ("value", "ah"),
-            ("timestamp", "aL"),
+            ("column0", "ah"),
+            ("column1", "aL"),
         ]
     )
 
@@ -21,7 +21,7 @@ def test_serialise_nttable():
         table,
         {
             "labels": ["value", "timestamp"],
-            "value": {"value": values, "timestamp": timestamps},
+            "value": {"column0": values, "column1": timestamps},
         },
     )
 
