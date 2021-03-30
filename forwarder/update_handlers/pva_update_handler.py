@@ -1,6 +1,6 @@
 import time
 from threading import Lock
-from typing import Optional, Tuple, Union
+from typing import Optional, Union
 
 from p4p import Value
 from p4p.client.thread import Cancelled

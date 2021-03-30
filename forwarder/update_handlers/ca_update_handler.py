@@ -1,6 +1,6 @@
 import time
 from threading import Lock
-from typing import Optional, Tuple
+from typing import Optional
 
 from caproto import ReadNotifyResponse
 from caproto.threading.client import PV
