@@ -35,5 +35,7 @@ def test_serialise_nttable():
     assert np.array_equal(fb_update.values, values)
     assert fb_update.values.dtype == values.dtype
     assert np.array_equal(fb_update.value_ts, timestamps)
-    assert fb_update.timestamp == datetime.fromtimestamp(timestamps[0] / 1e9, tz=timezone.utc)
+    assert fb_update.timestamp == datetime.fromtimestamp(
+        timestamps[0] / 1e9, tz=timezone.utc
+    )
     assert fb_update.message_counter == 0
