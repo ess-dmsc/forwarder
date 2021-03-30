@@ -38,7 +38,7 @@ class PVAUpdateHandler:
         self._producer = producer
         self._output_topic = output_topic
         self._pv_name = pv_name
-        self._cached_update: Optional[Tuple[Value, int]] = None
+        self._cached_update: Optional[Value] = None
         self._repeating_timer = None
         self._cache_lock = Lock()
 
@@ -90,27 +90,21 @@ class PVAUpdateHandler:
             # Enum values for example don't have .size, just continue
             pass
 
-        timestamp = (
-            response.timeStamp.secondsPastEpoch * 1_000_000_000
-        ) + response.timeStamp.nanoseconds
-
         with self._cache_lock:
             # If this is the first update or the alarm status has changed, then
             # include alarm status in message
             if (
                 self._cached_update is None
-                or response.alarm.message != self._cached_update[0].alarm.message
+                or response.alarm.message != self._cached_update.alarm.message
             ):
                 self._publish_message(
-                    self._message_serialiser.serialise(response, serialise_alarm=True),
-                    timestamp,
+                    *self._message_serialiser.serialise(response, serialise_alarm=True)
                 )
             else:
                 self._publish_message(
-                    self._message_serialiser.serialise(response, serialise_alarm=False),
-                    timestamp,
+                    *self._message_serialiser.serialise(response, serialise_alarm=False)
                 )
-            self._cached_update = (response, timestamp)
+            self._cached_update = response
             if self._repeating_timer is not None:
                 self._repeating_timer.reset()
 
@@ -119,10 +113,9 @@ class PVAUpdateHandler:
             if self._cached_update is not None:
                 # Always include current alarm status in periodic update messages
                 self._publish_message(
-                    self._message_serialiser.serialise(
-                        self._cached_update[0], serialise_alarm=True
-                    ),
-                    self._cached_update[1],
+                    *self._message_serialiser.serialise(
+                        self._cached_update, serialise_alarm=True
+                    )
                 )
 
     def _publish_message(self, message: bytes, timestamp_ns: int):

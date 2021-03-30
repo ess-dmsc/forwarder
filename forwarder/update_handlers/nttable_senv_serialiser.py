@@ -3,6 +3,7 @@ from typing import Union, Tuple
 import p4p
 from caproto import ReadNotifyResponse
 from datetime import datetime
+import numpy as np
 
 
 class nttable_senv_Serialiser:
@@ -28,6 +29,8 @@ class nttable_senv_Serialiser:
             )
         tables = update.value.items()
         values = tables[column_headers.index("value")][1]
+        if np.issubdtype(values.dtype, np.floating):
+            values = values.round().astype(np.int64)
         timestamps = tables[column_headers.index("timestamp")][1]
         self._msg_counter += 1
         origin_timestamp = timestamps[0]

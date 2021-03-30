@@ -52,7 +52,7 @@ def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str]:
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
-    return time_ns // 1_000_000
+    return int(time_ns) // 1_000_000
 
 
 _state_str_to_enum: Dict[Union[str, Exception], ConnectionStatusEventType] = {

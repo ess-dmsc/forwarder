@@ -56,7 +56,7 @@ def test_update_handler_publishes_float_update(
     )
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert isclose(pv_update_output.value, pv_value, abs_tol=0.0001)
     assert pv_update_output.source_name == pv_source_name
 
@@ -87,7 +87,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_caproto_type, pv_numpy
     )
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
 
@@ -131,7 +131,7 @@ def test_update_handler_publishes_floatarray_update(
     )
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
 
@@ -164,7 +164,7 @@ def test_update_handler_publishes_alarm_update():
     )
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
     assert pv_update_output.alarm_status == AlarmStatus.LOW
@@ -197,7 +197,7 @@ def test_update_handler_publishes_periodic_update():
     )
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
 
@@ -245,7 +245,7 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     )
 
     assert producer.messages_published == 2
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.alarm_status == AlarmStatus.NO_CHANGE
     assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
 
@@ -276,7 +276,7 @@ def test_update_handler_publishes_enum_update():
 
     assert producer.messages_published == 1
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.value == 0
     assert pv_update_output.source_name == pv_source_name
 
@@ -324,7 +324,7 @@ def test_empty_update_is_not_forwarded():
     assert (
         producer.messages_published == 1
     ), "Expected only the one PV update with non-empty value array to have been published"
-    pv_update_output = deserialise_tdct(producer.published_payload[0])
+    pv_update_output = deserialise_tdct(producer.published_payload)
     assert (
         pv_update_output.timestamps.size > 0
     ), "Expected the published PV update not to be empty"
