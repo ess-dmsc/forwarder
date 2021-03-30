@@ -3,7 +3,7 @@ from p4p import Value
 from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_Serialiser
 from streaming_data_types.sample_environment_senv import deserialise_senv
 import numpy as np
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 def test_serialise_nttable():
@@ -35,5 +35,5 @@ def test_serialise_nttable():
     assert np.array_equal(fb_update.values, values)
     assert fb_update.values.dtype == values.dtype
     assert np.array_equal(fb_update.value_ts, timestamps)
-    assert fb_update.timestamp == datetime.fromtimestamp(timestamps[0] / 1e9)
+    assert fb_update.timestamp == datetime.fromtimestamp(timestamps[0] / 1e9, tz=timezone.utc)
     assert fb_update.message_counter == 0
