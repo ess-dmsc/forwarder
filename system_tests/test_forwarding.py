@@ -27,7 +27,6 @@ from .helpers.producerwrapper import ProducerWrapper
 from .helpers.PVs import (
     PVDOUBLE,
     PVDOUBLE_WITH_ALARM_THRESHOLDS,
-    PVENUM,
     PVFLOATARRAY,
     PVLONG,
     PVSTR,
@@ -196,7 +195,7 @@ def forwarding_long(consumer: Consumer, producer: ProducerWrapper):
         PVLONG: initial_long_value,
     }
     first_msg, _ = poll_for_valid_message(consumer)
-    messages = [first_msg,]
+    messages = [first_msg, ]
     check_multiple_expected_values(messages, expected_values)
     producer.remove_config(pvs)
 
