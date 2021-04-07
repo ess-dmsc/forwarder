@@ -48,7 +48,7 @@ class f142_Serialiser:
             timestamp = (
                 update.timeStamp.secondsPastEpoch * 1_000_000_000
             ) + update.timeStamp.nanoseconds
-        elif isinstance(update, ReadNotifyResponse):
+        else:
             alarm = ca_alarm_status_to_f142[update.metadata.status]
             severity = epics_alarm_severity_to_f142[update.metadata.severity]
             timestamp = seconds_to_nanoseconds(update.metadata.timestamp)

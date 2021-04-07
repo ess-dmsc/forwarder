@@ -1,7 +1,7 @@
 from streaming_data_types.timestamps_tdct import serialise_tdct
 import p4p
 from typing import Union, Tuple
-from caproto import ReadNotifyResponse
+from caproto import Message as CA_Message
 import numpy as np
 from forwarder.epics_to_serialisable_types import (
     numpy_type_from_p4p_type,
@@ -20,7 +20,7 @@ def _extract_pva_data(update: p4p.Value):
     return np.squeeze(np.array(update.value)).astype(data_type)
 
 
-def _extract_ca_data(update: ReadNotifyResponse):
+def _extract_ca_data(update: CA_Message):
     data_type = numpy_type_from_caproto_type[update.data_type]
     return np.squeeze(np.array(update.data)).astype(data_type)
 
@@ -31,14 +31,14 @@ class tdct_Serialiser:
         self._msg_counter = -1
 
     def serialise(
-        self, update: Union[p4p.Value, ReadNotifyResponse], **unused
+        self, update: Union[p4p.Value, CA_Message], **unused
     ) -> Tuple[bytes, int]:
         if isinstance(update, p4p.Value):
             origin_time = (
                 update.timeStamp.secondsPastEpoch * 1_000_000_000
             ) + update.timeStamp.nanoseconds
             value_arr = _extract_pva_data(update)
-        elif isinstance(update, ReadNotifyResponse):
+        else:
             origin_time = seconds_to_nanoseconds(update.metadata.timestamp)
             value_arr = _extract_ca_data(update)
         timestamps = value_arr + origin_time

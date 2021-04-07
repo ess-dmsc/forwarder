@@ -1,7 +1,7 @@
 from streaming_data_types.sample_environment_senv import serialise_senv
 from typing import Union, Tuple
 import p4p
-from caproto import ReadNotifyResponse
+from caproto import Message as CA_Message
 from datetime import datetime
 import numpy as np
 
@@ -12,9 +12,9 @@ class nttable_senv_Serialiser:
         self._msg_counter = -1
 
     def serialise(
-        self, update: Union[p4p.Value, ReadNotifyResponse], **unused
+        self, update: Union[p4p.Value, CA_Message], **unused
     ) -> Tuple[bytes, int]:
-        if isinstance(update, ReadNotifyResponse):
+        if isinstance(update, CA_Message):
             raise RuntimeError(
                 "nttable_senv_Serialiser is unable to process channel access data."
             )
