@@ -184,7 +184,9 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
 
 
 def forwarding_long(consumer: Consumer, producer: ProducerWrapper):
-    pvs = [PVLONG, ]
+    pvs = [
+        PVLONG,
+    ]
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
@@ -195,7 +197,9 @@ def forwarding_long(consumer: Consumer, producer: ProducerWrapper):
         PVLONG: initial_long_value,
     }
     first_msg, _ = poll_for_valid_message(consumer)
-    messages = [first_msg, ]
+    messages = [
+        first_msg,
+    ]
     check_multiple_expected_values(messages, expected_values)
     producer.remove_config(pvs)
 
