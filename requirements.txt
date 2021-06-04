@@ -1,4 +1,4 @@
-caproto == 0.7.1
+caproto == 0.8.1
 p4p == 3.5.2
 confluent_kafka == 1.6.0
 flatbuffers == 1.12
