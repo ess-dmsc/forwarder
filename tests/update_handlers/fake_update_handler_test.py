@@ -21,7 +21,7 @@ def test_update_handler_publishes_f142_update():
     fake_update_handler._timer_callback()
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_f142(producer.published_payload[0])
+    pv_update_output = deserialise_f142(producer.published_payload)
     assert pv_update_output.source_name == pv_source_name
 
     fake_update_handler.stop()
@@ -35,7 +35,7 @@ def test_update_handler_publishes_tdct_update():
     fake_update_handler._timer_callback()
 
     assert producer.published_payload is not None
-    pv_update_output = deserialise_tdct(producer.published_payload[0])
+    pv_update_output = deserialise_tdct(producer.published_payload)
     assert pv_update_output.name == pv_source_name
 
     fake_update_handler.stop()
