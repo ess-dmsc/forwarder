@@ -1,4 +1,3 @@
-import time
 from random import randint
 
 import numpy as np
@@ -50,8 +49,7 @@ class FakeUpdateHandler:
         else:
             # Otherwise 0D (scalar) is fine
             update = NTScalar("i").wrap(randint(0, 100))
-
-        self._publish_message(self._message_publisher.serialise(update), time.time_ns())
+        self._publish_message(*self._message_publisher.serialise(update))
 
     def _publish_message(self, message: bytes, timestamp_ns: int):
         self._producer.produce(
