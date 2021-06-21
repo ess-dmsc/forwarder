@@ -7,18 +7,17 @@ from p4p.client.thread import Cancelled
 from p4p.client.thread import Context as PVAContext
 from p4p.client.thread import Disconnected, RemoteError
 
-from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
-    _nanoseconds_to_milliseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
 
 
-class PVAUpdateHandler:
+class PVAUpdateHandler(BaseUpdateHandler):
     """
     Monitors via EPICS v4 Process Variable Access (PVA),
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -34,10 +33,7 @@ class PVAUpdateHandler:
         schema: str,
         periodic_update_ms: Optional[int] = None,
     ):
-        self._logger = get_logger()
-        self._producer = producer
-        self._output_topic = output_topic
-        self._pv_name = pv_name
+        super().__init__(producer, pv_name, output_topic)
         self._cached_update: Optional[Value] = None
         self._repeating_timer = None
         self._cache_lock = Lock()
@@ -117,14 +113,6 @@ class PVAUpdateHandler:
                         self._cached_update, serialise_alarm=True
                     )
                 )
-
-    def _publish_message(self, message: bytes, timestamp_ns: int):
-        self._producer.produce(
-            self._output_topic,
-            message,
-            _nanoseconds_to_milliseconds(timestamp_ns),
-            key=self._pv_name,
-        )
 
     def stop(self):
         """

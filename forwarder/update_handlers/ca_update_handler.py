@@ -6,19 +6,17 @@ from caproto import ReadNotifyResponse
 from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
-from forwarder.application_logger import get_logger
-
 from forwarder.kafka.kafka_helpers import (
     publish_connection_status_message,
     seconds_to_nanoseconds,
-    _nanoseconds_to_milliseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
 
 
-class CAUpdateHandler:
+class CAUpdateHandler(BaseUpdateHandler):
     """
     Monitors via EPICS v3 Channel Access (CA),
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -34,9 +32,7 @@ class CAUpdateHandler:
         schema: str,
         periodic_update_ms: Optional[int] = None,
     ):
-        self._logger = get_logger()
-        self._producer = producer
-        self._output_topic = output_topic
+        super().__init__(producer, pv_name, output_topic)
         self._cached_update: Optional[ReadNotifyResponse] = None
         self._repeating_timer = None
         self._cache_lock = Lock()
@@ -106,14 +102,6 @@ class CAUpdateHandler:
                         self._cached_update, serialise_alarm=True
                     )
                 )
-
-    def _publish_message(self, message: bytes, timestamp_ns: int):
-        self._producer.produce(
-            self._output_topic,
-            message,
-            _nanoseconds_to_milliseconds(timestamp_ns),
-            key=self._pv.name,
-        )
 
     def stop(self):
         """
