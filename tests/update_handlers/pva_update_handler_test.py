@@ -147,7 +147,9 @@ def test_update_handler_publishes_alarm_update():
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-                "timeStamp": {"secondsPastEpoch": pv_timestamp_s, }
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
             }
         )
     )
@@ -212,7 +214,9 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-                "timeStamp": {"secondsPastEpoch": pv_timestamp_s, }
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
             }
         )
     )
@@ -226,7 +230,9 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-                "timeStamp": {"secondsPastEpoch": pv_timestamp_s, }
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
             }
         )
     )
