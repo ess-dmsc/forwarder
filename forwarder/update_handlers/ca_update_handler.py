@@ -37,12 +37,11 @@ class CAUpdateHandler(BaseUpdateHandler):
         self._repeating_timer = None
         self._cache_lock = Lock()
 
-        try:
-            self._message_serialiser = schema_serialisers[schema](pv_name)
-        except KeyError:
+        if schema not in schema_serialisers:
             raise ValueError(
                 f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
             )
+        self._message_serialiser = schema_serialisers[schema](pv_name)
 
         (self._pv,) = context.get_pvs(
             pv_name, connection_state_callback=self._connection_state_callback
