@@ -5,12 +5,12 @@ import numpy as np
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
-from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
 
 from p4p.nt import NTScalar
 
 
-class FakeUpdateHandler:
+class FakeUpdateHandler(BaseUpdateHandler):
     """
     Periodically generate a random integer as a PV value instead of monitoring a real EPICS PV
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -24,9 +24,7 @@ class FakeUpdateHandler:
         schema: str,
         fake_pv_period_ms: int,
     ):
-        self._producer = producer
-        self._output_topic = output_topic
-        self._pv_name = pv_name
+        super().__init__(producer, pv_name, output_topic)
         self._schema = schema
 
         try:
@@ -50,11 +48,6 @@ class FakeUpdateHandler:
             # Otherwise 0D (scalar) is fine
             update = NTScalar("i").wrap(randint(0, 100))
         self._publish_message(*self._message_publisher.serialise(update))
-
-    def _publish_message(self, message: bytes, timestamp_ns: int):
-        self._producer.produce(
-            self._output_topic, message, _nanoseconds_to_milliseconds(timestamp_ns)
-        )
 
     def stop(self):
         """

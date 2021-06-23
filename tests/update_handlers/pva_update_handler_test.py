@@ -1,5 +1,5 @@
 from cmath import isclose
-from time import sleep
+from time import sleep, time
 from typing import List
 
 import numpy as np
@@ -34,7 +34,7 @@ def test_update_handler_publishes_enum_update():
 
     pv_index = 0
     pv_value_str = "choice0"
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
@@ -58,7 +58,7 @@ def test_update_handler_publishes_float_update(pv_value, pv_type):
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
@@ -82,7 +82,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_type):
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
@@ -109,7 +109,7 @@ def test_update_handler_publishes_floatarray_update(pv_value, pv_type):
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
     pva_update_handler = PVAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
@@ -131,7 +131,7 @@ def test_update_handler_publishes_alarm_update():
 
     pv_value = 42
     pv_type = "i"
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
     alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
     alarm_severity = 1  # AlarmSeverity.MINOR
@@ -147,8 +147,10 @@ def test_update_handler_publishes_alarm_update():
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-            },
-            timestamp=pv_timestamp_s,
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
         )
     )
 
@@ -166,7 +168,7 @@ def test_update_handler_publishes_periodic_update():
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
     pv_value = -3
     pv_type = "i"
@@ -194,7 +196,7 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
     pv_value = -3
     pv_type = "i"
@@ -212,8 +214,10 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-            },
-            timestamp=pv_timestamp_s,
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
         )
     )
     # Second update, with unchanged alarm
@@ -226,8 +230,10 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
                     "severity": alarm_severity,
                     "message": alarm_message,
                 },
-            },
-            timestamp=pv_timestamp_s,
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
         )
     )
 
@@ -243,7 +249,7 @@ def test_empty_update_is_not_forwarded():
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
     pv_value = [1, 2, 3]
     pv_type = "ai"
@@ -278,7 +284,7 @@ def test_empty_update_is_not_cached():
     producer = FakeProducer()
     context = FakeContext()
 
-    pv_timestamp_s = 1.1  # seconds from unix epoch
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
     pv_value: List = []
     pv_type = "ai"
