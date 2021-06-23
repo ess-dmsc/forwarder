@@ -17,7 +17,7 @@ class BaseUpdateHandler:
             year=1900, month=1, day=1, hour=0, minute=0, second=0, tzinfo=timezone.utc
         )
 
-    def _publish_message(self, message: bytes, timestamp_ns: int):
+    def _publish_message(self, message: bytes, timestamp_ns: int) -> None:
         message_datetime = datetime.fromtimestamp(timestamp_ns / 1e9, tz=timezone.utc)
         if message_datetime < self._last_timestamp:
             self._logger.error(
