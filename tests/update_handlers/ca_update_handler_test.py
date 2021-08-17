@@ -1,7 +1,7 @@
+import time
 from cmath import isclose
 from time import sleep
 from typing import List
-import time
 
 import numpy as np
 import pytest

@@ -13,8 +13,8 @@ from forwarder.kafka.kafka_helpers import (
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
 from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
+from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 
 class PVAUpdateHandler(BaseUpdateHandler):

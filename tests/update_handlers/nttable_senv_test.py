@@ -1,9 +1,11 @@
-from p4p.nt import NTTable
-from p4p import Value
-from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_Serialiser
-from streaming_data_types.sample_environment_senv import deserialise_senv
-import numpy as np
 from datetime import datetime, timezone
+
+import numpy as np
+from p4p import Value
+from p4p.nt import NTTable
+from streaming_data_types.sample_environment_senv import deserialise_senv
+
+from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_Serialiser
 
 
 def test_serialise_nttable():

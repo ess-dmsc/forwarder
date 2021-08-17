@@ -7,7 +7,6 @@ from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import 
     EventType as ConnectionStatusEventType,
 )
 
-
 from forwarder.utils import Counter
 
 from .kafka_producer import KafkaProducer

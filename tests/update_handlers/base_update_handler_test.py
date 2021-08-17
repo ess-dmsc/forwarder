@@ -1,6 +1,7 @@
-from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
 from datetime import datetime, timedelta
 from unittest import mock
+
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
 
 
 def test_accepted_timestamp():

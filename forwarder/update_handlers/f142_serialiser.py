@@ -1,8 +1,11 @@
-from streaming_data_types.logdata_f142 import serialise_f142
+from typing import Tuple, Union
+
 import numpy as np
-from typing import Union, Tuple
 import p4p
 from caproto import ReadNotifyResponse
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.logdata_f142 import serialise_f142
+
 from forwarder.epics_to_serialisable_types import (
     ca_alarm_status_to_f142,
     epics_alarm_severity_to_f142,
@@ -11,7 +14,6 @@ from forwarder.epics_to_serialisable_types import (
     pva_alarm_message_to_f142_alarm_status,
 )
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 
 
 def _get_alarm_status(response):

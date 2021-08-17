@@ -1,7 +1,9 @@
-from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
 from datetime import datetime, timedelta, timezone
+from typing import Union
+
 from forwarder.application_logger import get_logger
+from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
+from forwarder.kafka.kafka_producer import KafkaProducer
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
@@ -17,7 +19,7 @@ class BaseUpdateHandler:
             year=1900, month=1, day=1, hour=0, minute=0, second=0, tzinfo=timezone.utc
         )
 
-    def _publish_message(self, message: bytes, timestamp_ns: int) -> None:
+    def _publish_message(self, message: bytes, timestamp_ns: Union[int, float]) -> None:
         message_datetime = datetime.fromtimestamp(timestamp_ns / 1e9, tz=timezone.utc)
         if message_datetime < self._last_timestamp:
             self._logger.error(
@@ -39,6 +41,6 @@ class BaseUpdateHandler:
         self._producer.produce(
             self._output_topic,
             message,
-            _nanoseconds_to_milliseconds(timestamp_ns),
+            _nanoseconds_to_milliseconds(int(timestamp_ns)),
             key=self._pv_name,
         )

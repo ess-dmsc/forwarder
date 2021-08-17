@@ -1,11 +1,13 @@
-from streaming_data_types.timestamps_tdct import serialise_tdct
-import p4p
-from typing import Union, Tuple
-from caproto import Message as CA_Message
+from typing import Tuple, Union
+
 import numpy as np
+import p4p
+from caproto import Message as CA_Message
+from streaming_data_types.timestamps_tdct import serialise_tdct
+
 from forwarder.epics_to_serialisable_types import (
-    numpy_type_from_p4p_type,
     numpy_type_from_caproto_type,
+    numpy_type_from_p4p_type,
 )
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
 

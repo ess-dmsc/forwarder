@@ -1,9 +1,10 @@
-from streaming_data_types.sample_environment_senv import serialise_senv
-from typing import Union, Tuple
+from datetime import datetime
+from typing import Tuple, Union
+
+import numpy as np
 import p4p
 from caproto import Message as CA_Message
-from datetime import datetime
-import numpy as np
+from streaming_data_types.sample_environment_senv import serialise_senv
 
 
 class nttable_senv_Serialiser:

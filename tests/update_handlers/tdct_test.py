@@ -1,7 +1,8 @@
 import numpy as np
-from forwarder.update_handlers.tdct_serialiser import tdct_Serialiser
-from streaming_data_types.timestamps_tdct import deserialise_tdct
 from p4p.nt import NTScalar
+from streaming_data_types.timestamps_tdct import deserialise_tdct
+
+from forwarder.update_handlers.tdct_serialiser import tdct_Serialiser
 
 
 def test_tdct_serialiser_handles_negative_relative_timestamps():
