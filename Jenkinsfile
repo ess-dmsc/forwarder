@@ -2,8 +2,6 @@
 import ecdcpipeline.ContainerBuildNode
 import ecdcpipeline.PipelineBuilder
 
-project = "forwarder"
-
 container_build_nodes = [
   'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
 ]
@@ -37,18 +35,15 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Dependencies") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
-      /opt/miniconda/bin/conda init bash
-      export PATH=/opt/miniconda/bin:$PATH
       python --version
-      python -m pip install --user -r ${project}/requirements-dev.txt
+      python -m pip install --user -r ${pipeline_builder.project}/requirements-dev.txt
     """
   } // stage
 
   pipeline_builder.stage("${container.key}: Formatting (black) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      cd ${project}
+      cd ${pipeline_builder.project}
       python -m black --check .
     """
   } // stage
@@ -56,8 +51,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      cd ${project}
+      cd ${pipeline_builder.project}
       python -m flake8
     """
   } // stage
@@ -65,8 +59,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      cd ${project}
+      cd ${pipeline_builder.project}
       python -m mypy .
     """
   } // stage
@@ -74,14 +67,13 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
       python --version
-      cd ${project}
+      cd ${pipeline_builder.project}
       python -m pytest --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
-    container.copyFrom("${project}/${test_output}", ".")
+    container.copyFrom("${pipeline_builder.project}/${test_output}", ".")
     xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
-    container.copyFrom("${project}/coverage.xml", ".")
+    container.copyFrom("${pipeline_builder.project}/coverage.xml", ".")
     withCredentials([string(credentialsId: 'forwarder-codecov-token', variable: 'TOKEN')]) {
     sh "curl -s https://codecov.io/bash | bash -s - -t ${TOKEN} -C ${scm_vars.GIT_COMMIT} -f coverage.xml"
     }
@@ -89,7 +81,7 @@ builders = pipeline_builder.createBuilders { container ->
 }  // createBuilders
 
 node {
-  dir("${project}") {
+  dir("${pipeline_builder.project}") {
     scm_vars = checkout scm
   }
 
@@ -111,14 +103,13 @@ def get_system_tests_pipeline() {
   return {
     node('system-test') {
       cleanWs()
-      dir("${project}") {
+      dir("${pipeline_builder.project}") {
         try {
           stage("System tests: Checkout") {
             checkout scm
           }  // stage
           stage("System tests: Install requirements") {
             sh """
-            export PATH=/opt/miniconda/bin:$PATH
             python --version
             python -m venv test_env
             source test_env/bin/activate
