@@ -4,3 +4,4 @@ __pycache__
 system_tests/logs/*.log
 .mypy_cache
 .pytest_cache
+.tox
