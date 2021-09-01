@@ -4,6 +4,7 @@
 pre-commit
 pytest
 pytest-cov
+tox
 wheel
 # Pin to match versions in precommit hooks
 black==21.5b2
