@@ -77,7 +77,7 @@ builders = pipeline_builder.createBuilders { container ->
       export PATH=/opt/miniconda/bin:$PATH
       python --version
       cd ${project}
-      python -m pytest --cov=forwarder --cov-report=xml --junitxml=${test_output}
+      python -m tox --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
     container.copyFrom("${project}/${test_output}", ".")
     xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
