@@ -110,14 +110,14 @@ def get_system_tests_pipeline() {
           }  // stage
           stage("System tests: Install requirements") {
             sh """
-            python --version
-            python -m venv test_env
+            python3 --version
+            python3 -m venv test_env
             source test_env/bin/activate
-            which python
+            which python3
             pwd
-            pip install --upgrade pip
-            pip install -r requirements-dev.txt
-            pip install -r system_tests/requirements.txt
+            pip3 install --upgrade pip
+            pip3 install -r requirements-dev.txt
+            pip3 install -r system_tests/requirements.txt
             """
           }  // stage
           stage("System tests: Run") {
@@ -128,7 +128,7 @@ def get_system_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd system_tests/
-              python -m pytest -s --junitxml=./SystemTestsOutput.xml .
+              python3 -m pytest -s --junitxml=./SystemTestsOutput.xml .
               """
             }
           }  // stage
