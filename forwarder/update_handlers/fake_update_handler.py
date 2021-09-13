@@ -1,14 +1,15 @@
-import time
 from random import randint
 
 import numpy as np
+from p4p.nt import NTScalar
 
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_publishers import schema_publishers
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
+from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 
-class FakeUpdateHandler:
+class FakeUpdateHandler(BaseUpdateHandler):
     """
     Periodically generate a random integer as a PV value instead of monitoring a real EPICS PV
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -22,16 +23,14 @@ class FakeUpdateHandler:
         schema: str,
         fake_pv_period_ms: int,
     ):
-        self._producer = producer
-        self._output_topic = output_topic
-        self._pv_name = pv_name
+        super().__init__(producer, pv_name, output_topic)
         self._schema = schema
 
         try:
-            self._message_publisher = schema_publishers[schema]
+            self._message_publisher = schema_serialisers[schema](self._pv_name)
         except KeyError:
             raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_publishers.keys())}"
+                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
             )
 
         self._repeating_timer = RepeatTimer(
@@ -43,12 +42,11 @@ class FakeUpdateHandler:
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
             data = np.array([randint(0, 100)]).astype(np.int32)
+            update = NTScalar("ai").wrap(data)
         else:
             # Otherwise 0D (scalar) is fine
-            data = np.array(randint(0, 100)).astype(np.int32)
-        self._message_publisher(
-            self._producer, self._output_topic, data, self._pv_name, time.time_ns()
-        )
+            update = NTScalar("i").wrap(randint(0, 100))
+        self._publish_message(*self._message_publisher.serialise(update))
 
     def stop(self):
         """

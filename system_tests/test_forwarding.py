@@ -27,15 +27,12 @@ from .helpers.producerwrapper import ProducerWrapper
 from .helpers.PVs import (
     PVDOUBLE,
     PVDOUBLE_WITH_ALARM_THRESHOLDS,
-    PVENUM,
     PVFLOATARRAY,
     PVLONG,
     PVSTR,
 )
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
-INITIAL_STRING_VALUE = "test"
-INITIAL_ENUM_VALUE = "INIT"
 INITIAL_LONG_VALUE = 0
 INITIAL_DOUBLE_VALUE = 0.0
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3, 4.4, 5.5)
@@ -51,9 +48,7 @@ def setup_and_teardown_function(request):
         PVDOUBLE: INITIAL_DOUBLE_VALUE,
         # We have to use this as the second parameter for caput gets parsed as empty so does not change the value of
         # the PV
-        PVSTR: INITIAL_STRING_VALUE,
         PVLONG: INITIAL_LONG_VALUE,
-        PVENUM: np.array([INITIAL_ENUM_VALUE]).astype(np.string_),
         PVDOUBLE_WITH_ALARM_THRESHOLDS: INITIAL_DOUBLE_VALUE,
         PVFLOATARRAY: INITIAL_FLOATARRAY_VALUE,
     }
@@ -108,11 +103,10 @@ def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwardin
     cons = create_consumer()
     cons.subscribe([data_topic])
 
-    forwarding_enum(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_floatarray(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_string_and_long(cons, prod)
+    forwarding_long(cons, prod)
     consumer_seek_to_end_of_topic(cons, data_topic)
     forwarding_double_with_alarm(cons, prod)
 
@@ -173,22 +167,6 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
     )
 
 
-def forwarding_enum(consumer: Consumer, producer: ProducerWrapper):
-    pvs = [PVENUM]
-    producer.add_config(pvs)
-    # Wait for config change to be picked up
-    sleep(5)
-    new_enum_value = "START"
-    change_pv_value(PVENUM, np.array([new_enum_value]).astype(np.string_))
-    # Wait for forwarder to forward PV update into Kafka
-    sleep(5)
-    first_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(first_msg, PVENUM, INITIAL_ENUM_VALUE)
-    second_msg, _ = poll_for_valid_message(consumer)
-    check_expected_value(second_msg, PVENUM, new_enum_value)
-    producer.remove_config(pvs)
-
-
 def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     pvs = [PVFLOATARRAY]
     producer.add_config(pvs)
@@ -205,22 +183,23 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-def forwarding_string_and_long(consumer: Consumer, producer: ProducerWrapper):
-    pvs = [PVSTR, PVLONG]
+def forwarding_long(consumer: Consumer, producer: ProducerWrapper):
+    pvs = [
+        PVLONG,
+    ]
     producer.add_config(pvs)
     # Wait for config to be pushed
     sleep(5)
-    initial_string_value = INITIAL_STRING_VALUE
     initial_long_value = INITIAL_LONG_VALUE
     # Wait for forwarder to forward PV update into Kafka
     sleep(5)
     expected_values = {
-        PVSTR: initial_string_value,
         PVLONG: initial_long_value,
     }
     first_msg, _ = poll_for_valid_message(consumer)
-    second_msg, _ = poll_for_valid_message(consumer)
-    messages = [first_msg, second_msg]
+    messages = [
+        first_msg,
+    ]
     check_multiple_expected_values(messages, expected_values)
     producer.remove_config(pvs)
 

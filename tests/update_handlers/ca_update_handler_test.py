@@ -1,10 +1,11 @@
+import time
 from cmath import isclose
 from time import sleep
 from typing import List
 
 import numpy as np
 import pytest
-from caproto import ChannelType, ReadNotifyResponse, TimeStamp
+from caproto import ChannelType, ReadNotifyResponse, TimeStamp, timestamp_to_epics
 from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType as ConnectionEventType,
@@ -17,6 +18,10 @@ from streaming_data_types.timestamps_tdct import deserialise_tdct
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.ca_fakes import FakeContext
+
+
+def epics_timestamp():
+    return timestamp_to_epics(time.time())
 
 
 def test_update_handler_throws_if_schema_not_recognised():
@@ -42,8 +47,7 @@ def test_update_handler_publishes_float_update(
 
     pv_source_name = "source_name"
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
-
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -74,7 +78,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_caproto_type, pv_numpy
     pv_source_name = "source_name"
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -118,7 +122,7 @@ def test_update_handler_publishes_floatarray_update(
     pv_source_name = "source_name"
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -151,7 +155,7 @@ def test_update_handler_publishes_alarm_update():
 
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
 
-    metadata = (alarm_status, alarm_severity, TimeStamp(4, 0))
+    metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -184,7 +188,7 @@ def test_update_handler_publishes_periodic_update():
 
     update_period_ms = 10
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142", update_period_ms)  # type: ignore
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -221,7 +225,7 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     alarm_severity = 1  # AlarmSeverity.MINOR
 
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
-    metadata = (alarm_status, alarm_severity, TimeStamp(4, 0))
+    metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
@@ -262,7 +266,7 @@ def test_update_handler_publishes_enum_update():
 
     # Nothing gets published when ENUM type update is received, the handler will resubscribe using STRING
     # type as the string is more useful to forwarder to the filewriter than the enum int
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([0]),
@@ -273,25 +277,11 @@ def test_update_handler_publishes_enum_update():
             metadata=metadata,
         )
     )
-    # Second update, with STRING type
-    enum_string_value = "ENUM_STRING"
-    context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(
-            [enum_string_value.encode("utf8")],
-            ChannelType.TIME_STRING,
-            1,
-            1,
-            1,
-            metadata=metadata,
-        )
-    )
 
-    assert (
-        producer.messages_published == 1
-    ), "Only expected a single message with string payload, not the original enum update"
+    assert producer.messages_published == 1
     assert producer.published_payload is not None
     pv_update_output = deserialise_f142(producer.published_payload)
-    assert pv_update_output.value == enum_string_value
+    assert pv_update_output.value == 0
     assert pv_update_output.source_name == pv_source_name
 
     update_handler.stop()
@@ -307,7 +297,7 @@ def test_empty_update_is_not_forwarded():
     pv_source_name = "chopper"
 
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
     # First update, with non-empty timestamp array
     context.call_monitor_callback_with_fake_pv_update(
@@ -359,7 +349,7 @@ def test_empty_update_is_not_cached():
     # Set an update period to enable PV update caching, so that we can test
     auto_update_period = 5000
     update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct", auto_update_period)  # type: ignore
-    metadata = (0, 0, TimeStamp(4, 0))
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
     # Update with empty timestamp array
     context.call_monitor_callback_with_fake_pv_update(

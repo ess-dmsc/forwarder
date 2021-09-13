@@ -24,20 +24,17 @@ class ConfigurationStore:
     def save_configuration(self, update_handlers: Dict):
         streams = []
         for channel, update_handler in update_handlers.items():
-            if channel.protocol == EpicsProtocol.CA:
-                stream = StreamInfo(
-                    channel.name,
-                    channel.schema,
-                    channel.output_topic,
-                    Protocol.Protocol.CA,
-                )
-            else:
-                stream = StreamInfo(
-                    channel.name,
-                    channel.schema,
-                    channel.output_topic,
-                    Protocol.Protocol.PVA,
-                )
+            protocol_map = {
+                EpicsProtocol.CA: Protocol.Protocol.CA,
+                EpicsProtocol.FAKE: Protocol.Protocol.FAKE,
+                EpicsProtocol.PVA: Protocol.Protocol.PVA,
+            }
+            stream = StreamInfo(
+                channel.name,
+                channel.schema,
+                channel.output_topic,
+                protocol_map[channel.protocol],
+            )
 
             streams.append(stream)
         if streams:

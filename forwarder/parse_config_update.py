@@ -16,7 +16,7 @@ from streaming_data_types.forwarder_config_update_rf5k import (
 )
 
 from forwarder.application_logger import get_logger
-from forwarder.update_handlers.schema_publishers import schema_publishers
+from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 logger = get_logger()
 
@@ -119,7 +119,7 @@ def _parse_streams(
             )
             continue
 
-        if stream.schema and stream.schema not in schema_publishers.keys():
+        if stream.schema and stream.schema not in schema_serialisers.keys():
             logger.warning(
                 f'Unsupported schema type "{stream.schema}" specified for'
                 f"stream in configuration update message."
