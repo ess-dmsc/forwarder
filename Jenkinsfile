@@ -38,7 +38,7 @@ builders = pipeline_builder.createBuilders { container ->
       /opt/miniconda/bin/conda init bash
       export PATH=/opt/miniconda/bin:$PATH
       python --version
-      python -m pip install --user -r ${project}/requirements-dev.txt
+      python -m pip install --user -r ${pipeline_builder.project}/requirements-dev.txt
     """
   } // stage
 
@@ -74,7 +74,7 @@ builders = pipeline_builder.createBuilders { container ->
     container.sh """
       export PATH=/opt/miniconda/bin:$PATH
       python --version
-      cd ${project}
+      cd ${pipeline_builder.project}
       python -m tox -- --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
     container.copyFrom("${pipeline_builder.project}/${test_output}", ".")
