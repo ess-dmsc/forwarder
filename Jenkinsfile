@@ -35,6 +35,8 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Dependencies") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
+      /opt/miniconda/bin/conda init bash
+      export PATH=/opt/miniconda/bin:$PATH
       python --version
       python -m pip install --user -r ${pipeline_builder.project}/requirements-dev.txt
     """
@@ -43,6 +45,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Formatting (black) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m black --check .
     """
@@ -51,6 +54,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m flake8
     """
@@ -59,6 +63,7 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
     def conan_remote = "ess-dmsc-local"
     container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m mypy .
     """
@@ -67,9 +72,10 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
+      export PATH=/opt/miniconda/bin:$PATH
       python --version
       cd ${pipeline_builder.project}
-      python -m pytest --cov=forwarder --cov-report=xml --junitxml=${test_output}
+      python -m tox -- --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
     container.copyFrom("${pipeline_builder.project}/${test_output}", ".")
     xunit thresholds: [failed(unstableThreshold: '0')], tools: [JUnit(deleteOutputFiles: true, pattern: '*.xml', skipNoTestFiles: false, stopProcessingIfError: true)]
