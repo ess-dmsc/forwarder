@@ -3,16 +3,28 @@ from typing import Dict
 from unittest import mock
 
 from confluent_kafka import TopicPartition
+from flatbuffers.packer import struct as flatbuffer_struct
+from streaming_data_types.exceptions import WrongSchemaException
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
 from streaming_data_types.forwarder_config_update_rf5k import (
     Protocol,
     StreamInfo,
+    deserialise_rf5k,
     serialise_rf5k,
 )
 
 from forwarder.parse_config_update import EpicsProtocol
+
+
+def is_a_valid_configuration(payload):
+    validated = True
+    try:
+        _ = deserialise_rf5k(payload)
+    except (RuntimeError, flatbuffer_struct.error, WrongSchemaException):
+        validated = False
+    return validated
 
 
 class ConfigurationStore:
