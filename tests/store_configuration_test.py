@@ -92,7 +92,7 @@ def test_retrieving_stored_info_with_no_pvs_gets_message_without_streams():
     )
 
     config = parse_config_update(store.retrieve_configuration())
-
+    assert mock_consumer.consume.call_count == 1
     assert config.channels is None
 
 
@@ -106,6 +106,7 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
     )
 
     config = parse_config_update(store.retrieve_configuration())
+    assert mock_consumer.consume.call_count == 1
     channels = config.channels
 
     assert_stored_channel_correct(channels[0])  # type: ignore
@@ -132,6 +133,9 @@ def test_retrieve_config_with_junk_as_last_message_and_valid_messages_before():
         producer=None, consumer=mock_consumer, topic="store_topic"
     )
     config = parse_config_update(store.retrieve_configuration())
+    # Test consume method is called only twice, since the second message
+    # is a valid configuration buffer
+    assert mock_consumer.consume.call_count == 2
     channels = config.channels
     assert_stored_channel_correct(channels[0])  # type: ignore
     assert_stored_channel_correct(channels[1])  # type: ignore
