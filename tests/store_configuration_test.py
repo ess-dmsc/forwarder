@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from confluent_kafka import Consumer
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
@@ -109,3 +110,42 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
 
     assert_stored_channel_correct(channels[0])  # type: ignore
     assert_stored_channel_correct(channels[1])  # type: ignore
+
+
+def test_retrieve_config_with_junk_as_last_message_and_valid_messages_before():
+    mock_consumer = mock.create_autospec(Consumer)
+    mock_consumer.get_watermark_offsets.return_value = (0, 2)
+
+    message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
+    messages_in_storage_topic = [
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE ::")],
+        [FakeKafkaMessage(message)],
+        [FakeKafkaMessage(message)],
+    ]
+    mock_consumer.consume.side_effect = messages_in_storage_topic
+
+    store = ConfigurationStore(
+        producer=None, consumer=mock_consumer, topic="store_topic"
+    )
+    config = parse_config_update(store.retrieve_configuration())
+    channels = config.channels
+    assert_stored_channel_correct(channels[0])  # type: ignore
+    assert_stored_channel_correct(channels[1])  # type: ignore
+
+
+def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
+    mock_consumer = mock.create_autospec(Consumer)
+    mock_consumer.get_watermark_offsets.return_value = (0, 2)
+
+    messages_in_storage_topic = [
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
+    ]
+    mock_consumer.consume.side_effect = messages_in_storage_topic
+
+    store = ConfigurationStore(
+        producer=None, consumer=mock_consumer, topic="store_topic"
+    )
+    with pytest.raises(RuntimeError):
+        store.retrieve_configuration()
