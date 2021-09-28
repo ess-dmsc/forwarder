@@ -49,8 +49,9 @@ class ConfigurationStore:
         # Retrieve last valid configuration buffer from partition 0
         topic = TopicPartition(self._topic, 0)
         low_offset, high_offset = self._consumer.get_watermark_offsets(topic)
+        high_offset -= 1
         # Set offset to high_offset - 1 to start retrieving from last message
-        topic.offset = high_offset - 1
+        topic.offset = high_offset
         self._consumer.assign([topic])
 
         stored_config_buffer = None
