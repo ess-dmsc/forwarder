@@ -46,30 +46,23 @@ class ConfigurationStore:
         self._producer.produce(self._topic, bytes(message), int(time.time() * 1000))
 
     def retrieve_configuration(self):
-        # Retrieve last valid configuration buffer from partition 0
-        topic = TopicPartition(self._topic, 0)
+        """Retrieve last valid configuration buffer."""
+        topic = TopicPartition(self._topic, partition=0)
         low_offset, high_offset = self._consumer.get_watermark_offsets(topic)
-        high_offset -= 1
-        # Set offset to high_offset - 1 to start retrieving from last message
-        topic.offset = high_offset
+        # Set offset to current_offset to start retrieving from last message
+        current_offset = high_offset - 1
+        topic.offset = current_offset
         self._consumer.assign([topic])
 
-        stored_config_buffer = None
-
-        while high_offset >= low_offset:
+        while current_offset >= low_offset:
             msg = self._consumer.consume(timeout=2)
-            if msg:
-                payload = msg[-1].value()
-                if self._is_a_valid_configuration_buffer(payload):
-                    stored_config_buffer = payload
-                    break
-            high_offset -= 1
-            self._consumer.seek(TopicPartition(self._topic, 0, high_offset))
+            if msg and self._is_a_valid_configuration_buffer(msg[-1].value()):
+                return msg[-1].value()
+            current_offset -= 1
+            topic.offset = current_offset
+            self._consumer.seek(topic)
 
-        if stored_config_buffer:
-            return stored_config_buffer
-        else:
-            raise RuntimeError("Could not retrieve stored configuration")
+        raise RuntimeError("Could not retrieve stored configuration")
 
     def stop(self):
         self._producer.close()
@@ -77,12 +70,11 @@ class ConfigurationStore:
 
     @staticmethod
     def _is_a_valid_configuration_buffer(payload):
-        validated = True
         try:
             _ = deserialise_rf5k(payload)
+            return True
         except Exception:
-            validated = False
-        return validated
+            return False
 
 
 NullConfigurationStore = mock.create_autospec(ConfigurationStore)
