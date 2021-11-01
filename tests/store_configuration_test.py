@@ -1,3 +1,4 @@
+from typing import List
 from unittest import mock
 
 import pytest
@@ -113,7 +114,7 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
 
 def test_retrieve_config_find_valid_message_amongst_junk():
     message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
-    messages_in_storage_topic = [
+    messages_in_storage_topic: List[List[FakeKafkaMessage]] = [
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
         [FakeKafkaMessage(message)],
@@ -133,15 +134,13 @@ def test_retrieve_config_find_valid_message_amongst_junk():
         producer=None, consumer=mock_consumer, topic="store_topic"
     )
     config = parse_config_update(store.retrieve_configuration())
-    # Test consume method is called only twice, since the second message
-    # is a valid configuration buffer
     channels = config.channels
     assert_stored_channel_correct(channels[0])  # type: ignore
     assert_stored_channel_correct(channels[1])  # type: ignore
 
 
 def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
-    messages_in_storage_topic = [
+    messages_in_storage_topic: List[List[FakeKafkaMessage]] = [
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
@@ -161,7 +160,7 @@ def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
 
 
 def test_retrieve_config_with_empty_storage_topic():
-    messages_in_storage_topic = []
+    messages_in_storage_topic: List[List[FakeKafkaMessage]] = []
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (
         0,
