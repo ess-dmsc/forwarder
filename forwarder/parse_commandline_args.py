@@ -109,6 +109,13 @@ def parse_args():
         type=str,
     )
     parser.add_argument(
+        "--statistics-update-interval",
+        required=False,
+        help="Update interval (in seconds) to send statistics to Grafana metrics server",
+        type=int,
+        default=10,
+    )
+    parser.add_argument(
         "--log-file", required=False, help="Log filename", type=str, env_var="LOG_FILE"
     )
     parser.add_argument(
