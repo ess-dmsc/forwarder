@@ -1,4 +1,3 @@
-from typing import List
 from unittest import mock
 
 import pytest
@@ -114,13 +113,13 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
 
 def test_retrieve_config_find_valid_message_amongst_junk():
     message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
-    messages_in_storage_topic: List[List[FakeKafkaMessage]] = [
+    messages_in_storage_topic = [
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
         [FakeKafkaMessage(message)],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 4 ::")],
-    ]
+    ]  # type: ignore
 
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (
@@ -140,11 +139,11 @@ def test_retrieve_config_find_valid_message_amongst_junk():
 
 
 def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
-    messages_in_storage_topic: List[List[FakeKafkaMessage]] = [
+    messages_in_storage_topic = [
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
-    ]
+    ]  # type: ignore
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (
         0,
@@ -160,7 +159,7 @@ def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
 
 
 def test_retrieve_config_with_empty_storage_topic():
-    messages_in_storage_topic: List[List[FakeKafkaMessage]] = []
+    messages_in_storage_topic = []  # type: ignore
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (
         0,
