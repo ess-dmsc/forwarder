@@ -91,6 +91,7 @@ if __name__ == "__main__":
             update_buffer_err_counter,
             logger,
             prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
+            update_interval_s=args.statistics_update_interval,
         )
         statistic_reporter.start()
 
