@@ -1,5 +1,6 @@
 from unittest import mock
 
+import pytest
 from confluent_kafka import Consumer
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
@@ -91,7 +92,6 @@ def test_retrieving_stored_info_with_no_pvs_gets_message_without_streams():
     )
 
     config = parse_config_update(store.retrieve_configuration())
-
     assert config.channels is None
 
 
@@ -109,3 +109,66 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
 
     assert_stored_channel_correct(channels[0])  # type: ignore
     assert_stored_channel_correct(channels[1])  # type: ignore
+
+
+def test_retrieve_config_find_valid_message_amongst_junk():
+    message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
+    messages_in_storage_topic = [
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
+        [FakeKafkaMessage(message)],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 4 ::")],
+    ]  # type: ignore
+
+    mock_consumer = mock.create_autospec(Consumer)
+    mock_consumer.get_watermark_offsets.return_value = (
+        0,
+        len(messages_in_storage_topic),
+    )
+
+    mock_consumer.consume.side_effect = messages_in_storage_topic
+
+    store = ConfigurationStore(
+        producer=None, consumer=mock_consumer, topic="store_topic"
+    )
+    config = parse_config_update(store.retrieve_configuration())
+    channels = config.channels
+    assert_stored_channel_correct(channels[0])  # type: ignore
+    assert_stored_channel_correct(channels[1])  # type: ignore
+
+
+def test_retrieve_config_with_only_junk_as_message_in_storage_topic():
+    messages_in_storage_topic = [
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
+        [FakeKafkaMessage(":: SOME JUNK MESSAGE 3 ::")],
+    ]  # type: ignore
+    mock_consumer = mock.create_autospec(Consumer)
+    mock_consumer.get_watermark_offsets.return_value = (
+        0,
+        len(messages_in_storage_topic),
+    )
+    mock_consumer.consume.side_effect = messages_in_storage_topic
+
+    store = ConfigurationStore(
+        producer=None, consumer=mock_consumer, topic="store_topic"
+    )
+    with pytest.raises(RuntimeError):
+        store.retrieve_configuration()
+
+
+def test_retrieve_config_with_empty_storage_topic():
+    messages_in_storage_topic = []  # type: ignore
+    mock_consumer = mock.create_autospec(Consumer)
+    mock_consumer.get_watermark_offsets.return_value = (
+        0,
+        len(messages_in_storage_topic),
+    )
+    mock_consumer.consume.side_effect = messages_in_storage_topic
+
+    store = ConfigurationStore(
+        producer=None, consumer=mock_consumer, topic="store_topic"
+    )
+    with pytest.raises(RuntimeError):
+        store.retrieve_configuration()

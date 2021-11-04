@@ -9,6 +9,7 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType impo
 from streaming_data_types.forwarder_config_update_rf5k import (
     Protocol,
     StreamInfo,
+    deserialise_rf5k,
     serialise_rf5k,
 )
 
@@ -45,22 +46,35 @@ class ConfigurationStore:
         self._producer.produce(self._topic, bytes(message), int(time.time() * 1000))
 
     def retrieve_configuration(self):
-        # Retrieve last message
-        topic = TopicPartition(self._topic, 0)
-        _, high_offset = self._consumer.get_watermark_offsets(topic)
-        topic.offset = high_offset - 1
+        """Retrieve last valid configuration buffer."""
+        topic = TopicPartition(self._topic, partition=0)
+        low_offset, high_offset = self._consumer.get_watermark_offsets(topic)
+        # Set offset to current_offset to start retrieving from last message
+        current_offset = high_offset - 1
+        topic.offset = current_offset
         self._consumer.assign([topic])
 
-        msg = self._consumer.consume(timeout=2)
+        while current_offset >= low_offset:
+            msg = self._consumer.consume(timeout=2)
+            if msg and self._is_a_valid_configuration_buffer(msg[-1].value()):
+                return msg[-1].value()
+            current_offset -= 1
+            topic.offset = current_offset
+            self._consumer.seek(topic)
 
-        if msg:
-            return msg[~0].value()
-        else:
-            raise RuntimeError("Could not retrieve stored configuration")
+        raise RuntimeError("Could not retrieve stored configuration")
 
     def stop(self):
         self._producer.close()
         self._consumer.close()
+
+    @staticmethod
+    def _is_a_valid_configuration_buffer(payload):
+        try:
+            _ = deserialise_rf5k(payload)
+            return True
+        except Exception:
+            return False
 
 
 NullConfigurationStore = mock.create_autospec(ConfigurationStore)
