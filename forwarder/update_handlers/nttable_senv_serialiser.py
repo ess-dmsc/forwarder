@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 
 import numpy as np
 import p4p
@@ -14,7 +14,7 @@ class nttable_senv_Serialiser:
 
     def serialise(
         self, update: Union[p4p.Value, CA_Message], **unused
-    ) -> Tuple[bytes, int]:
+    ) -> Tuple[Optional[bytes], int]:
         if isinstance(update, CA_Message):
             raise RuntimeError(
                 "nttable_senv_Serialiser is unable to process channel access data."
@@ -33,6 +33,8 @@ class nttable_senv_Serialiser:
         if np.issubdtype(values.dtype, np.floating):
             values = values.round().astype(np.int64)
         timestamps = tables[column_headers.index("timestamp")][1]
+        if len(timestamps) == 0:
+            return None, 0
         self._msg_counter += 1
         origin_timestamp = timestamps[0]
         message_timestamp = datetime.fromtimestamp(origin_timestamp / 1e9)
