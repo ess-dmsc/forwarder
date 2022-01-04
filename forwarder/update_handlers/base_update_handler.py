@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Union, Optional
+from typing import Optional, Union
 
 from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
@@ -19,7 +19,9 @@ class BaseUpdateHandler:
             year=1900, month=1, day=1, hour=0, minute=0, second=0, tzinfo=timezone.utc
         )
 
-    def _publish_message(self, message: Optional[bytes], timestamp_ns: Union[int, float]) -> None:
+    def _publish_message(
+        self, message: Optional[bytes], timestamp_ns: Union[int, float]
+    ) -> None:
         if message is None:
             self._logger.error(
                 f'Rejecting update from PV "{self._pv_name}" as the message was not serialised.'
