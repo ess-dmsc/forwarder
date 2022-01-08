@@ -36,6 +36,8 @@ def _extract_ca_data(update: ReadNotifyResponse):
     data = update.data
     if type(data) is not np.ndarray:
         data = np.array(data).astype(data_type)
+    else:
+        data = data.astype(np.dtype(data.dtype.str.strip("<>=")))
     return np.squeeze(data)
 
 
