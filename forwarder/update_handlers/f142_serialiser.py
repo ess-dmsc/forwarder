@@ -33,7 +33,10 @@ def _extract_pva_data(update: p4p.Value):
 
 def _extract_ca_data(update: ReadNotifyResponse):
     data_type = numpy_type_from_caproto_type[update.data_type]
-    return np.squeeze(np.array(update.data)).astype(data_type)
+    data = update.data
+    if type(data) is not np.ndarray:
+        data = np.array(data).astype(data_type)
+    return np.squeeze(data)
 
 
 class f142_Serialiser:

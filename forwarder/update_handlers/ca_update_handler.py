@@ -72,16 +72,17 @@ class CAUpdateHandler(BaseUpdateHandler):
                 self._cached_update is None
                 or response.metadata.status != self._cached_update.metadata.status
             ):
-                self._publish_message(
+                success = self._publish_message(
                     *self._message_serialiser.serialise(response, serialise_alarm=True)
                 )
             else:
-                self._publish_message(
+                success = self._publish_message(
                     *self._message_serialiser.serialise(response, serialise_alarm=False)
                 )
-            self._cached_update = response
-            if self._repeating_timer is not None:
-                self._repeating_timer.reset()
+            if success:
+                self._cached_update = response
+                if self._repeating_timer is not None:
+                    self._repeating_timer.reset()
 
     def _connection_state_callback(self, pv: PV, state: str):
         publish_connection_status_message(
