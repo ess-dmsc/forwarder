@@ -93,16 +93,17 @@ class PVAUpdateHandler(BaseUpdateHandler):
                 self._cached_update is None
                 or response.alarm.message != self._cached_update.alarm.message
             ):
-                self._publish_message(
+                success = self._publish_message(
                     *self._message_serialiser.serialise(response, serialise_alarm=True)
                 )
             else:
-                self._publish_message(
+                success = self._publish_message(
                     *self._message_serialiser.serialise(response, serialise_alarm=False)
                 )
-            self._cached_update = response
-            if self._repeating_timer is not None:
-                self._repeating_timer.reset()
+            if success:
+                self._cached_update = response
+                if self._repeating_timer is not None:
+                    self._repeating_timer.reset()
 
     def publish_cached_update(self):
         with self._cache_lock:
