@@ -35,8 +35,8 @@ def test_update_handler_throws_if_schema_not_recognised():
 @pytest.mark.parametrize(
     "pv_value,pv_caproto_type,pv_numpy_type",
     [
-        (4.2222, ChannelType.TIME_DOUBLE, np.float64),
-        (4.2, ChannelType.TIME_FLOAT, np.float32),
+        (4.2222, ChannelType.TIME_DOUBLE, np.dtype("float64")),
+        (4.2, ChannelType.TIME_FLOAT, np.dtype("float32")),
     ],
 )
 def test_update_handler_publishes_float_update(
