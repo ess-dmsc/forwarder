@@ -60,7 +60,9 @@ class CAUpdateHandler(BaseUpdateHandler):
         try:
             self.__response_handler(sub, response)
         except (RuntimeError, ValueError) as e:
-            self._logger.error(f"Got error when handling CA update. Message was: {str(e)}")
+            self._logger.error(
+                f"Got error when handling CA update. Message was: {str(e)}"
+            )
 
     def __response_handler(self, sub, response: ReadNotifyResponse):
         # Skip PV updates with empty values
@@ -110,7 +112,9 @@ class CAUpdateHandler(BaseUpdateHandler):
                         )
                     )
         except (RuntimeError, ValueError) as e:
-            self._logger.error(f"Got error when publishing cached CA update. Message was: {str(e)}")
+            self._logger.error(
+                f"Got error when publishing cached CA update. Message was: {str(e)}"
+            )
 
     def stop(self):
         """

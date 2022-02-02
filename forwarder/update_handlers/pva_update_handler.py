@@ -63,7 +63,9 @@ class PVAUpdateHandler(BaseUpdateHandler):
         try:
             self.__response_handler(response)
         except (RuntimeError, ValueError) as e:
-            self._logger.error(f"Got error when handling PVA update. Message was: {str(e)}")
+            self._logger.error(
+                f"Got error when handling PVA update. Message was: {str(e)}"
+            )
 
     def __response_handler(self, response: Union[Value, Exception]):
         if isinstance(response, Exception):
@@ -122,7 +124,9 @@ class PVAUpdateHandler(BaseUpdateHandler):
                         )
                     )
         except (RuntimeError, ValueError) as e:
-            self._logger.error(f"Got error when publishing cached PVA update. Message was: {str(e)}")
+            self._logger.error(
+                f"Got error when publishing cached PVA update. Message was: {str(e)}"
+            )
 
     def stop(self):
         """
