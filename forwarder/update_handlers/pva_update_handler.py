@@ -60,6 +60,14 @@ class PVAUpdateHandler(BaseUpdateHandler):
             self._repeating_timer.start()
 
     def _monitor_callback(self, response: Union[Value, Exception]):
+        try:
+            self.__response_handler(response)
+        except (RuntimeError, ValueError) as e:
+            self._logger.error(
+                f"Got error when handling PVA update. Message was: {str(e)}"
+            )
+
+    def __response_handler(self, response: Union[Value, Exception]):
         if isinstance(response, Exception):
             # "Cancelled" occurs when we unsubscribe, we don't want to publish that as a
             # connection state change.
@@ -106,14 +114,19 @@ class PVAUpdateHandler(BaseUpdateHandler):
                     self._repeating_timer.reset()
 
     def publish_cached_update(self):
-        with self._cache_lock:
-            if self._cached_update is not None:
-                # Always include current alarm status in periodic update messages
-                self._publish_message(
-                    *self._message_serialiser.serialise(
-                        self._cached_update, serialise_alarm=True
+        try:
+            with self._cache_lock:
+                if self._cached_update is not None:
+                    # Always include current alarm status in periodic update messages
+                    self._publish_message(
+                        *self._message_serialiser.serialise(
+                            self._cached_update, serialise_alarm=True
+                        )
                     )
-                )
+        except (RuntimeError, ValueError) as e:
+            self._logger.error(
+                f"Got error when publishing cached PVA update. Message was: {str(e)}"
+            )
 
     def stop(self):
         """

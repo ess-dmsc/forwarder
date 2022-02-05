@@ -57,6 +57,14 @@ class CAUpdateHandler(BaseUpdateHandler):
             self._repeating_timer.start()
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
+        try:
+            self.__response_handler(sub, response)
+        except (RuntimeError, ValueError) as e:
+            self._logger.error(
+                f"Got error when handling CA update. Message was: {str(e)}"
+            )
+
+    def __response_handler(self, sub, response: ReadNotifyResponse):
         # Skip PV updates with empty values
         try:
             if response.data.size == 0:
@@ -94,14 +102,19 @@ class CAUpdateHandler(BaseUpdateHandler):
         )
 
     def publish_cached_update(self):
-        with self._cache_lock:
-            if self._cached_update is not None:
-                # Always include current alarm status in periodic update messages
-                self._publish_message(
-                    *self._message_serialiser.serialise(
-                        self._cached_update, serialise_alarm=True
+        try:
+            with self._cache_lock:
+                if self._cached_update is not None:
+                    # Always include current alarm status in periodic update messages
+                    self._publish_message(
+                        *self._message_serialiser.serialise(
+                            self._cached_update, serialise_alarm=True
+                        )
                     )
-                )
+        except (RuntimeError, ValueError) as e:
+            self._logger.error(
+                f"Got error when publishing cached CA update. Message was: {str(e)}"
+            )
 
     def stop(self):
         """

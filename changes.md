@@ -5,4 +5,5 @@
 * Fixed bug when serialising empty senv-messages.
 * Fixed bug where the wrong type was picked when casting numpy arrays in the f142 serialiser.
 * Known bad PV updates will no longer be cached for (attempted) re-transmission.
+* Some exceptions in the PVA/CA update handling code will now produce log messages.
 
