@@ -18,6 +18,7 @@ def test_serialise_start():
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
     assert fb_update.type == EventType.EventType.NEVER_CONNECTED
 
+
 def test_serialise_pva_value():
     test_data = np.array([-3, -2, -1]).astype(np.int32)
     reference_timestamp = 10
@@ -52,6 +53,7 @@ def test_serialise_pva_disconnected():
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
     assert fb_update.type == EventType.EventType.DISCONNECTED
 
+
 def test_serialise_pva_unknown():
     pv_name = "some_pv"
     serialiser = ep00_Serialiser(pv_name)
@@ -84,6 +86,7 @@ def test_serialise_ca_connected():
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
     assert fb_update.type == EventType.EventType.CONNECTED
+
 
 def test_serialise_ca_unknown():
     pv_name = "some_pv"
