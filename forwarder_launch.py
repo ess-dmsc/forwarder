@@ -1,5 +1,6 @@
 import os.path as osp
 import sys
+from socket import gethostname
 from typing import Dict
 
 from caproto.threading.client import Context as CaContext
@@ -45,8 +46,10 @@ if __name__ == "__main__":
         graylog_logger_address=args.graylog_logger_address,
     )
 
+    service_id = f"Forwarder.{gethostname()}.{args.service_id}"
+
     version = get_version()
-    logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
+    logger.info(f"Forwarder v{version} started, service Id: {service_id}")
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
@@ -76,7 +79,7 @@ if __name__ == "__main__":
         update_handlers,
         create_producer(status_broker),
         status_topic,
-        args.service_id,
+        service_id,
         version,
         logger,
     )
@@ -90,7 +93,7 @@ if __name__ == "__main__":
             update_message_counter,
             update_buffer_err_counter,
             logger,
-            prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
+            prefix=f"{service_id.replace(' ', '').lower()}.throughput",
             update_interval_s=args.statistics_update_interval,
         )
         statistic_reporter.start()
