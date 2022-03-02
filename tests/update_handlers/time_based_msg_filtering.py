@@ -10,6 +10,7 @@ def test_accepted_timestamp():
     handler = SerialiserTracker(serialiser=mock_serialiser, publisher=mock_publisher)
     handler.set_new_message(b"", datetime.now().timestamp() * 1e9)
     assert mock_publisher.publish_message.called
+    handler.stop()
 
 
 def test_ordered_timestamps():
@@ -21,6 +22,7 @@ def test_ordered_timestamps():
         b"", (datetime.now() + timedelta(seconds=1)).timestamp() * 1e9
     )
     assert mock_publisher.publish_message.call_count == 2
+    handler.stop()
 
 
 def test_too_old_timestamp():
@@ -31,6 +33,7 @@ def test_too_old_timestamp():
         b"", (datetime.now() - timedelta(days=400)).timestamp() * 1e9
     )
     assert not mock_publisher.publish_message.called
+    handler.stop()
 
 
 def test_too_futuristic_timestamp():
@@ -41,6 +44,7 @@ def test_too_futuristic_timestamp():
         b"", (datetime.now() + timedelta(minutes=60)).timestamp() * 1e9
     )
     assert not mock_publisher.publish_message.called
+    handler.stop()
 
 
 def test_out_of_order_timestamps():
@@ -52,3 +56,4 @@ def test_out_of_order_timestamps():
         b"", (datetime.now() - timedelta(seconds=1)).timestamp() * 1e9
     )
     assert mock_publisher.publish_message.call_count == 1
+    handler.stop()

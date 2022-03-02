@@ -52,7 +52,9 @@ class f142_Serialiser:
             timestamp,
         )
 
-    def pva_serialise(self, update: p4p.Value) -> Tuple[bytes, int]:
+    def pva_serialise(self, update: Union[p4p.Value, RuntimeError]) -> Tuple[bytes, int]:
+        if isinstance(update, RuntimeError):
+            return None, None
         alarm = _get_alarm_status(update)
         severity = epics_alarm_severity_to_f142[update.alarm.severity]
         value = _extract_pva_data(update)

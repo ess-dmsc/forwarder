@@ -13,8 +13,10 @@ class nttable_senv_Serialiser:
         self._msg_counter = -1
 
     def pva_serialise(
-        self, update: p4p.Value, **unused
+        self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Tuple[Optional[bytes], int]:
+        if isinstance(update, RuntimeError):
+            return None, None
         if update.getID() != "epics:nt/NTTable:1.0":
             raise RuntimeError(
                 f'Unable to process EPICS updates of type: "{update.getID()}".'

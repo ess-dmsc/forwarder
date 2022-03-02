@@ -12,15 +12,6 @@ from forwarder.epics_to_serialisable_types import (
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
 
 
-def _extract_pva_data(update: p4p.Value) -> np.ndarray:
-    allowed_types = ["epics:nt/NTScalar:1.0", "epics:nt/NTScalarArray:1.0"]
-    if update.getID() not in allowed_types:
-        raise RuntimeError(
-            f'Unable to extract TDC data from EPICS type: "{update.getID()}"'
-        )
-    data_type = numpy_type_from_p4p_type[update.type()["value"][-1]]
-    return np.squeeze(np.array(update.value)).astype(data_type)
-
 
 def _extract_ca_data(update: CA_Message) -> np.ndarray:
     data_type = numpy_type_from_caproto_type[update.data_type]
@@ -45,12 +36,26 @@ class tdct_Serialiser:
         )
 
     def pva_serialise(
-        self, update: p4p.Value, **unused
+        self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Tuple[bytes, int]:
+        if isinstance(update, RuntimeError):
+            return None, None
         origin_time = (
             update.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + update.timeStamp.nanoseconds
-        value_arr = _extract_pva_data(update)
+
+        allowed_types = ["epics:nt/NTScalar:1.0", "epics:nt/NTScalarArray:1.0"]
+        if update.getID() not in allowed_types:
+            raise RuntimeError(
+                f'Unable to extract TDC data from EPICS type: "{update.getID()}"'
+            )
+        try:
+            if update.value.size == 0:
+                return None, None
+        except AttributeError:
+            pass
+        data_type = numpy_type_from_p4p_type[update.type()["value"][-1]]
+        value_arr = np.squeeze(np.array(update.value)).astype(data_type)
         return self._serialise(value_arr, origin_time)
 
     def ca_serialise(self, update: CA_Message, **unused) -> Tuple[bytes, int]:

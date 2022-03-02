@@ -53,4 +53,5 @@ class FakeUpdateHandler(BaseUpdateHandler):
         """
         Stop periodic updates
         """
+        super().stop()
         self._repeating_timer.cancel()

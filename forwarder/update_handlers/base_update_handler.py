@@ -83,6 +83,9 @@ class BaseUpdateHandler:
         except KeyError:
             raise ValueError(
                 f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}")
+        # Connection status serialiser
+        self.serialiser_tracker_list.append(
+            SerialiserTracker(schema_serialisers["ep00"](self._pv_name), self, periodic_update_ms))
 
     def publish_message(
         self, message: Optional[bytes], timestamp_ns: Union[int, float]
