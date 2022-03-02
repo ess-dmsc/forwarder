@@ -6,4 +6,4 @@
 * Fixed bug where the wrong type was picked when casting numpy arrays in the f142 serialiser.
 * Known bad PV updates will no longer be cached for (attempted) re-transmission.
 * Some exceptions in the PVA/CA update handling code will now produce log messages.
-
+* Added separate ep00 module for handling only connection status serialisation
