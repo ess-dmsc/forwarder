@@ -111,6 +111,7 @@ def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwardin
     forwarding_double_with_alarm(cons, prod)
 
     cons.close()
+    prod.producer.close()
 
 
 def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):

@@ -32,7 +32,7 @@ class ep00_Serialiser:
 
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
-    ) -> Tuple[Optional[bytes], Optional[int]]:
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, p4p.Value):
             timestamp = (
                 update.timeStamp.secondsPastEpoch * 1_000_000_000
@@ -54,7 +54,7 @@ class ep00_Serialiser:
 
     def ca_serialise(
         self, update: CA_Message, **unused
-    ) -> Tuple[Optional[bytes], Optional[int]]:
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         return None, None
 
     def ca_conn_serialise(

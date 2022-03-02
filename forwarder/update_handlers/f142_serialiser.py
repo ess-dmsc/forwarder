@@ -54,7 +54,7 @@ class f142_Serialiser:
 
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError]
-    ) -> Tuple[bytes, int]:
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):
             return None, None
         alarm = _get_alarm_status(update)
@@ -65,7 +65,9 @@ class f142_Serialiser:
         ) + update.timeStamp.nanoseconds
         return self._serialise(alarm, severity, value, timestamp)
 
-    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[bytes, int]:
+    def ca_serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         alarm = ca_alarm_status_to_f142[update.metadata.status]
         severity = epics_alarm_severity_to_f142[update.metadata.severity]
         timestamp = seconds_to_nanoseconds(update.metadata.timestamp)

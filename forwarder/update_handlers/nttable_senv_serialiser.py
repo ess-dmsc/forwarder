@@ -14,7 +14,7 @@ class nttable_senv_Serialiser:
 
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
-    ) -> Tuple[Optional[bytes], int]:
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):
             return None, None
         if update.getID() != "epics:nt/NTTable:1.0":

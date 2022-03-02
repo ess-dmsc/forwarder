@@ -36,7 +36,7 @@ class tdct_Serialiser:
 
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
-    ) -> Tuple[bytes, int]:
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):
             return None, None
         origin_time = (
@@ -57,7 +57,9 @@ class tdct_Serialiser:
         value_arr = np.squeeze(np.array(update.value)).astype(data_type)
         return self._serialise(value_arr, origin_time)
 
-    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[bytes, int]:
+    def ca_serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if update.data.size == 0:
             return None, None
         origin_time = seconds_to_nanoseconds(update.metadata.timestamp)
