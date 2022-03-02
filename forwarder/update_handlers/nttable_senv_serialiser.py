@@ -12,13 +12,9 @@ class nttable_senv_Serialiser:
         self._source_name = source_name
         self._msg_counter = -1
 
-    def serialise(
-        self, update: Union[p4p.Value, CA_Message], **unused
+    def pva_serialise(
+        self, update: p4p.Value, **unused
     ) -> Tuple[Optional[bytes], int]:
-        if isinstance(update, CA_Message):
-            raise RuntimeError(
-                "nttable_senv_Serialiser is unable to process channel access data."
-            )
         if update.getID() != "epics:nt/NTTable:1.0":
             raise RuntimeError(
                 f'Unable to process EPICS updates of type: "{update.getID()}".'
@@ -51,3 +47,15 @@ class nttable_senv_Serialiser:
             ),
             origin_timestamp,
         )
+
+    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
+        raise RuntimeError(
+            "nttable_senv_Serialiser is unable to process channel access data."
+        )
+        return None, None
+
+    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+        raise RuntimeError(
+            "nttable_senv_Serialiser is unable to process channel access connection status updates."
+        )
+        return None, None

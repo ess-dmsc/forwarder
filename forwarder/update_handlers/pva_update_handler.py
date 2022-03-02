@@ -12,8 +12,7 @@ from forwarder.kafka.kafka_helpers import (
     seconds_to_nanoseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
+from forwarder.update_handlers.base_update_handler import BaseUpdateHandler, SerialiserTracker
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 
@@ -33,17 +32,7 @@ class PVAUpdateHandler(BaseUpdateHandler):
         schema: str,
         periodic_update_ms: Optional[int] = None,
     ):
-        super().__init__(producer, pv_name, output_topic)
-        self._cached_update: Optional[Value] = None
-        self._repeating_timer = None
-        self._cache_lock = Lock()
-
-        try:
-            self._message_serialiser = schema_serialisers[schema](self._pv_name)
-        except KeyError:
-            raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
-            )
+        super().__init__(producer, pv_name, output_topic, schema, periodic_update_ms)
 
         request = context.makeRequest("field()")
         self._sub = context.monitor(
@@ -53,85 +42,21 @@ class PVAUpdateHandler(BaseUpdateHandler):
             notify_disconnect=True,
         )
 
-        if periodic_update_ms is not None:
-            self._repeating_timer = RepeatTimer(
-                milliseconds_to_seconds(periodic_update_ms), self.publish_cached_update
-            )
-            self._repeating_timer.start()
-
     def _monitor_callback(self, response: Union[Value, Exception]):
         try:
-            self.__response_handler(response)
+            for serialiser_tracker in self.serialiser_tracker_list:
+                new_message, new_timestamp = serialiser_tracker.serialiser.pva_serialise(response)
+                if new_message is not None:
+                    serialiser_tracker.set_new_message(new_message, new_timestamp)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling PVA update. Message was: {str(e)}"
             )
 
-    def __response_handler(self, response: Union[Value, Exception]):
-        if isinstance(response, Exception):
-            # "Cancelled" occurs when we unsubscribe, we don't want to publish that as a
-            # connection state change.
-            # We are only interested loss of communication with the server
-            if not isinstance(response, Cancelled):
-                if isinstance(response, (Disconnected, RemoteError)):
-                    connection_state = "disconnected"
-                else:
-                    connection_state = "unrecognised_connection_exception"
-                publish_connection_status_message(
-                    self._producer,
-                    self._output_topic,
-                    self._pv_name,
-                    seconds_to_nanoseconds(time.time()),
-                    connection_state,
-                )
-            return
-
-        # Skip PV updates with empty values
-        try:
-            if response.value.size == 0:
-                return
-        except AttributeError:
-            # Enum values for example don't have .size, just continue
-            pass
-
-        with self._cache_lock:
-            # If this is the first update or the alarm status has changed, then
-            # include alarm status in message
-            if (
-                self._cached_update is None
-                or response.alarm.message != self._cached_update.alarm.message
-            ):
-                success = self._publish_message(
-                    *self._message_serialiser.serialise(response, serialise_alarm=True)
-                )
-            else:
-                success = self._publish_message(
-                    *self._message_serialiser.serialise(response, serialise_alarm=False)
-                )
-            if success:
-                self._cached_update = response
-                if self._repeating_timer is not None:
-                    self._repeating_timer.reset()
-
-    def publish_cached_update(self):
-        try:
-            with self._cache_lock:
-                if self._cached_update is not None:
-                    # Always include current alarm status in periodic update messages
-                    self._publish_message(
-                        *self._message_serialiser.serialise(
-                            self._cached_update, serialise_alarm=True
-                        )
-                    )
-        except (RuntimeError, ValueError) as e:
-            self._logger.error(
-                f"Got error when publishing cached PVA update. Message was: {str(e)}"
-            )
 
     def stop(self):
         """
         Stop periodic updates and unsubscribe from PV
         """
-        if self._repeating_timer is not None:
-            self._repeating_timer.cancel()
+        super().stop()
         self._sub.close()

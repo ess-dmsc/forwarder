@@ -213,7 +213,7 @@ def test_update_handler_publishes_periodic_update():
     update_handler.stop()
 
 
-def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequent_updates():
+def test_update_handler_always_includes_alarm_status():
     producer = FakeProducer()
     context = FakeContext()
 
@@ -250,8 +250,8 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
 
     assert producer.messages_published == 2
     pv_update_output = deserialise_f142(producer.published_payload)
-    assert pv_update_output.alarm_status == AlarmStatus.NO_CHANGE
-    assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
+    assert pv_update_output.alarm_status == AlarmStatus.LOW
+    assert pv_update_output.alarm_severity == AlarmSeverity.MINOR
 
     update_handler.stop()
 
@@ -364,7 +364,7 @@ def test_empty_update_is_not_cached():
     )
 
     assert (
-        update_handler._cached_update is None
+        update_handler.serialiser_tracker_list[0]._cached_update is None
     ), "Expected the empty update not to have been cached"
 
     update_handler.stop()
