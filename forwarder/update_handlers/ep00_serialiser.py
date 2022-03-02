@@ -17,7 +17,7 @@ class ep00_Serialiser:
         self._source_name = source_name
         self._conn_status: EventType = EventType.NEVER_CONNECTED
 
-    def _serialise(self, timestamp_ns: int) -> Optional[Tuple[bytes, int]]:
+    def _serialise(self, timestamp_ns: int) -> Tuple[bytes, int]:
         return (
             serialise_ep00(
                 timestamp_ns=timestamp_ns,

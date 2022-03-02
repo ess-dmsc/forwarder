@@ -32,7 +32,7 @@ class nttable_senv_Serialiser:
             values = values.round().astype(np.int64)
         timestamps = tables[column_headers.index("timestamp")][1]
         if len(timestamps) == 0:
-            return None, 0
+            return None, None
         self._msg_counter += 1
         origin_timestamp = timestamps[0]
         message_timestamp = datetime.fromtimestamp(origin_timestamp / 1e9)
