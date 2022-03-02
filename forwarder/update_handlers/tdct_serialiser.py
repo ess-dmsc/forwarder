@@ -12,7 +12,6 @@ from forwarder.epics_to_serialisable_types import (
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
 
 
-
 def _extract_ca_data(update: CA_Message) -> np.ndarray:
     data_type = numpy_type_from_caproto_type[update.data_type]
     return np.squeeze(np.array(update.data)).astype(data_type)

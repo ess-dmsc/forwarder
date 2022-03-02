@@ -33,6 +33,7 @@ def test_update_handler_publishes_enum_update():
 
     source_name = ""
     got_value = None
+
     def check_payload(payload):
         nonlocal source_name, got_value
         try:
@@ -41,6 +42,7 @@ def test_update_handler_publishes_enum_update():
             got_value = result.value
         except Exception:
             pass
+
     producer = FakeProducer(check_payload)
 
     pv_index = 0
@@ -171,12 +173,14 @@ def test_update_handler_publishes_alarm_update():
     context = FakeContext()
 
     result = None
+
     def check_payload(payload):
         nonlocal result
         try:
             result = deserialise_f142(payload)
         except Exception:
             pass
+
     producer = FakeProducer(check_payload)
 
     pv_value = 42

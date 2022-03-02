@@ -5,8 +5,9 @@ from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.update_handlers.base_update_handler import BaseUpdateHandler, SerialiserTracker
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.base_update_handler import (
+    BaseUpdateHandler,
+)
 
 
 class CAUpdateHandler(BaseUpdateHandler):
@@ -37,7 +38,9 @@ class CAUpdateHandler(BaseUpdateHandler):
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                new_message, new_timestamp = serialiser_tracker.serialiser.ca_serialise(response)
+                new_message, new_timestamp = serialiser_tracker.serialiser.ca_serialise(
+                    response
+                )
                 if new_message is not None:
                     serialiser_tracker.set_new_message(new_message, new_timestamp)
         except (RuntimeError, ValueError) as e:
@@ -48,7 +51,10 @@ class CAUpdateHandler(BaseUpdateHandler):
     def _connection_state_callback(self, pv: PV, state: str):
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                new_message, new_timestamp = serialiser_tracker.serialiser.ca_conn_serialise(pv, state)
+                (
+                    new_message,
+                    new_timestamp,
+                ) = serialiser_tracker.serialiser.ca_conn_serialise(pv, state)
                 if new_message is not None:
                     serialiser_tracker.set_new_message(new_message, new_timestamp)
         except (RuntimeError, ValueError) as e:

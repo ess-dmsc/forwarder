@@ -6,7 +6,6 @@ from p4p.nt import NTScalar
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 
 class FakeUpdateHandler(BaseUpdateHandler):
@@ -41,7 +40,10 @@ class FakeUpdateHandler(BaseUpdateHandler):
             update = NTScalar("i").wrap(randint(0, 100))
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                new_message, new_timestamp = serialiser_tracker.serialiser.pva_serialise(update)
+                (
+                    new_message,
+                    new_timestamp,
+                ) = serialiser_tracker.serialiser.pva_serialise(update)
                 if new_message is not None:
                     serialiser_tracker.set_new_message(new_message, new_timestamp)
         except (RuntimeError, ValueError) as e:

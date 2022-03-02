@@ -1,19 +1,11 @@
-import time
-from threading import Lock
 from typing import Optional, Union
 
 from p4p import Value
-from p4p.client.thread import Cancelled
 from p4p.client.thread import Context as PVAContext
-from p4p.client.thread import Disconnected, RemoteError
-
-from forwarder.kafka.kafka_helpers import (
-    publish_connection_status_message,
-    seconds_to_nanoseconds,
-)
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.update_handlers.base_update_handler import BaseUpdateHandler, SerialiserTracker
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.base_update_handler import (
+    BaseUpdateHandler,
+)
 
 
 class PVAUpdateHandler(BaseUpdateHandler):
@@ -45,14 +37,16 @@ class PVAUpdateHandler(BaseUpdateHandler):
     def _monitor_callback(self, response: Union[Value, Exception]):
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                new_message, new_timestamp = serialiser_tracker.serialiser.pva_serialise(response)
+                (
+                    new_message,
+                    new_timestamp,
+                ) = serialiser_tracker.serialiser.pva_serialise(response)
                 if new_message is not None:
                     serialiser_tracker.set_new_message(new_message, new_timestamp)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling PVA update. Message was: {str(e)}"
             )
-
 
     def stop(self):
         """

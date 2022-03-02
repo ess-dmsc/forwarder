@@ -41,6 +41,7 @@ def test_update_handler_publishes_update():
 def test_update_handler_publishes_tdct_update():
     got_tdct: bool = False
     pv_name: str = ""
+
     def check_payload(payload):
         try:
             deserialized = deserialise_tdct(payload)

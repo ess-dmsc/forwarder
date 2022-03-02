@@ -52,7 +52,9 @@ class f142_Serialiser:
             timestamp,
         )
 
-    def pva_serialise(self, update: Union[p4p.Value, RuntimeError]) -> Tuple[bytes, int]:
+    def pva_serialise(
+        self, update: Union[p4p.Value, RuntimeError]
+    ) -> Tuple[bytes, int]:
         if isinstance(update, RuntimeError):
             return None, None
         alarm = _get_alarm_status(update)
@@ -72,4 +74,3 @@ class f142_Serialiser:
 
     def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
         return None, None
-

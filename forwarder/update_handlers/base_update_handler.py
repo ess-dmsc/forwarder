@@ -13,7 +13,12 @@ UPPER_AGE_LIMIT = timedelta(minutes=10)
 
 
 class SerialiserTracker(object):
-    def __init__(self, serialiser, publisher: "BaseUpdateHandler", periodic_update_ms: Optional[int] = None):
+    def __init__(
+        self,
+        serialiser,
+        publisher: "BaseUpdateHandler",
+        periodic_update_ms: Optional[int] = None,
+    ):
         self.serialiser = serialiser
         self._logger = get_logger()
         self._publisher = publisher
@@ -34,7 +39,9 @@ class SerialiserTracker(object):
         try:
             with self._cache_lock:
                 if self._cached_update is not None:
-                    self._publisher.publish_message(self._cached_update, self._cached_timestamp)
+                    self._publisher.publish_message(
+                        self._cached_update, self._cached_timestamp
+                    )
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when publishing cached PVA update. Message was: {str(e)}"
@@ -46,22 +53,25 @@ class SerialiserTracker(object):
         message_datetime = datetime.fromtimestamp(timestamp_ns / 1e9, tz=timezone.utc)
         if message_datetime < self._last_timestamp:
             self._logger.error(
-                f'Rejecting update as its timestamp is older than the previous message timestamp from that PV ({message_datetime} vs {self._last_timestamp}).'
+                f"Rejecting update as its timestamp is older than the previous message timestamp from that PV ({message_datetime} vs {self._last_timestamp})."
             )
             return
         current_datetime = datetime.now(tz=timezone.utc)
         if message_datetime < current_datetime - LOWER_AGE_LIMIT:
             self._logger.error(
-                f'Rejecting update as its timestamp is older than allowed ({LOWER_AGE_LIMIT}).'
+                f"Rejecting update as its timestamp is older than allowed ({LOWER_AGE_LIMIT})."
             )
             return
         if message_datetime > current_datetime + UPPER_AGE_LIMIT:
             self._logger.error(
-                f'Rejecting update as its timestamp is from further into the future than allowed ({UPPER_AGE_LIMIT}).'
+                f"Rejecting update as its timestamp is from further into the future than allowed ({UPPER_AGE_LIMIT})."
             )
             return
         self._last_timestamp = message_datetime
-        if self._publisher.publish_message(message, timestamp_ns) and self._repeating_timer is not None:
+        if (
+            self._publisher.publish_message(message, timestamp_ns)
+            and self._repeating_timer is not None
+        ):
             with self._cache_lock:
                 self._cached_update = message
                 self._cached_timestamp = timestamp_ns
@@ -72,20 +82,35 @@ class SerialiserTracker(object):
 
 
 class BaseUpdateHandler:
-    def __init__(self, producer: KafkaProducer, pv_name: str, output_topic: str, schema: str, periodic_update_ms: Optional[int] = None):
+    def __init__(
+        self,
+        producer: KafkaProducer,
+        pv_name: str,
+        output_topic: str,
+        schema: str,
+        periodic_update_ms: Optional[int] = None,
+    ):
         self._logger = get_logger()
         self._producer = producer
         self._output_topic = output_topic
         self._pv_name = pv_name
-        self.serialiser_tracker_list:  List[SerialiserTracker] = []
+        self.serialiser_tracker_list: List[SerialiserTracker] = []
         try:
-            self.serialiser_tracker_list.append(SerialiserTracker(schema_serialisers[schema](self._pv_name), self, periodic_update_ms))
+            self.serialiser_tracker_list.append(
+                SerialiserTracker(
+                    schema_serialisers[schema](self._pv_name), self, periodic_update_ms
+                )
+            )
         except KeyError:
             raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}")
+                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
+            )
         # Connection status serialiser
         self.serialiser_tracker_list.append(
-            SerialiserTracker(schema_serialisers["ep00"](self._pv_name), self, periodic_update_ms))
+            SerialiserTracker(
+                schema_serialisers["ep00"](self._pv_name), self, periodic_update_ms
+            )
+        )
 
     def publish_message(
         self, message: Optional[bytes], timestamp_ns: Union[int, float]
