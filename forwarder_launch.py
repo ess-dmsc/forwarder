@@ -163,3 +163,5 @@ if __name__ == "__main__":
             handler.stop()
         consumer.close()
         producer.close()
+        if configuration_store is not None:
+            configuration_store._producer.close()

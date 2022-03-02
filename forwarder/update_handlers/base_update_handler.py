@@ -134,3 +134,4 @@ class BaseUpdateHandler:
         """
         for serialiser in self.serialiser_tracker_list:
             serialiser.stop()
+        self._producer.close()
