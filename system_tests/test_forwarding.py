@@ -36,6 +36,7 @@ CONFIG_TOPIC = "TEST_forwarderConfig"
 INITIAL_LONG_VALUE = 0
 INITIAL_DOUBLE_VALUE = 0.0
 INITIAL_FLOATARRAY_VALUE = (1.1, 2.2, 3.3, 4.4, 5.5)
+SLEEP_TIME = 3
 
 
 @pytest.fixture(scope="function", autouse=True)
@@ -58,13 +59,15 @@ def setup_and_teardown_function(request):
         attempts = 0
         while not pv_set and attempts < 10:
             try:
-                change_pv_value(key, value)
+                change_pv_value(key, value, Protocol.CA)
+                change_pv_value(key, value, Protocol.PVA)
             except CaprotoTimeoutError:
                 attempts += 1
+                print(f"Failed to write to {key}. Retrying.")
                 continue
             pv_set = True
 
-    sleep(1)
+    sleep(SLEEP_TIME)
 
     # TEARDOWN
     # Everything after yield is executed after the test function
@@ -73,7 +76,7 @@ def setup_and_teardown_function(request):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "")
     prod.stop_all_pvs()
 
-    sleep(2)
+    sleep(SLEEP_TIME)
 
 
 def wait_for_forwarder_to_be_ready(
@@ -104,41 +107,40 @@ def test_forwarding_of_various_pv_types(epics_protocol, docker_compose_forwardin
     cons.subscribe([data_topic])
 
     consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_floatarray(cons, prod)
+    forwarding_floatarray(cons, prod, epics_protocol)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_long(cons, prod)
+    forwarding_long(cons, prod, epics_protocol)
     consumer_seek_to_end_of_topic(cons, data_topic)
-    forwarding_double_with_alarm(cons, prod)
+    forwarding_double_with_alarm(cons, prod, epics_protocol)
 
     cons.close()
-    prod.producer.close()
 
 
 def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):
     consumer.unsubscribe()
-    sleep(1)
+    sleep(SLEEP_TIME)
     # Resubscribe at end of topic
     consumer.subscribe([data_topic])
 
 
-def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
+def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper, protocol: Protocol):
     pvs = [PVDOUBLE_WITH_ALARM_THRESHOLDS]
     producer.add_config(pvs)
     # Wait for config change to be picked up
-    sleep(5)
+    sleep(SLEEP_TIME)
 
     # Change the PV value, so something is forwarded
     # New value is between the HIGH and HIHI alarm thresholds
-    first_updated_value = 17
-    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value)
+    first_updated_value = 0.7
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, first_updated_value, protocol)
 
     # Change the PV value, so something is forwarded
     # New value is still between the HIGH and HIHI alarm thresholds
-    second_updated_value = 18
-    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value)
+    second_updated_value = 0.8
+    change_pv_value(PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value, protocol)
 
     # Wait for PV to be updated
-    sleep(5)
+    sleep(SLEEP_TIME)
     # Check the initial value is forwarded
     first_msg, msg_key = poll_for_valid_message(consumer)
     check_expected_value(
@@ -164,19 +166,19 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper):
         third_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value
     )
     check_expected_alarm_status(
-        third_msg, AlarmStatus.NO_CHANGE, AlarmSeverity.NO_CHANGE
+        third_msg, AlarmStatus.HIGH, AlarmSeverity.MINOR
     )
 
 
-def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
+def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper, protocol: Protocol):
     pvs = [PVFLOATARRAY]
     producer.add_config(pvs)
     # Wait for config to be pushed
-    sleep(5)
+    sleep(SLEEP_TIME)
     new_floatarray_value = [0.0, 0.1, 0.2, 0.3, 0.4]
-    change_pv_value(PVFLOATARRAY, np.array(new_floatarray_value).astype(np.string_))
+    change_pv_value(PVFLOATARRAY, np.array(new_floatarray_value), protocol)
     # Wait for forwarder to forward PV update into Kafka
-    sleep(5)
+    sleep(SLEEP_TIME)
     first_msg, _ = poll_for_valid_message(consumer)
     check_expected_value(first_msg, PVFLOATARRAY, INITIAL_FLOATARRAY_VALUE)
     second_msg, _ = poll_for_valid_message(consumer)
@@ -184,16 +186,16 @@ def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper):
     producer.remove_config(pvs)
 
 
-def forwarding_long(consumer: Consumer, producer: ProducerWrapper):
+def forwarding_long(consumer: Consumer, producer: ProducerWrapper, protocol: Protocol):
     pvs = [
         PVLONG,
     ]
     producer.add_config(pvs)
     # Wait for config to be pushed
-    sleep(5)
+    sleep(SLEEP_TIME)
     initial_long_value = INITIAL_LONG_VALUE
     # Wait for forwarder to forward PV update into Kafka
-    sleep(5)
+    sleep(SLEEP_TIME)
     expected_values = {
         PVLONG: initial_long_value,
     }
@@ -223,9 +225,9 @@ def test_forwarder_status_shows_added_pvs(docker_compose_forwarding):
     prod = ProducerWrapper("localhost:9092", CONFIG_TOPIC, "some_topic", Protocol.PVA)
     prod.add_config([PVLONG])
 
-    sleep(2)
+    sleep(SLEEP_TIME)
     cons.subscribe([status_topic])
-    sleep(5)
+    sleep(SLEEP_TIME)
 
     # Poll for the latest message
     status_msg, _ = poll_for_valid_message(cons, expected_file_identifier=None)
@@ -276,9 +278,9 @@ def test_forwarder_can_handle_rapid_config_updates(docker_compose_forwarding):
         prod.add_config([pv])
         configured_list_of_pvs.append(pv)
 
-    sleep(5)
+    sleep(SLEEP_TIME)
     cons.assign([TopicPartition(status_topic, partition=0)])
-    sleep(2)
+    sleep(SLEEP_TIME)
     # Get the last available status message
     status_msg = get_last_available_status_message(cons, status_topic)
 
@@ -304,7 +306,7 @@ def test_forwarder_sends_fake_pv_updates(docker_compose_forwarding):
     # A fake PV is defined in the config json file with channel name "FakePV"
     consumer = create_consumer()
     consumer.subscribe([data_topic])
-    sleep(5)
+    sleep(SLEEP_TIME)
     msg, _ = poll_for_valid_message(consumer)
     # We should see PV updates in Kafka despite there being no IOC running
     check_expected_value(msg, "FakePV", None)

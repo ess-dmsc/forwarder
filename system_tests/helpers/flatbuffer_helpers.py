@@ -49,7 +49,7 @@ def check_expected_value(
 
     if expected_value is not None:
         if is_sequence(expected_value):
-            assert np.allclose(log_data.value, np.array(expected_value))
+            assert np.allclose(log_data.value, np.array(expected_value)), f"Expected {expected_value}, got {log_data.value} instead."
         else:
             if isinstance(expected_value, float):
                 assert isclose(log_data.value, expected_value)
