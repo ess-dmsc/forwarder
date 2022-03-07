@@ -123,7 +123,9 @@ def consumer_seek_to_end_of_topic(consumer: Consumer, data_topic: str):
     consumer.subscribe([data_topic])
 
 
-def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper, protocol: Protocol):
+def forwarding_double_with_alarm(
+    consumer: Consumer, producer: ProducerWrapper, protocol: Protocol
+):
     pvs = [PVDOUBLE_WITH_ALARM_THRESHOLDS]
     producer.add_config(pvs)
     # Wait for config change to be picked up
@@ -165,12 +167,12 @@ def forwarding_double_with_alarm(consumer: Consumer, producer: ProducerWrapper, 
     check_expected_value(
         third_msg, PVDOUBLE_WITH_ALARM_THRESHOLDS, second_updated_value
     )
-    check_expected_alarm_status(
-        third_msg, AlarmStatus.HIGH, AlarmSeverity.MINOR
-    )
+    check_expected_alarm_status(third_msg, AlarmStatus.HIGH, AlarmSeverity.MINOR)
 
 
-def forwarding_floatarray(consumer: Consumer, producer: ProducerWrapper, protocol: Protocol):
+def forwarding_floatarray(
+    consumer: Consumer, producer: ProducerWrapper, protocol: Protocol
+):
     pvs = [PVFLOATARRAY]
     producer.add_config(pvs)
     # Wait for config to be pushed

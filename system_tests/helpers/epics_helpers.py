@@ -20,10 +20,9 @@ def change_pv_value(pvname, value, protocol):
         print(f"{response}\n", flush=True)
         assert response.status.success
     elif protocol == Protocol.PVA:
-        ctxt = Context('pva')
+        ctxt = Context("pva")
         response = ctxt.put(pvname, value, timeout=10, throw=False, wait=True)
         print(f"{response}\n", flush=True)
         assert not isinstance(response, Exception)
     else:
         raise RuntimeError(f"Unknown EPICS protocol: {protocol}")
-

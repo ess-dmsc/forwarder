@@ -149,8 +149,12 @@ def build_and_run(options, request, config_file=None, log_file=None):
         run_containers(cmd, options)
     else:
         # Launch local builds
-        proc_ca_ioc = Popen(["python", os.path.join(local_path, "system_tests/helpers/ca_ioc.py")])
-        proc_pva_ioc = Popen(["python", os.path.join(local_path, "system_tests/helpers/pva_ioc.py")])
+        proc_ca_ioc = Popen(
+            ["python", os.path.join(local_path, "system_tests/helpers/ca_ioc.py")]
+        )
+        proc_pva_ioc = Popen(
+            ["python", os.path.join(local_path, "system_tests/helpers/pva_ioc.py")]
+        )
 
         forwarder_path = os.path.join(local_path, "forwarder_launch.py")
         command_options = [
