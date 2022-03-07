@@ -5,4 +5,4 @@ RUN pip install -r requirements.txt
 
 ADD . .
 
-CMD [ "python", "./forwarder_launch.py"]
+CMD [ "bash", "./docker_launch_script.sh"]

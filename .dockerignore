@@ -1,5 +1,4 @@
 tests
-system_tests
 manual_testing
 .gitignore
 .pre-commit-config.yaml

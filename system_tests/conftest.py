@@ -148,21 +148,24 @@ def build_and_run(options, request, config_file=None, log_file=None):
         cmd = TopLevelCommand(project)
         run_containers(cmd, options)
     else:
-        # Launch local build of forwarder
-        full_path_of_forwarder_exe = os.path.join(local_path, "forwarder_launch.py")
+        # Launch local builds
+        proc_ca_ioc = Popen(["python", os.path.join(local_path, "system_tests/helpers/ca_ioc.py")])
+        proc_pva_ioc = Popen(["python", os.path.join(local_path, "system_tests/helpers/pva_ioc.py")])
+
+        forwarder_path = os.path.join(local_path, "forwarder_launch.py")
         command_options = [
             "python",
-            full_path_of_forwarder_exe,
+            forwarder_path,
             "-c",
             os.path.join(local_path, "system_tests", "config-files", config_file),
             "--log-file",
             os.path.join(local_path, "system_tests", "logs", log_file),
         ]
-        proc = Popen(command_options)
+        proc_forwarder = Popen(command_options)
         if wait_for_debugger:
             input(
                 f"\n"
-                f"Attach a debugger to process id {proc.pid} now if you wish, then press enter to continue the tests: "
+                f"Attach a debugger to process id {proc_forwarder.pid} now if you wish, then press enter to continue the tests: "
             )
 
     def fin():
@@ -175,7 +178,9 @@ def build_and_run(options, request, config_file=None, log_file=None):
             options["--timeout"] = 30
             cmd.down(options)
         else:
-            proc.kill()
+            proc_forwarder.kill()
+            proc_ca_ioc.kill()
+            proc_pva_ioc.kill()
         print("containers stopped", flush=True)
 
     # Using a finalizer rather than yield in the fixture means
