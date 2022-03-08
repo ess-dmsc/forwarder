@@ -134,7 +134,7 @@ def get_system_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd system_tests/
-              python3 -m pytest -s --junitxml=./SystemTestsOutput.xml . --local-build=../
+              python3 -m pytest -s --junitxml=./SystemTestsOutput.xml .
               """
             }
           }  // stage
