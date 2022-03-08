@@ -1,10 +1,10 @@
-from typing import Optional, Union
+from typing import Union, List
 
 from p4p import Value
 from p4p.client.thread import Context as PVAContext
-from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.update_handlers.base_update_handler import (
     BaseUpdateHandler,
+    SerialiserTracker,
 )
 
 
@@ -17,18 +17,15 @@ class PVAUpdateHandler(BaseUpdateHandler):
 
     def __init__(
         self,
-        producer: KafkaProducer,
         context: PVAContext,
         pv_name: str,
-        output_topic: str,
-        schema: str,
-        periodic_update_ms: Optional[int] = None,
+        serialiser_tracker_list: List[SerialiserTracker],
     ):
-        super().__init__(producer, pv_name, output_topic, schema, periodic_update_ms)
+        super().__init__(serialiser_tracker_list)
 
         request = context.makeRequest("field()")
         self._sub = context.monitor(
-            self._pv_name,
+            pv_name,
             self._monitor_callback,
             request=request,
             notify_disconnect=True,

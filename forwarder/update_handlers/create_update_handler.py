@@ -9,6 +9,7 @@ from forwarder.parse_config_update import EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
+from forwarder.update_handlers.base_update_handler import create_serialiser_list
 
 UpdateHandler = Union[CAUpdateHandler, PVAUpdateHandler, FakeUpdateHandler]
 
@@ -31,30 +32,13 @@ def create_update_handler(
         raise RuntimeError(
             f"Schema not specified when adding handler for channel {channel.name}"
         )
+    serialiser_list = create_serialiser_list(
+        producer, channel.name, channel.output_topic, channel.schema, periodic_update_ms
+    )
     if channel.protocol == EpicsProtocol.PVA:
-        return PVAUpdateHandler(
-            producer,
-            pva_context,
-            channel.name,
-            channel.output_topic,
-            channel.schema,
-            periodic_update_ms,
-        )
+        return PVAUpdateHandler(pva_context, channel.name, serialiser_list)
     elif channel.protocol == EpicsProtocol.CA:
-        return CAUpdateHandler(
-            producer,
-            ca_context,
-            channel.name,
-            channel.output_topic,
-            channel.schema,
-            periodic_update_ms,
-        )
+        return CAUpdateHandler(ca_context, channel.name, serialiser_list)
     elif channel.protocol == EpicsProtocol.FAKE:
-        return FakeUpdateHandler(
-            producer,
-            channel.name,
-            channel.output_topic,
-            channel.schema,
-            fake_pv_period_ms,
-        )
+        return FakeUpdateHandler(serialiser_list, channel.schema, fake_pv_period_ms)
     raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")

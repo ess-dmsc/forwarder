@@ -12,16 +12,20 @@ LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
 
 
-class SerialiserTracker(object):
+class SerialiserTracker:
     def __init__(
         self,
         serialiser,
-        publisher: "BaseUpdateHandler",
+        producer: KafkaProducer,
+        pv_name: str,
+        output_topic: str,
         periodic_update_ms: Optional[int] = None,
     ):
         self.serialiser = serialiser
         self._logger = get_logger()
-        self._publisher = publisher
+        self._producer = producer
+        self._pv_name = pv_name
+        self._output_topic = output_topic
         self._last_timestamp = datetime(
             year=1900, month=1, day=1, hour=0, minute=0, second=0, tzinfo=timezone.utc
         )
@@ -39,9 +43,7 @@ class SerialiserTracker(object):
         try:
             with self._cache_lock:
                 if self._cached_update is not None:
-                    self._publisher.publish_message(
-                        self._cached_update, self._cached_timestamp
-                    )
+                    self.publish_message(self._cached_update, self._cached_timestamp)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when publishing cached PVA update. Message was: {str(e)}"
@@ -69,7 +71,7 @@ class SerialiserTracker(object):
             return
         self._last_timestamp = message_datetime
         if (
-            self._publisher.publish_message(message, timestamp_ns)
+            self.publish_message(message, timestamp_ns)
             and self._repeating_timer is not None
         ):
             with self._cache_lock:
@@ -79,38 +81,7 @@ class SerialiserTracker(object):
     def stop(self):
         if self._repeating_timer is not None:
             self._repeating_timer.cancel()
-
-
-class BaseUpdateHandler:
-    def __init__(
-        self,
-        producer: KafkaProducer,
-        pv_name: str,
-        output_topic: str,
-        schema: str,
-        periodic_update_ms: Optional[int] = None,
-    ):
-        self._logger = get_logger()
-        self._producer = producer
-        self._output_topic = output_topic
-        self._pv_name = pv_name
-        self.serialiser_tracker_list: List[SerialiserTracker] = []
-        try:
-            self.serialiser_tracker_list.append(
-                SerialiserTracker(
-                    schema_serialisers[schema](self._pv_name), self, periodic_update_ms
-                )
-            )
-        except KeyError:
-            raise ValueError(
-                f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
-            )
-        # Connection status serialiser
-        self.serialiser_tracker_list.append(
-            SerialiserTracker(
-                schema_serialisers["ep00"](self._pv_name), self, periodic_update_ms
-            )
-        )
+        self._producer.close()
 
     def publish_message(
         self, message: Optional[bytes], timestamp_ns: Union[int, float]
@@ -128,10 +99,53 @@ class BaseUpdateHandler:
         )
         return True
 
+
+def create_serialiser_list(
+    producer: KafkaProducer,
+    pv_name: str,
+    output_topic: str,
+    schema: str,
+    periodic_update_ms: Optional[int] = None,
+) -> List[SerialiserTracker]:
+    return_list = []
+    try:
+        return_list.append(
+            SerialiserTracker(
+                schema_serialisers[schema](pv_name),
+                producer,
+                pv_name,
+                output_topic,
+                periodic_update_ms,
+            )
+        )
+    except KeyError:
+        raise ValueError(
+            f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
+        )
+    # Connection status serialiser
+    return_list.append(
+        SerialiserTracker(
+            schema_serialisers["ep00"](pv_name),
+            producer,
+            pv_name,
+            output_topic,
+            periodic_update_ms,
+        )
+    )
+    return return_list
+
+
+class BaseUpdateHandler:
+    def __init__(
+        self,
+        serialiser_tracker_list: List[SerialiserTracker],
+    ):
+        self._logger = get_logger()
+        self.serialiser_tracker_list: List[SerialiserTracker] = serialiser_tracker_list
+
     def stop(self):
         """
         Stop periodic updates and unsubscribe from PV
         """
         for serialiser in self.serialiser_tracker_list:
             serialiser.stop()
-        self._producer.close()

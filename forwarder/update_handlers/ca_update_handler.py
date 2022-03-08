@@ -1,12 +1,12 @@
-from typing import Optional
+from typing import List
 
 from caproto import ReadNotifyResponse
 from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
-from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.update_handlers.base_update_handler import (
     BaseUpdateHandler,
+    SerialiserTracker,
 )
 
 
@@ -19,14 +19,11 @@ class CAUpdateHandler(BaseUpdateHandler):
 
     def __init__(
         self,
-        producer: KafkaProducer,
         context: CAContext,
         pv_name: str,
-        output_topic: str,
-        schema: str,
-        periodic_update_ms: Optional[int] = None,
+        serialiser_tracker_list: List[SerialiserTracker],
     ):
-        super().__init__(producer, pv_name, output_topic, schema, periodic_update_ms)
+        super().__init__(serialiser_tracker_list)
 
         (self._pv,) = context.get_pvs(
             pv_name, connection_state_callback=self._connection_state_callback

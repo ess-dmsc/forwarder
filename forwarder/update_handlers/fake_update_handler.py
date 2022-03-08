@@ -1,11 +1,14 @@
+from typing import List
 from random import randint
 
 import numpy as np
 from p4p.nt import NTScalar
 
-from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.base_update_handler import BaseUpdateHandler
+from forwarder.update_handlers.base_update_handler import (
+    BaseUpdateHandler,
+    SerialiserTracker,
+)
 
 
 class FakeUpdateHandler(BaseUpdateHandler):
@@ -16,13 +19,11 @@ class FakeUpdateHandler(BaseUpdateHandler):
 
     def __init__(
         self,
-        producer: KafkaProducer,
-        pv_name: str,
-        output_topic: str,
+        serialiser_tracker_list: List[SerialiserTracker],
         schema: str,
         fake_pv_period_ms: int,
     ):
-        super().__init__(producer, pv_name, output_topic, schema, fake_pv_period_ms)
+        super().__init__(serialiser_tracker_list)
         self._schema = schema
 
         self._repeating_timer = RepeatTimer(
