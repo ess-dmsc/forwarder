@@ -9,3 +9,4 @@
 * Re-factored the code to allow automatic instantiation of forwarding modules
 * Added separate ep00 module for handling only connection status serialisation
 * New ep00 module is now automatically instantiated for every PV that the forwarder is configured to forward
+* System test running has been simplified and fixed
