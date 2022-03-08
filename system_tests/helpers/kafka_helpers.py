@@ -81,6 +81,7 @@ def poll_for_valid_message(
                 message_file_id == expected_file_identifier
             ), f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             return msg.value(), msg.key()
+        print("Waiting for message")
 
 
 def create_consumer(offset_reset="earliest"):
