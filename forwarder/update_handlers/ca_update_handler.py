@@ -44,6 +44,10 @@ class CAUpdateHandler(BaseUpdateHandler):
             self._logger.error(
                 f"Got error when handling CA update. Message was: {str(e)}"
             )
+        except BaseException as e:
+            exception_string = f"Got uncaught exception in CAUpdateHandler._monitor_callback. The message was: {str(e)}"
+            print(exception_string)
+            self._logger.error(exception_string)
 
     def _connection_state_callback(self, pv: PV, state: str):
         try:
@@ -58,6 +62,10 @@ class CAUpdateHandler(BaseUpdateHandler):
             self._logger.error(
                 f"Got error when handling CA connection status. Message was: {str(e)}"
             )
+        except BaseException as e:
+            exception_string = f"Got uncaught exception in CAUpdateHandler._connection_state_callback. The message was: {str(e)}"
+            print(exception_string)
+            self._logger.error(exception_string)
 
     def stop(self):
         """

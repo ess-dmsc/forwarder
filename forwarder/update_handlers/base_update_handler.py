@@ -5,6 +5,11 @@ from threading import Lock
 from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
 from forwarder.kafka.kafka_producer import KafkaProducer
+from confluent_kafka.error import (
+    KafkaException,
+    ValueSerializationError,
+    KeySerializationError,
+)
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
@@ -44,10 +49,19 @@ class SerialiserTracker:
             with self._cache_lock:
                 if self._cached_update is not None:
                     self.publish_message(self._cached_update, self._cached_timestamp)
-        except (RuntimeError, ValueError) as e:
+        except (
+            KafkaException,
+            ValueSerializationError,
+            KeySerializationError,
+            BufferError,
+        ) as e:
             self._logger.error(
-                f"Got error when publishing cached PVA update. Message was: {str(e)}"
+                f"Got kafka error when publishing cached update. Message was: {str(e)}"
             )
+        except BaseException as e:
+            exception_string = f"Got uncaught exception in SerialiserTracker._publish_cached_update. The message was: {str(e)}"
+            print(exception_string)
+            self._logger.error(exception_string)
 
     def set_new_message(self, message: bytes, timestamp_ns: Union[int, float]):
         if message is None:
