@@ -10,3 +10,4 @@
 * Added separate ep00 module for handling only connection status serialisation
 * New ep00 module is now automatically instantiated for every PV that the forwarder is configured to forward
 * System test running has been simplified and fixed
+* Set the "facility" and "process_name" fields in the Graylog messages to to "ESS" and "forwarder"
