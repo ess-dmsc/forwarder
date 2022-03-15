@@ -1,5 +1,6 @@
 import os.path as osp
 import sys
+from socket import gethostname
 from typing import Dict
 
 from caproto.threading.client import Context as CaContext
@@ -84,13 +85,14 @@ if __name__ == "__main__":
 
     statistic_reporter = None
     if grafana_carbon_address:
+        prefix = f"Forwarder.{gethostname()}.{args.service_id}".replace(" ", "").lower()
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
             update_message_counter,
             update_buffer_err_counter,
             logger,
-            prefix=f"{args.service_id.replace(' ', '').lower()}.throughput",
+            prefix=f"{prefix}.throughput",
             update_interval_s=args.statistics_update_interval,
         )
         statistic_reporter.start()

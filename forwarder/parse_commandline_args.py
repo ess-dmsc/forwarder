@@ -2,7 +2,6 @@ import configparser
 import logging
 from os import getpid
 from pathlib import Path
-from socket import gethostname
 
 import configargparse
 
@@ -136,8 +135,8 @@ def parse_args():
     parser.add_argument(
         "--service-id",
         required=False,
-        help='Identifier for this particular instance of the Forwarder, defaults to "Forwarder.<HOSTNAME>.<PID>',
-        default=f"Forwarder.{gethostname()}.{getpid()}",
+        help='Identifier for this particular instance of the Forwarder, defaults to "<PID>',
+        default=f"{getpid()}",
         env_var="SERVICE_ID",
         type=str,
     )
