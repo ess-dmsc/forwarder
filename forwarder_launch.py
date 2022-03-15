@@ -46,10 +46,8 @@ if __name__ == "__main__":
         graylog_logger_address=args.graylog_logger_address,
     )
 
-    service_id = f"Forwarder.{gethostname()}.{args.service_id}"
-
     version = get_version()
-    logger.info(f"Forwarder v{version} started, service Id: {service_id}")
+    logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
@@ -79,7 +77,7 @@ if __name__ == "__main__":
         update_handlers,
         create_producer(status_broker),
         status_topic,
-        service_id,
+        args.service_id,
         version,
         logger,
     )
@@ -87,13 +85,14 @@ if __name__ == "__main__":
 
     statistic_reporter = None
     if grafana_carbon_address:
+        prefix = f"Forwarder.{gethostname()}.{args.service_id}".replace(" ", "").lower()
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
             update_message_counter,
             update_buffer_err_counter,
             logger,
-            prefix=f"{service_id.replace(' ', '').lower()}.throughput",
+            prefix=f"{prefix}.throughput",
             update_interval_s=args.statistics_update_interval,
         )
         statistic_reporter.start()
