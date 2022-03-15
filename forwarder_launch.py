@@ -86,7 +86,9 @@ if __name__ == "__main__":
     statistic_reporter = None
     if grafana_carbon_address:
         metric_hostname = gethostname().replace(".", "_")
-        prefix = f"Forwarder.{metric_hostname}.{args.service_id}".replace(" ", "").lower()
+        prefix = f"Forwarder.{metric_hostname}.{args.service_id}".replace(
+            " ", ""
+        ).lower()
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
