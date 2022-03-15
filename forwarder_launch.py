@@ -91,7 +91,7 @@ if __name__ == "__main__":
             update_handlers,
             update_message_counter,
             update_buffer_err_counter,
-            logger,
+            get_logger(),
             prefix=f"{prefix}.throughput",
             update_interval_s=args.statistics_update_interval,
         )
