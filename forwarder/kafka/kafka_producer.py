@@ -3,7 +3,7 @@ from typing import Optional
 
 import confluent_kafka
 
-from forwarder.application_logger import setup_logger
+from forwarder.application_logger import get_logger
 from forwarder.utils import Counter
 
 
@@ -20,7 +20,7 @@ class KafkaProducer:
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
-        self.logger = setup_logger()
+        self.logger = get_logger()
 
     def _poll_loop(self):
         while not self._cancelled:

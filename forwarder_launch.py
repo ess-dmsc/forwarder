@@ -6,7 +6,7 @@ from typing import Dict
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 
-from forwarder.application_logger import setup_logger
+from forwarder.application_logger import setup_logger, get_logger
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
@@ -32,22 +32,22 @@ if __name__ == "__main__":
         folder = osp.dirname(args.log_file)
         if folder and not osp.exists(folder):
             # Create logger with console, log error and exit
-            logger = setup_logger(
+            setup_logger(
                 level=args.verbosity, graylog_logger_address=args.graylog_logger_address
             )
-            logger.error(
+            get_logger().error(
                 f"Log folder '{folder}' does not exist. Please create it first!"
             )
             sys.exit()
 
-    logger = setup_logger(
+    setup_logger(
         level=args.verbosity,
         log_file_name=args.log_file,
         graylog_logger_address=args.graylog_logger_address,
     )
 
     version = get_version()
-    logger.info(f"Forwarder v{version} started, service Id: {args.service_id}")
+    get_logger().info(f"Forwarder v{version} started, service Id: {args.service_id}")
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)
@@ -79,7 +79,7 @@ if __name__ == "__main__":
         status_topic,
         args.service_id,
         version,
-        logger,
+        get_logger(),
     )
     status_reporter.start()
 
@@ -91,7 +91,7 @@ if __name__ == "__main__":
             update_handlers,
             update_message_counter,
             update_buffer_err_counter,
-            logger,
+            get_logger(),
             prefix=f"{prefix}.throughput",
             update_interval_s=args.statistics_update_interval,
         )
@@ -115,12 +115,12 @@ if __name__ == "__main__":
                     producer,
                     ca_ctx,
                     pva_ctx,
-                    logger,
+                    get_logger(),
                     status_reporter,
                     configuration_store,
                 )
             except RuntimeError as error:
-                logger.error(
+                get_logger().error(
                     "Could not retrieve stored configuration on start-up: " f"{error}"
                 )
     else:
@@ -136,9 +136,9 @@ if __name__ == "__main__":
             if msg is None:
                 continue
             if msg.error():
-                logger.error(msg.error())
+                get_logger().error(msg.error())
             else:
-                logger.info("Received config message")
+                get_logger().info("Received config message")
                 config_change = parse_config_update(msg.value())
                 handle_configuration_change(
                     config_change,
@@ -148,13 +148,13 @@ if __name__ == "__main__":
                     producer,
                     ca_ctx,
                     pva_ctx,
-                    logger,
+                    get_logger(),
                     status_reporter,
                     configuration_store,
                 )
 
     except KeyboardInterrupt:
-        logger.info("%% Aborted by user")
+        get_logger().info("%% Aborted by user")
 
     finally:
         status_reporter.stop()
