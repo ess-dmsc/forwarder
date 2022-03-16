@@ -1,7 +1,6 @@
 from datetime import datetime, timedelta
 from threading import Lock, Timer
 from forwarder.application_logger import get_logger
-import traceback
 
 
 def milliseconds_to_seconds(time_ms: int) -> float:
