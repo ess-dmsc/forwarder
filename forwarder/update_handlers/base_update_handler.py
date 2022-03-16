@@ -60,8 +60,8 @@ class SerialiserTracker:
             )
         except BaseException as e:
             exception_string = f"Got uncaught exception in SerialiserTracker._publish_cached_update. The message was: {str(e)}"
-            print(exception_string)
             self._logger.error(exception_string)
+            self._logger.exception(e)
 
     def set_new_message(self, message: bytes, timestamp_ns: Union[int, float]):
         if message is None:

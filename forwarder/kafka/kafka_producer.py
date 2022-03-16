@@ -23,8 +23,11 @@ class KafkaProducer:
         self.logger = get_logger()
 
     def _poll_loop(self):
-        while not self._cancelled:
-            self._producer.poll(0.5)
+        try:
+            while not self._cancelled:
+                self._producer.poll(0.5)
+        except BaseException as e:
+            self.logger.exception(e)
 
     def close(self):
         self._cancelled = True
