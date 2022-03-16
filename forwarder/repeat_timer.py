@@ -1,5 +1,7 @@
 from datetime import datetime, timedelta
 from threading import Lock, Timer
+from forwarder.application_logger import get_logger
+import traceback
 
 
 def milliseconds_to_seconds(time_ms: int) -> float:
@@ -12,6 +14,7 @@ class RepeatTimer(Timer):
         self._lock = Lock()
         self._interval_time = timedelta(seconds=interval)
         self._trigger_time = datetime.now() + self._interval_time
+        self._logger = get_logger()
 
     def _calculate_new_wait_time(self, current_time: datetime) -> float:
         if current_time > self._trigger_time:
@@ -27,7 +30,10 @@ class RepeatTimer(Timer):
             current_time = datetime.now()
             with self._lock:
                 if current_time >= self._trigger_time:
-                    self.function(*self.args, **self.kwargs)
+                    try:
+                        self.function(*self.args, **self.kwargs)
+                    except BaseException as e:
+                        self._logger.exception(e)
                 wait_time = self._calculate_new_wait_time(current_time)
 
     def reset(self):

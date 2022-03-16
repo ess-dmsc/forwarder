@@ -46,8 +46,8 @@ class PVAUpdateHandler(BaseUpdateHandler):
             )
         except BaseException as e:
             exception_string = f"Got uncaught exception in PVAUpdateHandler._monitor_callback. The message was: {str(e)}"
-            print(exception_string)
             self._logger.error(exception_string)
+            self._logger.exception(e)
 
     def stop(self):
         """
