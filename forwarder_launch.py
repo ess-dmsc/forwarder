@@ -159,7 +159,9 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         get_logger().info("%% Aborted by user")
     except BaseException as e:
-        get_logger().error("Got an exception in the application main loop. The exception message was: {e}")
+        get_logger().error(
+            "Got an exception in the application main loop. The exception message was: {e}"
+        )
         get_logger().exception(e)
 
     finally:
