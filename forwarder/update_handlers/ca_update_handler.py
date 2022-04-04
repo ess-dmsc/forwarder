@@ -24,6 +24,8 @@ class CAUpdateHandler(BaseUpdateHandler):
         serialiser_tracker_list: List[SerialiserTracker],
     ):
         super().__init__(serialiser_tracker_list)
+        self._current_unit = None
+        self._pv_name = pv_name
 
         (self._pv,) = context.get_pvs(
             pv_name, connection_state_callback=self._connection_state_callback
@@ -31,6 +33,20 @@ class CAUpdateHandler(BaseUpdateHandler):
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
         sub.add_callback(self._monitor_callback)
+
+        ctrl_sub = self._pv.subscribe(data_type="control")
+        ctrl_sub.add_callback(self._unit_callback)
+
+    def _unit_callback(self, sub, response: ReadNotifyResponse):
+        old_unit = self._current_unit
+        try:
+            self._current_unit = response.metadata.units.decode("utf-8")
+        except AttributeError:
+            return
+        if old_unit is not None and old_unit != self._current_unit:
+            self._logger.warning(
+                f"Display unit of PV with name \"{self._pv_name}\" changed from \"{old_unit}\" to \"{self._current_unit}\"."
+            )
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         try:
