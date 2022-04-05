@@ -11,7 +11,9 @@ class SimpleTestIOC(PVGroup):
     A simple test IOC for running test PVs.
     """
 
-    DOUBLE = pvproperty(value=0.0, record="ai", units="cm", doc="A random float value", dtype=float)
+    DOUBLE = pvproperty(
+        value=0.0, record="ai", units="cm", doc="A random float value", dtype=float
+    )
     DOUBLE3 = pvproperty(
         value=0.0,
         record="ai",
@@ -26,7 +28,9 @@ class SimpleTestIOC(PVGroup):
     FLOATARRAY = pvproperty(
         value=np.zeros(5, dtype=float).tolist(), doc="A random float array value"
     )
-    LONG = pvproperty(value=0, record="ai", units="MIPS", doc="A random int value", dtype=int)
+    LONG = pvproperty(
+        value=0, record="ai", units="MIPS", doc="A random int value", dtype=int
+    )
     BOOL = pvproperty(value=False, doc="A random boolean value", dtype=bool)
     ENUM = pvproperty(
         value=0,

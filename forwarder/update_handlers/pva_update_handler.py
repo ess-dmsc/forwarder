@@ -41,7 +41,7 @@ class PVAUpdateHandler(BaseUpdateHandler):
             pass
         if old_unit is not None and old_unit != self._unit:
             self._logger.error(
-                f"Display unit of (pva) PV with name \"{self._pv_name}\" changed from \"{old_unit}\" to \"{self._unit}\"."
+                f'Display unit of (pva) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._unit}".'
             )
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
