@@ -1,6 +1,4 @@
-from typing import Union, List
-
-from p4p import Value
+from typing import List
 from p4p.client.thread import Context as PVAContext
 from forwarder.update_handlers.base_update_handler import (
     BaseUpdateHandler,
@@ -33,7 +31,7 @@ class PVAUpdateHandler(BaseUpdateHandler):
             notify_disconnect=True,
         )
 
-    def _monitor_callback(self, response: Union[Value, Exception]):
+    def _monitor_callback(self, response):
         old_unit = self._unit
         try:
             self._unit = response.display.units
