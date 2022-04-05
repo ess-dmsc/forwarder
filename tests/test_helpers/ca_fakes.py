@@ -10,10 +10,14 @@ class FakeSubscription:
                 "Callback was called before it was set in FakeSubscription object"
             )
 
-        self.callback: Callable = callback_undefined
+        self._first_new_callback = True
+        self.callback: List[Callable] = [callback_undefined]
 
     def add_callback(self, callback: Callable):
-        self.callback = callback
+        if self._first_new_callback:
+            self.callback.clear()
+            self._first_new_callback = False
+        self.callback.append(callback)
 
 
 class FakePV:
@@ -41,7 +45,8 @@ class FakeContext:
         return [FakePV(pv_name, self.subscription) for pv_name in pv_names]
 
     def call_monitor_callback_with_fake_pv_update(self, pv_update: ReadNotifyResponse):
-        self.subscription.callback(self.subscription, pv_update)
+        for c in self.subscription.callback:
+            c(self.subscription, pv_update)
 
     def call_connection_state_callback_with_fake_state_change(self, state: str):
         if self._connection_state_callback is not None:
