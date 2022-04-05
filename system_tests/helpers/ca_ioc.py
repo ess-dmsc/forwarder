@@ -38,12 +38,12 @@ class SimpleTestIOC(PVGroup):
         value="init_value", doc="A random string", dtype=ChannelType.STRING
     )
 
-    @DOUBLE3.startup
-    async def DOUBLE3(self, instance, async_lib):
+    @DOUBLE.startup
+    async def DOUBLE(self, instance, async_lib):
         while True:
-            await instance.write(value=1, units="cm")
+            await instance.write(value=0.0, units="cm")
             await async_lib.library.sleep(2.0)
-            await instance.write(value=5, units="mm")
+            await instance.write(value=0.0, units="mm")
             await async_lib.library.sleep(2.0)
 
 

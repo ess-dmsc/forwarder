@@ -44,8 +44,8 @@ class CAUpdateHandler(BaseUpdateHandler):
         except AttributeError:
             return
         if old_unit is not None and old_unit != self._current_unit:
-            self._logger.warning(
-                f"Display unit of PV with name \"{self._pv_name}\" changed from \"{old_unit}\" to \"{self._current_unit}\"."
+            self._logger.error(
+                f"Display unit of (ca) PV with name \"{self._pv_name}\" changed from \"{old_unit}\" to \"{self._current_unit}\"."
             )
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
