@@ -1,5 +1,5 @@
 from time import sleep
-
+import pytest
 from streaming_data_types.logdata_f142 import deserialise_f142
 
 from .helpers.f142_logdata.AlarmSeverity import AlarmSeverity
@@ -8,15 +8,21 @@ from .helpers.flatbuffer_helpers import check_expected_value
 from .helpers.kafka_helpers import create_consumer, poll_for_valid_message
 from .helpers.producerwrapper import ProducerWrapper
 from .helpers.PVs import PVDOUBLE
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
+    Protocol,
+)
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 
-def test_forwarder_sends_idle_pv_updates(docker_compose_idle_updates):
+@pytest.mark.parametrize("epics_protocol", [Protocol.CA, Protocol.PVA])
+def test_forwarder_sends_idle_pv_updates(epics_protocol, docker_compose_idle_updates):
     data_topic = "TEST_forwarderData_idle_updates"
 
     sleep(5)
-    producer = ProducerWrapper("localhost:9092", CONFIG_TOPIC, data_topic)
+    producer = ProducerWrapper(
+        "localhost:9092", CONFIG_TOPIC, data_topic, epics_protocol=epics_protocol
+    )
     producer.add_config([PVDOUBLE])
 
     consumer = create_consumer()

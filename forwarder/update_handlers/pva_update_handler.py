@@ -1,6 +1,4 @@
-from typing import Union, List
-
-from p4p import Value
+from typing import List
 from p4p.client.thread import Context as PVAContext
 from forwarder.update_handlers.base_update_handler import (
     BaseUpdateHandler,
@@ -22,6 +20,8 @@ class PVAUpdateHandler(BaseUpdateHandler):
         serialiser_tracker_list: List[SerialiserTracker],
     ):
         super().__init__(serialiser_tracker_list)
+        self._pv_name = pv_name
+        self._unit = None
 
         request = context.makeRequest("field()")
         self._sub = context.monitor(
@@ -31,7 +31,16 @@ class PVAUpdateHandler(BaseUpdateHandler):
             notify_disconnect=True,
         )
 
-    def _monitor_callback(self, response: Union[Value, Exception]):
+    def _monitor_callback(self, response):
+        old_unit = self._unit
+        try:
+            self._unit = response.display.units
+        except AttributeError:
+            pass
+        if old_unit is not None and old_unit != self._unit:
+            self._logger.error(
+                f'Display unit of (pva) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._unit}".'
+            )
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
                 (

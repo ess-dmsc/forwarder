@@ -3,13 +3,32 @@ from p4p.nt import NTScalar, NTEnum
 from p4p.server import Server
 from p4p.server.thread import SharedPV
 
-DOUBLE = SharedPV(nt=NTScalar("d"), initial=0.0)
+DOUBLE = SharedPV(
+    nt=NTScalar("d", display=True),
+    initial={
+        "value": 0.0,
+        "timeStamp": {
+            "secondsPastEpoch": int(time.time()),
+            "nanoseconds": 12345600,
+            "userTag": 0,
+        },
+        "alarm": {"severity": 0, "status": 0, "message": ""},
+        "display": {
+            "limitLow": 0,
+            "limitHigh": 1,
+            "description": "Hello",
+            "format": "6f",
+            "units": "mm",
+        },
+    },
+)
+
+
 DOUBLE3 = SharedPV(
     nt=NTScalar("d"),
     initial={
         "value": 0.0,
-        "timeStamp.secondsPastEpoch": int(time.time()),
-        "timeStamp.nanoseconds": 0,
+        "timeStamp": {"secondsPastEpoch": int(time.time()), "nanoseconds": 123456},
         "alarm.message": "HIGH_ALARM",
         "alarm.severity": 1,
         "alarm.status": 4,
@@ -24,6 +43,17 @@ BOOL = SharedPV(nt=NTScalar("?"), initial=False)
 FLOATARRAY = SharedPV(nt=NTScalar("ad"), initial=[0, 0, 0, 0, 0])
 
 
+def set_units(pv, value, units):
+    pv.post(
+        {
+            "value": value,
+            "timeStamp.secondsPastEpoch": int(time.time()),
+            "timeStamp.nanoseconds": 12345600,
+            "display.units": units,
+        }
+    )
+
+
 @DOUBLE.put
 @DOUBLE3.put
 @STR.put
@@ -36,22 +66,32 @@ def handle(pv, op):
         {
             "value": op.value(),
             "timeStamp.secondsPastEpoch": int(time.time()),
-            "timeStamp.nanoseconds": 0,
+            "timeStamp.nanoseconds": 123456,
         }
     )
     op.done()
 
 
-Server.forever(
-    providers=[
-        {
-            "SIMPLE:DOUBLE": DOUBLE,
-            "SIMPLE:DOUBLE3": DOUBLE3,
-            "SIMPLE:STR": STR,
-            "SIMPLE:ENUM": ENUM,
-            "SIMPLE:LONG": LONG,
-            "SIMPLE:BOOL": BOOL,
-            "SIMPLE:FLOATARRAY": FLOATARRAY,
-        }
-    ]
-)
+providers = [
+    {
+        "SIMPLE:DOUBLE": DOUBLE,
+        "SIMPLE:DOUBLE3": DOUBLE3,
+        "SIMPLE:STR": STR,
+        "SIMPLE:ENUM": ENUM,
+        "SIMPLE:LONG": LONG,
+        "SIMPLE:BOOL": BOOL,
+        "SIMPLE:FLOATARRAY": FLOATARRAY,
+    }
+]
+with Server(providers=providers):
+    print("Running server")
+    try:
+        while True:
+            time.sleep(2)
+            set_units(DOUBLE, 0.0, "mm")
+            time.sleep(2)
+            set_units(DOUBLE, 0.0, "cm")
+    except KeyboardInterrupt:
+        pass
+    finally:
+        print("Stopping server")
