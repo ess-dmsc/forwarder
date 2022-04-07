@@ -26,12 +26,12 @@ def pytest_addoption(parser):
         type=bool,
         action="store",
         default=False,
-        help="Use this flag to cause the system tests to prompt you to attach a debugger to the file writer process",
+        help="Use this flag to cause the integration tests to prompt you to attach a debugger to the file writer process",
     )
 
 
 def wait_until_kafka_ready(docker_cmd, docker_options):
-    print("Waiting for Kafka broker to be ready for system tests...", flush=True)
+    print("Waiting for Kafka broker to be ready for integration tests...", flush=True)
     conf = {
         "bootstrap.servers": "localhost:9092",
     }
@@ -109,10 +109,10 @@ def build_and_run(request, config_file=None, log_file=None):
     local_path = "../"
     # Launch local builds
     proc_ca_ioc = Popen(
-        ["python", os.path.join(local_path, "system_tests/helpers/ca_ioc.py")]
+        ["python", os.path.join(local_path, "integration_tests/helpers/ca_ioc.py")]
     )
     proc_pva_ioc = Popen(
-        ["python", os.path.join(local_path, "system_tests/helpers/pva_ioc.py")]
+        ["python", os.path.join(local_path, "integration_tests/helpers/pva_ioc.py")]
     )
 
     forwarder_path = os.path.join(local_path, "forwarder_launch.py")
@@ -120,9 +120,9 @@ def build_and_run(request, config_file=None, log_file=None):
         "python",
         forwarder_path,
         "-c",
-        os.path.join(local_path, "system_tests", "config-files", config_file),
+        os.path.join(local_path, "integration_tests", "config-files", config_file),
         "--log-file",
-        os.path.join(local_path, "system_tests", "logs", log_file),
+        os.path.join(local_path, "integration_tests", "logs", log_file),
     ]
     proc_forwarder = Popen(command_options)
     if wait_for_debugger:
