@@ -107,7 +107,7 @@ node {
 
 def get_integration_tests_pipeline() {
   return {
-    node('system-test') {
+    node('docker') {
       cleanWs()
       dir("${pipeline_builder.project}") {
         try {
