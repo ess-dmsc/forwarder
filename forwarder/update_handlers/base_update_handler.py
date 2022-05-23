@@ -3,7 +3,7 @@ from typing import Optional, Union, List
 
 from threading import Lock
 from forwarder.application_logger import get_logger
-from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds
+from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds, seconds_to_nanoseconds
 from forwarder.kafka.kafka_producer import KafkaProducer
 from confluent_kafka.error import (
     KafkaException,
@@ -12,6 +12,7 @@ from confluent_kafka.error import (
 )
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
+import time
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
@@ -48,7 +49,7 @@ class SerialiserTracker:
         try:
             with self._cache_lock:
                 if self._cached_update is not None:
-                    self.publish_message(self._cached_update, self._cached_timestamp)
+                    self.publish_message(self._cached_update, seconds_to_nanoseconds(time.time()))
         except (
             KafkaException,
             ValueSerializationError,
