@@ -3,7 +3,10 @@ from typing import Optional, Union, List
 
 from threading import Lock
 from forwarder.application_logger import get_logger
-from forwarder.kafka.kafka_helpers import _nanoseconds_to_milliseconds, seconds_to_nanoseconds
+from forwarder.kafka.kafka_helpers import (
+    _nanoseconds_to_milliseconds,
+    seconds_to_nanoseconds,
+)
 from forwarder.kafka.kafka_producer import KafkaProducer
 from confluent_kafka.error import (
     KafkaException,
@@ -49,7 +52,9 @@ class SerialiserTracker:
         try:
             with self._cache_lock:
                 if self._cached_update is not None:
-                    self.publish_message(self._cached_update, seconds_to_nanoseconds(time.time()))
+                    self.publish_message(
+                        self._cached_update, seconds_to_nanoseconds(time.time())
+                    )
         except (
             KafkaException,
             ValueSerializationError,
