@@ -6,9 +6,9 @@ import numpy as np
 import pytest
 from p4p.client.thread import Cancelled, Disconnected, RemoteError
 from p4p.nt import NTEnum, NTScalar
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
-    EventType as ConnectionEventType,
+from streaming_data_types.epics_pv_conn_status_pvCn import deserialise_pvCn
+from streaming_data_types.fbschemas.epics_conn_status_pvCn.ConnectionInfo import (
+    ConnectionInfo as ConnectionEventType,
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
@@ -319,7 +319,7 @@ def test_empty_update_is_not_cached():
 @pytest.mark.parametrize(
     "exception,state_enum",
     [
-        (RemoteError(), ConnectionEventType.DISCONNECTED),
+        (RemoteError(), ConnectionEventType.REMOTE_ERROR),
         (Disconnected(), ConnectionEventType.DISCONNECTED),
         (RuntimeError("some unrecognised exception"), ConnectionEventType.UNKNOWN),
     ],
@@ -330,7 +330,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_pvCn(payload)
         except Exception:
             pass
 
@@ -343,7 +343,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert producer.published_payload is not None
-    assert result.type == state_enum
+    assert result.status == state_enum
     assert result.source_name == pv_source_name
 
     pva_update_handler.stop()
@@ -355,7 +355,7 @@ def test_connection_state_change_on_cancel():
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_pvCn(payload)
         except Exception:
             pass
 

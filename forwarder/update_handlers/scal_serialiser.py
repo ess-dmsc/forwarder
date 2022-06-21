@@ -36,7 +36,7 @@ class scal_Serialiser:
     def _serialise(self, value, timestamp) -> Tuple[bytes, int]:
         return (
             serialise_scal(value=value, source_name=self._source_name, timestamp=timestamp),
-            timestamp,
+            timestamp.timestamp() / 1_000_000_000,
         )
 
     def pva_serialise(

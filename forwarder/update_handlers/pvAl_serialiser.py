@@ -112,7 +112,7 @@ class pvAl_Serialiser:
         self._current_alarm = alarm
         return (
             serialise_pvAl(source_name=self._source_name, timestamp=timestamp, state=alarm, ca_state=ca_alarm, severity=severity, message=message),
-            timestamp,
+            timestamp.timestamp() / 1_000_000_000,
         )
 
     def _serialise_undefined(self) -> Tuple[bytes, int]:

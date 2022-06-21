@@ -6,9 +6,9 @@ from typing import List
 import numpy as np
 import pytest
 from caproto import ChannelType, ReadNotifyResponse, TimeStamp, timestamp_to_epics
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
-    EventType as ConnectionEventType,
+from streaming_data_types.epics_pv_conn_status_pvCn import deserialise_pvCn
+from streaming_data_types.fbschemas.epics_conn_status_pvCn.ConnectionInfo import (
+    ConnectionInfo as ConnectionEventType,
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
@@ -390,8 +390,8 @@ def test_handler_publishes_connection_state_change(state_string, state_enum):
     context.call_connection_state_callback_with_fake_state_change(state_string)
 
     assert producer.published_payload is not None
-    connect_state_output = deserialise_ep00(producer.published_payload)
-    assert connect_state_output.type == state_enum
+    connect_state_output = deserialise_pvCn(producer.published_payload)
+    assert connect_state_output.status == state_enum
     assert connect_state_output.source_name == pv_source_name
 
     update_handler.stop()

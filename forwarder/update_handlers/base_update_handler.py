@@ -145,13 +145,24 @@ def create_serialiser_list(
     # Connection status serialiser
     return_list.append(
         SerialiserTracker(
-            schema_serialisers["ep00"](pv_name),
+            schema_serialisers["pvCn"](pv_name),
             producer,
             pv_name,
             output_topic,
             periodic_update_ms,
         )
     )
+    # Alarm status serialiser, note that f142 stores alarms
+    if schema != "f142":
+        return_list.append(
+            SerialiserTracker(
+                schema_serialisers["pvAl"](pv_name),
+                producer,
+                pv_name,
+                output_topic,
+                periodic_update_ms,
+            )
+        )
     return return_list
 
 
