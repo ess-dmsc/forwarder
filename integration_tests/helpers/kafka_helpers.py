@@ -74,7 +74,7 @@ def poll_for_valid_message(
             message_file_id = msg.value()[4:8]
 
             # Skip ep00 messages if we are looking for something else
-            if expected_file_identifier != b"ep00" and message_file_id == b"ep00":
+            if expected_file_identifier != b"pvCn" and message_file_id == b"pvCn":
                 continue
 
             assert (
