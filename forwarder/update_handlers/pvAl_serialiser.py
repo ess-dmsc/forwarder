@@ -179,5 +179,7 @@ class pvAl_Serialiser:
             alarm=alarm, severity=severity, ca_alarm=ca_alarm, timestamp=timestamp
         )
 
-    def ca_conn_serialise(self, pv: str, state: str) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+    def ca_conn_serialise(
+        self, pv: str, state: str
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         return self._serialise_undefined()
