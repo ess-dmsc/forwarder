@@ -1,6 +1,9 @@
 import numpy as np
 from p4p.client.thread import Disconnected
-from streaming_data_types.epics_pv_conn_status_pvCn import deserialise_pvCn, ConnectionInfo
+from streaming_data_types.epics_pv_conn_status_pvCn import (
+    deserialise_pvCn,
+    ConnectionInfo,
+)
 
 from forwarder.update_handlers.pvCn_serialiser import pvCn_Serialiser
 from p4p.nt import NTScalar
@@ -33,7 +36,9 @@ def test_serialise_pva_value():
     fb_update = deserialise_pvCn(message)
 
     assert fb_update.source_name == pv_name
-    assert fb_update.timestamp == datetime.fromtimestamp(0, tz=timezone.utc) + timedelta(microseconds=reference_nanoseconds / 1000)
+    assert fb_update.timestamp == datetime.fromtimestamp(
+        0, tz=timezone.utc
+    ) + timedelta(microseconds=reference_nanoseconds / 1000)
     assert fb_update.status == ConnectionInfo.ConnectionInfo.CONNECTED
 
     message, timestamp = serialiser.pva_serialise(update)

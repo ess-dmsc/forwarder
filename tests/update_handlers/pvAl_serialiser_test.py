@@ -1,5 +1,10 @@
 from p4p.client.thread import Disconnected
-from streaming_data_types.epics_pv_alarm_status_pvAl import deserialise_pvAl, AlarmSeverity, CAAlarmState, AlarmState
+from streaming_data_types.epics_pv_alarm_status_pvAl import (
+    deserialise_pvAl,
+    AlarmSeverity,
+    CAAlarmState,
+    AlarmState,
+)
 
 from forwarder.update_handlers.pvAl_serialiser import pvAl_Serialiser
 from p4p.nt import NTScalar
@@ -11,7 +16,9 @@ def test_serialise_pva_value():
     reference_time = datetime.now(tz=timezone.utc)
     update = NTScalar("i").wrap(3.134)
     update.timeStamp.secondsPastEpoch = int(reference_time.timestamp())
-    update.timeStamp.nanoseconds = int((reference_time.timestamp() - int(reference_time.timestamp()))*1e9)
+    update.timeStamp.nanoseconds = int(
+        (reference_time.timestamp() - int(reference_time.timestamp())) * 1e9
+    )
     update.alarm.status = 1
     update.alarm.severity = 3
     update.alarm.message = "Some alarm message"
@@ -62,10 +69,16 @@ def test_serialise_ca_alarm():
     reference_time = datetime.now(tz=timezone.utc)
     serialiser = pvAl_Serialiser(pv_name)
 
-    metadata = (CAAlarmState.CAAlarmState.DISABLE.real, AlarmSeverity.AlarmSeverity.MAJOR.real, TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))))
+    metadata = (
+        CAAlarmState.CAAlarmState.DISABLE.real,
+        AlarmSeverity.AlarmSeverity.MAJOR.real,
+        TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))),
+    )
 
     update = ReadNotifyResponse(
-        [3.14,],
+        [
+            3.14,
+        ],
         ChannelType.TIME_DOUBLE,
         1,
         1,
@@ -90,10 +103,16 @@ def test_serialise_ca_alarm_undefined():
     reference_time = datetime.now(tz=timezone.utc)
     serialiser = pvAl_Serialiser(pv_name)
 
-    metadata = (453, 0, TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))))
+    metadata = (
+        453,
+        0,
+        TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))),
+    )
 
     update = ReadNotifyResponse(
-        [3.14,],
+        [
+            3.14,
+        ],
         ChannelType.TIME_DOUBLE,
         1,
         1,
@@ -132,4 +151,3 @@ def test_repeated_alarm():
 
     assert message is None
     assert timestamp is None
-

@@ -35,7 +35,9 @@ class scal_Serialiser:
 
     def _serialise(self, value, timestamp) -> Tuple[bytes, int]:
         return (
-            serialise_scal(value=value, source_name=self._source_name, timestamp=timestamp),
+            serialise_scal(
+                value=value, source_name=self._source_name, timestamp=timestamp
+            ),
             timestamp.timestamp() / 1_000_000_000,
         )
 
@@ -45,8 +47,9 @@ class scal_Serialiser:
         if isinstance(update, RuntimeError):
             return None, None
         value = _extract_pva_data(update)
-        timestamp = datetime.fromtimestamp(update.timeStamp.secondsPastEpoch, tz=timezone.utc) + timedelta(
-            microseconds=update.timeStamp.nanoseconds / 1000)
+        timestamp = datetime.fromtimestamp(
+            update.timeStamp.secondsPastEpoch, tz=timezone.utc
+        ) + timedelta(microseconds=update.timeStamp.nanoseconds / 1000)
         return self._serialise(value=value, timestamp=timestamp)
 
     def ca_serialise(

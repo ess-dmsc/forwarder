@@ -13,7 +13,9 @@ def test_serialise_pva_single_value():
     reference_time = datetime.now(tz=timezone.utc)
     update = NTScalar("i").wrap(test_value)
     update.timeStamp.secondsPastEpoch = int(reference_time.timestamp())
-    update.timeStamp.nanoseconds = int((reference_time.timestamp() - int(reference_time.timestamp()))*1e9)
+    update.timeStamp.nanoseconds = int(
+        (reference_time.timestamp() - int(reference_time.timestamp())) * 1e9
+    )
 
     pv_name = "some_pv"
     serialiser = scal_Serialiser(pv_name)
@@ -31,7 +33,9 @@ def test_serialise_pva_array_value():
     reference_time = datetime.now(tz=timezone.utc)
     update = NTScalar("ai").wrap(test_value)
     update.timeStamp.secondsPastEpoch = int(reference_time.timestamp())
-    update.timeStamp.nanoseconds = int((reference_time.timestamp() - int(reference_time.timestamp()))*1e9)
+    update.timeStamp.nanoseconds = int(
+        (reference_time.timestamp() - int(reference_time.timestamp())) * 1e9
+    )
 
     pv_name = "some_pv"
     serialiser = scal_Serialiser(pv_name)
@@ -49,12 +53,18 @@ def test_serialise_ca_single_value():
     reference_time = datetime.now(tz=timezone.utc)
     serialiser = scal_Serialiser(pv_name)
 
-    metadata = (0, 0, TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))))
+    metadata = (
+        0,
+        0,
+        TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))),
+    )
 
     test_value = 1.2345
 
     update = ReadNotifyResponse(
-        [test_value, ],
+        [
+            test_value,
+        ],
         ChannelType.TIME_DOUBLE,
         1,
         1,
@@ -76,12 +86,18 @@ def test_serialise_ca_array_value():
     reference_time = datetime.now(tz=timezone.utc)
     serialiser = scal_Serialiser(pv_name)
 
-    metadata = (0, 0, TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))))
+    metadata = (
+        0,
+        0,
+        TimeStamp(*timestamp_to_epics(reference_time.replace(tzinfo=None))),
+    )
 
     test_value = np.linspace(1, 2)
 
     update = ReadNotifyResponse(
-        [test_value, ],
+        [
+            test_value,
+        ],
         ChannelType.TIME_DOUBLE,
         len(test_value),
         1,
@@ -114,4 +130,3 @@ def test_serialise_ca_connected():
 
     assert message is None
     assert timestamp is None
-
