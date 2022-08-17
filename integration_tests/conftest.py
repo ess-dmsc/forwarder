@@ -70,7 +70,7 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         NewTopic("TEST_forwarderData_fake", 1, 1),
         NewTopic("TEST_forwarderData_idle_updates", 1, 1),
         NewTopic("TEST_forwarderStorage", 1, 1),
-        NewTopic("TEST_forwarderStorageStatus", 1, 1)
+        NewTopic("TEST_forwarderStorageStatus", 1, 1),
     ]
     client.create_topics(topic_list)
     topic_ready = False
