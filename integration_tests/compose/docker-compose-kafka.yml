@@ -1,32 +1,72 @@
-version: "2"
-
+version: '3.5'
 services:
 
   zookeeper:
-    image: docker.io/bitnami/zookeeper:3.8
-    hostname: zookeeper
     container_name: zookeeper
-    ports:
-      - "2181:2181"
+    hostname: zookeeper
+    image: confluentinc/cp-zookeeper:7.2.1
+    restart: always
+    volumes:
+    - ./zookeeper_server_jaas.conf:/etc/kafka/zookeeper_server_jaas.conf:rw
     environment:
-      - ALLOW_ANONYMOUS_LOGIN=yes
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+        -Dzookeeper.allowSaslFailedClients=false -Dzookeeper.requireClientAuthScheme=sasl
 
   kafka1:
-    image: docker.io/bitnami/kafka:3.2
-    hostname: kafka1
     container_name: kafka1
+    hostname: kafka1
+    image: confluentinc/cp-server:7.2.1
     ports:
       - "9092:9092"
+      - "9093:9093"
+    restart: always
+    volumes:
+    - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:rw
     environment:
-      # zookeeper
-      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
-      # kafka config
-      - KAFKA_CFG_MESSAGE_MAX_BYTES=10000000
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+      KAFKA_BROKER_ID: 1
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       # listeners
-      - ALLOW_PLAINTEXT_LISTENER=yes
-      - KAFKA_CFG_LISTENERS=NOAUTH://0.0.0.0:9092,BROKERS://:9099
-      - KAFKA_CFG_ADVERTISED_LISTENERS=NOAUTH://localhost:9092,BROKERS://kafka1:9099
-      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=NOAUTH:PLAINTEXT,BROKERS:PLAINTEXT
-      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=BROKERS
+      KAFKA_LISTENERS: 'NOAUTH://0.0.0.0:9092,AUTH://0.0.0.0:9093,BROKERS://:9099'
+      KAFKA_ADVERTISED_LISTENERS: 'NOAUTH://localhost:9092,AUTH://localhost:9093,BROKERS://kafka1:9099'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'NOAUTH:PLAINTEXT,AUTH:SASL_PLAINTEXT,BROKERS:PLAINTEXT'
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKERS
+      KAFKA_LISTENER_NAME_AUTH_SASL_ENABLED_MECHANISMS: PLAIN
+      KAFKA_LISTENER_NAME_AUTH_PLAIN_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule
+        required \
+        username="broker" \
+        password="broker" \
+        user_broker="broker" \
+        user_client="client-secret";
+        '
+      # KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+      # KAFKA_LISTENER_NAME_BROKERS_SASL_ENABLED_MECHANISMS: PLAIN
+      # KAFKA_LISTENER_NAME_BROKERS_PLAIN_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule
+      #   required \
+      #   username="broker" \
+      #   password="broker" \
+      #   user_broker="broker" \
+      #   user_client="client-secret";
+      #   '
+
+  kcat:
+    container_name: kcat
     depends_on:
-      - zookeeper
+      kafka1:
+        condition: service_started
+    entrypoint:
+    - sh
+    - -c
+    - sleep infinity
+    hostname: kcat
+    image: confluentinc/cp-kcat:latest
+    profiles:
+    - kcat
