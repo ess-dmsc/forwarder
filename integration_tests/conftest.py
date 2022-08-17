@@ -5,7 +5,7 @@ from time import sleep
 import pytest
 from compose.cli.main import TopLevelCommand, project_from_options
 from confluent_kafka import Producer
-from confluent_kafka.admin import AdminClient
+from confluent_kafka.admin import AdminClient, NewTopic
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
     UpdateType,
 )
@@ -59,6 +59,20 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
         raise Exception("Kafka broker was not ready after 100 seconds, aborting tests.")
 
     client = AdminClient(conf)
+    topic_list = [
+        NewTopic("TEST_forwarderConfig", 1, 1),
+        NewTopic("TEST_forwarderData_2_partitions", 2, 1),
+        NewTopic("TEST_forwarderData_0", 1, 1),
+        NewTopic("TEST_forwarderData_1", 1, 1),
+        NewTopic("TEST_forwarderData_2", 1, 1),
+        NewTopic("TEST_forwarderData_change_config", 1, 1),
+        NewTopic("TEST_forwarderData_connection_status", 1, 1),
+        NewTopic("TEST_forwarderData_fake", 1, 1),
+        NewTopic("TEST_forwarderData_idle_updates", 1, 1),
+        NewTopic("TEST_forwarderStorage", 1, 1),
+        NewTopic("TEST_forwarderStorageStatus", 1, 1)
+    ]
+    client.create_topics(topic_list)
     topic_ready = False
 
     n_polls = 0
