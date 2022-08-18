@@ -10,7 +10,9 @@ It uses Docker containers to create containerised instances of Kafka and other c
 
 * Install Docker
 
-* Install the requirements using pip: `pip install -r integration_tests/requirements.txt`
+* Install the requirements using pip: `pip install -r requirements-dev.txt`
+
+* Install the integration tests requirements: `pip install -r integration_tests/requirements.txt`
 
 * Stop and remove any containers that may interfere with the integration tests, e.g IOC containers, Kafka containers and
 containers from previous runs. To stop and remove all containers use `docker stop $(docker ps -a -q) && docker
