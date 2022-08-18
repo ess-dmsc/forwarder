@@ -12,6 +12,24 @@ from forwarder.utils import Counter
 from .kafka_producer import KafkaProducer
 
 
+def sasl_conf():
+    """Return a dict with SASL configuration parameters.
+    TODO: This is an example, we must load the configuration from elsewhere!
+    """
+    sasl_conf = {
+        "sasl.mechanism": "PLAIN",  # GSSAPI, PLAIN, SCRAM-SHA-512, SCRAM-SHA-256
+        "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT, SASL_SSL
+    }
+    # Example for PLAIN:
+    sasl_conf.update(
+        {
+            "sasl.username": "client",
+            "sasl.password": "client-secret",
+        }
+    )
+    return sasl_conf
+
+
 def create_producer(
     broker_address: str,
     counter: Optional[Counter] = None,
@@ -21,6 +39,7 @@ def create_producer(
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
+    producer_config.update(sasl_conf())
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -30,13 +49,13 @@ def create_producer(
 
 
 def create_consumer(broker_address: str) -> Consumer:
-    return Consumer(
-        {
-            "bootstrap.servers": broker_address,
-            "group.id": uuid.uuid4(),
-            "default.topic.config": {"auto.offset.reset": "latest"},
-        }
-    )
+    consumer_config = {
+        "bootstrap.servers": broker_address,
+        "group.id": uuid.uuid4(),
+        "default.topic.config": {"auto.offset.reset": "latest"},
+    }
+    consumer_config.update(sasl_conf())
+    return Consumer(consumer_config)
 
 
 def get_broker_and_topic_from_uri(uri: str) -> Tuple[str, str, str]:
