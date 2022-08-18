@@ -84,11 +84,30 @@ def poll_for_valid_message(
         print("Waiting for message")
 
 
+def sasl_conf():
+    """Return a dict with SASL configuration parameters.
+    TODO: This is an example, we must load the configuration from elsewhere!
+    """
+    sasl_conf = {
+        "sasl.mechanism": "PLAIN",  # GSSAPI, PLAIN, SCRAM-SHA-512, SCRAM-SHA-256
+        "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT, SASL_SSL
+    }
+    # Example for PLAIN:
+    sasl_conf.update(
+        {
+            "sasl.username": "client",
+            "sasl.password": "client-secret",
+        }
+    )
+    return sasl_conf
+
+
 def create_consumer(offset_reset="earliest"):
     consumer_config = {
         "bootstrap.servers": "localhost:9092",
         "default.topic.config": {"auto.offset.reset": offset_reset},
         "group.id": uuid.uuid4(),
     }
+    consumer_config.update(sasl_conf())
     cons = Consumer(**consumer_config)
     return cons
