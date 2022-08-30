@@ -4,6 +4,8 @@ from typing import Optional, Tuple
 from confluent_kafka import Consumer, TopicPartition
 from pytictoc import TicToc
 
+from ...forwarder.kafka.kafka_helpers import sasl_config
+
 
 class MsgErrorException(Exception):
     pass
@@ -90,5 +92,6 @@ def create_consumer(offset_reset="earliest"):
         "default.topic.config": {"auto.offset.reset": offset_reset},
         "group.id": uuid.uuid4(),
     }
+    consumer_config.update(sasl_config("client", "client-secret"))
     cons = Consumer(**consumer_config)
     return cons
