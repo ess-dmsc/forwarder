@@ -11,9 +11,9 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
-        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
-        -Dzookeeper.allowSaslFailedClients=false -Dzookeeper.requireClientAuthScheme=sasl
+      # KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+      #   -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+      #   -Dzookeeper.allowSaslFailedClients=false -Dzookeeper.requireClientAuthScheme=sasl
 
   kafka1:
     container_name: kafka1
@@ -21,14 +21,13 @@ services:
     image: confluentinc/cp-server:7.2.1
     ports:
       - "9092:9092"
-      - "9093:9093"
-      - "9094:9094"
+      - "9099:9099"
     restart: always
-    volumes:
-    - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:rw
+    # volumes:
+    # - ./kafka_server_jaas.conf:/etc/kafka/kafka_server_jaas.conf:rw
     environment:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+      # KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
       KAFKA_BROKER_ID: 1
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
@@ -36,9 +35,9 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       ## listeners
-      KAFKA_LISTENERS: 'NOAUTH://0.0.0.0:9093,AUTH://0.0.0.0:9092,BROKERS://:9099,SCRAM://0.0.0.0:9094'
-      KAFKA_ADVERTISED_LISTENERS: 'NOAUTH://localhost:9093,AUTH://localhost:9092,BROKERS://kafka1:9099,SCRAM://localhost:9094'
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'NOAUTH:PLAINTEXT,AUTH:SASL_PLAINTEXT,BROKERS:PLAINTEXT,SCRAM:SASL_PLAINTEXT'
+      KAFKA_LISTENERS: 'AUTH://0.0.0.0:9092,BROKERS://:9099'
+      KAFKA_ADVERTISED_LISTENERS: 'AUTH://localhost:9092,BROKERS://kafka1:9099'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'AUTH:SASL_PLAINTEXT,BROKERS:PLAINTEXT'
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKERS
       #### sasl/plain
       KAFKA_LISTENER_NAME_AUTH_SASL_ENABLED_MECHANISMS: PLAIN
@@ -50,7 +49,8 @@ services:
         user_client="client-secret";
         '
       #### sasl/scram, to create users: kafka-configs --bootstrap-server localhost:9099 --alter --add-config 'SCRAM-SHA-256=[iterations=8192,password=bob-secret]' --entity-type users --entity-name bob
-      KAFKA_LISTENER_NAME_SCRAM_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      # KAFKA_LISTENER_NAME_SCRAM_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+      #### inter-broker authentication
       # KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
       # KAFKA_LISTENER_NAME_BROKERS_SASL_ENABLED_MECHANISMS: PLAIN
       # KAFKA_LISTENER_NAME_BROKERS_PLAIN_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule

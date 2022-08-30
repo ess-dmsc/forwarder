@@ -92,6 +92,6 @@ def create_consumer(offset_reset="earliest"):
         "default.topic.config": {"auto.offset.reset": offset_reset},
         "group.id": uuid.uuid4(),
     }
-    consumer_config.update(sasl_config("client", "client-secret"))
+    consumer_config.update(sasl_config("PLAIN", "client", "client-secret"))
     cons = Consumer(**consumer_config)
     return cons

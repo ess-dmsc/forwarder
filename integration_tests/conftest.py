@@ -37,7 +37,7 @@ def wait_until_kafka_ready(docker_cmd, docker_options):
     conf = {
         "bootstrap.servers": "localhost:9092",
     }
-    conf.update(sasl_config("client", "client-secret"))
+    conf.update(sasl_config("PLAIN", "client", "client-secret"))
     producer = Producer(**conf)
 
     kafka_ready = False
@@ -221,7 +221,7 @@ def docker_compose_storage(request):
     conf = {
         "bootstrap.servers": "localhost:9092",
     }
-    conf.update(sasl_config("client", "client-secret"))
+    conf.update(sasl_config("PLAIN", "client", "client-secret"))
     producer = Producer(**conf)
 
     stream_1 = StreamInfo(PVSTR, "f142", "some_topic_1", Protocol.Protocol.CA)
