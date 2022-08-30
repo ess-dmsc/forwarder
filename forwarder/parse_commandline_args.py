@@ -62,49 +62,49 @@ def parse_args():
     parser.add_argument(
         "--config-topic",
         required=True,
-        help="<[username@]host[:port][/topic]> Kafka broker/topic to listen for commands",
+        help="<[[SASL_MECHANISM\\]username@]host[:port][/topic]> Kafka broker/topic to listen for commands",
         type=str,
         env_var="CONFIG_TOPIC",
     )
     parser.add_argument(
         "--config-topic-sasl-password",
         required=False,
-        Help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
         type=str,
         env_var="CONFIG_TOPIC_SASL_PASSWORD",
     )
     parser.add_argument(
         "--status-topic",
         required=True,
-        help="<[username@]host[:port][/topic]> Kafka broker/topic to publish status updates on",
+        help="<[[SASL_MECHANISM\\]username@]host[:port][/topic]> Kafka broker/topic to publish status updates on",
         type=str,
         env_var="STATUS_TOPIC",
     )
     parser.add_argument(
         "--status-topic-sasl-password",
         required=False,
-        Help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
         type=str,
         env_var="STATUS_TOPIC_SASL_PASSWORD",
     )
     parser.add_argument(
         "--output-broker",
         required=True,
-        help="<[username@]host[:port]> Kafka broker to forward data into",
+        help="<[[SASL_MECHANISM\\]username@]host[:port]> Kafka broker to forward data into",
         type=str,
         env_var="OUTPUT_BROKER",
     )
     parser.add_argument(
         "--output-broker-sasl-password",
         required=False,
-        Help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
         type=str,
         env_var="OUTPUT_BROKER_SASL_PASSWORD",
     )
     parser.add_argument(
         "--storage-topic",
         required=False,
-        help="<[username@]host[:port][/topic]> Kafka broker/topic for storage of the "
+        help="<[[SASL_MECHANISM\\]username@]host[:port][/topic]> Kafka broker/topic for storage of the "
         "last known forwarding details",
         type=str,
         env_var="STORAGE_TOPIC",
@@ -112,7 +112,7 @@ def parse_args():
     parser.add_argument(
         "--storage-topic-sasl-password",
         required=False,
-        Help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
         type=str,
         env_var="STORAGE_TOPIC_SASL_PASSWORD",
     )

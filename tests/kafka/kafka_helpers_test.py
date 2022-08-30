@@ -3,6 +3,7 @@ import pytest
 from forwarder.kafka.kafka_helpers import (
     get_broker_and_username_from_uri,
     get_broker_topic_and_username_from_uri,
+    sasl_config,
 )
 
 
@@ -16,27 +17,30 @@ def test_uri_with_broker_name_and_topic_successfully_split():
     test_broker = "localhost"
     test_topic = "some_topic"
     test_uri = f"{test_broker}/{test_topic}"
-    broker, topic, _ = get_broker_topic_and_username_from_uri(test_uri)
+    broker, topic, _, username = get_broker_topic_and_username_from_uri(test_uri)
     assert broker == test_broker
     assert topic == test_topic
+    assert not username
 
 
 def test_uri_with_double_slash_in_from_of_broker_is_ok():
     test_broker = "localhost"
     test_topic = "some_topic"
     test_uri = f"//{test_broker}/{test_topic}"
-    broker, topic, _ = get_broker_topic_and_username_from_uri(test_uri)
+    broker, topic, _, username = get_broker_topic_and_username_from_uri(test_uri)
     assert broker == test_broker
     assert topic == test_topic
+    assert not username
 
 
 def test_uri_with_port_after_broker_is_included_in_broker_output():
     test_broker = "localhost:9092"
     test_topic = "some_topic"
     test_uri = f"{test_broker}/{test_topic}"
-    broker, topic, _ = get_broker_topic_and_username_from_uri(test_uri)
+    broker, topic, _, username = get_broker_topic_and_username_from_uri(test_uri)
     assert broker == test_broker
     assert topic == test_topic
+    assert not username
 
 
 def test_raises_exception_if_broker_only_uri_contains_slash():
@@ -52,7 +56,49 @@ def test_uri_with_username_port_and_topic():
     test_broker = "localhost:9092"
     test_topic = "some_topic"
     test_uri = f"{test_username}@{test_broker}/{test_topic}"
-    broker, topic, username = get_broker_topic_and_username_from_uri(test_uri)
+    broker, topic, sasl_mechanism, username = get_broker_topic_and_username_from_uri(
+        test_uri
+    )
     assert username == test_username
     assert broker == test_broker
     assert topic == test_topic
+    assert (
+        test_username
+        == sasl_config(sasl_mechanism, username, "some_password")["sasl.username"]
+    )
+
+
+def test_uri_with_sasl_mechanism_username_port_and_topic():
+    test_sasl_mechanism = "PLAIN"
+    test_username = "some_user"
+    test_broker = "localhost:9092"
+    test_topic = "some_topic"
+    test_uri = f"{test_sasl_mechanism}\\{test_username}@{test_broker}/{test_topic}"
+    broker, topic, sasl_mechanism, username = get_broker_topic_and_username_from_uri(
+        test_uri
+    )
+    assert sasl_mechanism == test_sasl_mechanism
+    assert username == test_username
+    assert broker == test_broker
+    assert topic == test_topic
+    assert (
+        test_sasl_mechanism
+        == sasl_config(sasl_mechanism, username, "some_password")["sasl.mechanism"]
+    )
+
+
+def test_raises_exception_if_uri_has_unsupported_sasl_mechanism():
+    test_sasl_mechanism = "xPLAIN"
+    test_username = "some_user"
+    test_broker = "localhost:9092"
+    test_topic = "some_topic"
+    test_uri = f"{test_sasl_mechanism}\\{test_username}@{test_broker}/{test_topic}"
+    broker, topic, sasl_mechanism, username = get_broker_topic_and_username_from_uri(
+        test_uri
+    )
+    assert sasl_mechanism == test_sasl_mechanism
+    assert username == test_username
+    assert broker == test_broker
+    assert topic == test_topic
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, username, "some_password")

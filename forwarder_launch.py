@@ -62,11 +62,14 @@ if __name__ == "__main__":
     update_buffer_err_counter = Counter()
 
     # Kafka
-    output_broker, output_username = get_broker_and_username_from_uri(
-        args.output_broker
-    )
+    (
+        output_broker,
+        output_sasl_mechanism,
+        output_username,
+    ) = get_broker_and_username_from_uri(args.output_broker)
     producer = create_producer(
         output_broker,
+        output_sasl_mechanism,
         output_username,
         args.output_broker_sasl_password,
         counter=update_message_counter if grafana_carbon_address else None,
@@ -78,22 +81,30 @@ if __name__ == "__main__":
     (
         config_broker,
         config_topic,
+        config_sasl_mechanism,
         config_username,
     ) = get_broker_topic_and_username_from_uri(args.config_topic)
     consumer = create_consumer(
-        config_broker, config_username, args.config_topic_sasl_password
+        config_broker,
+        config_sasl_mechanism,
+        config_username,
+        args.config_topic_sasl_password,
     )
     consumer.subscribe([config_topic])
 
     (
         status_broker,
         status_topic,
+        status_sasl_mechanism,
         status_username,
     ) = get_broker_topic_and_username_from_uri(args.status_topic)
     status_reporter = StatusReporter(
         update_handlers,
         create_producer(
-            status_broker, status_username, args.status_topic_sasl_password
+            status_broker,
+            status_sasl_mechanism,
+            status_username,
+            args.status_topic_sasl_password,
         ),
         status_topic,
         args.service_id,
@@ -123,14 +134,21 @@ if __name__ == "__main__":
         (
             store_broker,
             store_topic,
+            store_sasl_mechanism,
             store_username,
         ) = get_broker_topic_and_username_from_uri(args.storage_topic)
         configuration_store = ConfigurationStore(
             create_producer(
-                store_broker, store_username, args.storage_topic_sasl_password
+                store_broker,
+                store_sasl_mechanism,
+                store_username,
+                args.storage_topic_sasl_password,
             ),
             create_consumer(
-                store_broker, store_username, args.storage_topic_sasl_password
+                store_broker,
+                store_sasl_mechanism,
+                store_username,
+                args.storage_topic_sasl_password,
             ),
             store_topic,
         )

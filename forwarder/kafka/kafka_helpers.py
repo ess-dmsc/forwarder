@@ -11,16 +11,26 @@ from forwarder.utils import Counter
 
 from .kafka_producer import KafkaProducer
 
+DEFAULT_SASL_MECHANISM = "SCRAM-SHA-256"
 
-def sasl_config(username: Optional[str] = None, password: Optional[str] = None) -> dict:
-    """Return a dict with SASL SCRAM-SHA-256 configuration parameters."""
+
+def sasl_config(
+    mechanism, username: Optional[str] = None, password: Optional[str] = None
+) -> dict:
+    """Return a dict with SASL configuration parameters.
+    Supported mechanisms: PLAIN, SCRAM-SHA-512, SCRAM-SHA-256.
+    Supported protocols: SASL_PLAINTEXT (i.e. without TLS)
+    """
+    supported_sasl_mechanisms = ["PLAIN", "SCRAM-SHA-512", "SCRAM-SHA-256"]
     if not username or not password:
         return {}
+    if mechanism not in supported_sasl_mechanisms:
+        raise RuntimeError(
+            f"SASL mechanism {mechanism} not supported, use one of {supported_sasl_mechanisms}"
+        )
     sasl_config = {
-        # Supported mechanisms: GSSAPI, PLAIN, SCRAM-SHA-512, SCRAM-SHA-256
-        "sasl.mechanism": "SCRAM-SHA-256",
-        # SASL_PLAINTEXT for plaintext, SASL_SSL for encrypted
-        "security.protocol": "SASL_PLAINTEXT",
+        "sasl.mechanism": mechanism,
+        "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT for plaintext, SASL_SSL for encrypted
     }
     sasl_config.update(
         {
@@ -33,6 +43,7 @@ def sasl_config(username: Optional[str] = None, password: Optional[str] = None) 
 
 def create_producer(
     broker_address: str,
+    sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
     counter: Optional[Counter] = None,
@@ -42,7 +53,7 @@ def create_producer(
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    producer_config.update(sasl_config(username, password))
+    producer_config.update(sasl_config(sasl_mechanism, username, password))
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -53,6 +64,7 @@ def create_producer(
 
 def create_consumer(
     broker_address: str,
+    sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
 ) -> Consumer:
@@ -61,30 +73,35 @@ def create_consumer(
         "group.id": uuid.uuid4(),
         "default.topic.config": {"auto.offset.reset": "latest"},
     }
-    consumer_config.update(sasl_config(username, password))
+    consumer_config.update(sasl_config(sasl_mechanism, username, password))
     return Consumer(consumer_config)
 
 
-def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
-    if "/" not in uri:
-        raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [username@]localhost:9092/topic"
-        )
+def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
     topic = uri.split("/")[-1]
+    if "/" not in uri or not topic:
+        raise RuntimeError(
+            f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092/topic"
+        )
     broker_and_username = "".join(uri.split("/")[:-1])
-    broker, username = get_broker_and_username_from_uri(broker_and_username)
-    return broker, topic, username
+    broker, sasl_mechanism, username = get_broker_and_username_from_uri(
+        broker_and_username
+    )
+    return broker, topic, sasl_mechanism, username
 
 
-def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str]:
+def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
     if "/" in uri:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [username@]localhost:9092"
+            f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092"
         )
-    username = "".join(uri.split("@")[:-1])
+    username = "".join(uri.split("@")[:-1]).split("\\")[-1]
+    sasl_mechanism = "".join("".join(uri.split("@")[:-1]).split("\\")[:-1])
+    if not sasl_mechanism:
+        sasl_mechanism = DEFAULT_SASL_MECHANISM
     broker = uri.split("@")[-1]
     broker = broker.strip("/")
-    return broker, username
+    return broker, sasl_mechanism, username
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
