@@ -15,6 +15,7 @@ from streaming_data_types.forwarder_config_update_rf5k import (
     serialise_rf5k,
 )
 
+from ..forwarder.kafka.kafka_helpers import sasl_config
 from .helpers.PVs import PVLONG, PVSTR
 
 WAIT_FOR_DEBUGGER_ATTACH = "--wait-to-attach-debugger"
@@ -30,30 +31,12 @@ def pytest_addoption(parser):
     )
 
 
-def sasl_conf():
-    """Return a dict with SASL configuration parameters.
-    TODO: This is an example, we must load the configuration from elsewhere!
-    """
-    sasl_conf = {
-        "sasl.mechanism": "PLAIN",  # GSSAPI, PLAIN, SCRAM-SHA-512, SCRAM-SHA-256
-        "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT, SASL_SSL
-    }
-    # Credentials for PLAIN:
-    sasl_conf.update(
-        {
-            "sasl.username": "client",
-            "sasl.password": "client-secret",
-        }
-    )
-    return sasl_conf
-
-
 def wait_until_kafka_ready(docker_cmd, docker_options):
     print("Waiting for Kafka broker to be ready for integration tests...", flush=True)
     conf = {
         "bootstrap.servers": "localhost:9092",
     }
-    conf.update(sasl_conf())
+    conf.update(sasl_config("client", "client-secret"))
     producer = Producer(**conf)
 
     kafka_ready = False
@@ -237,7 +220,7 @@ def docker_compose_storage(request):
     conf = {
         "bootstrap.servers": "localhost:9092",
     }
-    conf.update(sasl_conf())
+    conf.update(sasl_config("client", "client-secret"))
     producer = Producer(**conf)
 
     stream_1 = StreamInfo(PVSTR, "f142", "some_topic_1", Protocol.Protocol.CA)
