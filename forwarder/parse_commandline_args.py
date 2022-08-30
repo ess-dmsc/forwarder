@@ -69,7 +69,7 @@ def parse_args():
     parser.add_argument(
         "--config-topic-sasl-password",
         required=False,
-        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL authentication",
         type=str,
         env_var="CONFIG_TOPIC_SASL_PASSWORD",
     )
@@ -83,7 +83,7 @@ def parse_args():
     parser.add_argument(
         "--status-topic-sasl-password",
         required=False,
-        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL authentication",
         type=str,
         env_var="STATUS_TOPIC_SASL_PASSWORD",
     )
@@ -97,7 +97,7 @@ def parse_args():
     parser.add_argument(
         "--output-broker-sasl-password",
         required=False,
-        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL authentication",
         type=str,
         env_var="OUTPUT_BROKER_SASL_PASSWORD",
     )
@@ -112,7 +112,7 @@ def parse_args():
     parser.add_argument(
         "--storage-topic-sasl-password",
         required=False,
-        help="Password for Kafka SASL/SCRAM-SHA-256 authentication",
+        help="Password for Kafka SASL authentication",
         type=str,
         env_var="STORAGE_TOPIC_SASL_PASSWORD",
     )
