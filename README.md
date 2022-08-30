@@ -53,7 +53,13 @@ output-broker=localhost:9092
 pv-update-period=1000
 ```
 
-The only Kafka authentication mechanism supported is SASL SCRAM-SHA-256 on non-TLS channels (`SASL_PLAINTEXT`).
+### Kafka authentication
+
+The supported Kafka authentication SASL mechanisms are `SCRAM-SHA-256` (default), `SCRAM-SHA-512` and `PLAIN`.
+Only non-TLS channels (`SASL_PLAINTEXT`) are currently supported.
+
+The SASL mechanism can be specified as part of the username/broker string as follows: `sasl_mechanism\username@broker:port/topic`.
+Example: `SCRAM-SHA-256\alice@10.123.123.1:9092/topic`.
 
 ## Configuring EPICS PVs to be forwarded
 
