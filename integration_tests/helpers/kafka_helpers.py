@@ -4,7 +4,7 @@ from typing import Optional, Tuple
 from confluent_kafka import Consumer, TopicPartition
 from pytictoc import TicToc
 
-from ...forwarder.kafka.kafka_helpers import sasl_config
+from forwarder.kafka.kafka_helpers import sasl_config
 
 
 class MsgErrorException(Exception):

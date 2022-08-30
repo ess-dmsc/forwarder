@@ -15,7 +15,8 @@ from streaming_data_types.forwarder_config_update_rf5k import (
     serialise_rf5k,
 )
 
-from ..forwarder.kafka.kafka_helpers import sasl_config
+from forwarder.kafka.kafka_helpers import sasl_config
+
 from .helpers.PVs import PVLONG, PVSTR
 
 WAIT_FOR_DEBUGGER_ATTACH = "--wait-to-attach-debugger"

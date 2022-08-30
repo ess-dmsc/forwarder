@@ -6,7 +6,8 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import
     Protocol,
 )
 
-from ...forwarder.kafka.kafka_helpers import sasl_config
+from forwarder.kafka.kafka_helpers import sasl_config
+
 from .forwarderconfig import ForwarderConfig
 
 
