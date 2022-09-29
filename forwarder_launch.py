@@ -6,13 +6,14 @@ from typing import Dict
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 
-from forwarder.application_logger import setup_logger, get_logger
+from forwarder.application_logger import get_logger, setup_logger
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
     create_consumer,
     create_producer,
-    get_broker_and_topic_from_uri,
+    get_broker_and_username_from_uri,
+    get_broker_topic_and_username_from_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import Channel, parse_config_update
@@ -61,21 +62,50 @@ if __name__ == "__main__":
     update_buffer_err_counter = Counter()
 
     # Kafka
+    (
+        output_broker,
+        output_sasl_mechanism,
+        output_username,
+    ) = get_broker_and_username_from_uri(args.output_broker)
     producer = create_producer(
-        args.output_broker,
+        output_broker,
+        output_sasl_mechanism,
+        output_username,
+        args.output_broker_sasl_password,
         counter=update_message_counter if grafana_carbon_address else None,
         buffer_err_counter=update_buffer_err_counter
         if grafana_carbon_address
         else None,
     )
-    config_broker, config_topic = get_broker_and_topic_from_uri(args.config_topic)
-    consumer = create_consumer(config_broker)
+
+    (
+        config_broker,
+        config_topic,
+        config_sasl_mechanism,
+        config_username,
+    ) = get_broker_topic_and_username_from_uri(args.config_topic)
+    consumer = create_consumer(
+        config_broker,
+        config_sasl_mechanism,
+        config_username,
+        args.config_topic_sasl_password,
+    )
     consumer.subscribe([config_topic])
 
-    status_broker, status_topic = get_broker_and_topic_from_uri(args.status_topic)
+    (
+        status_broker,
+        status_topic,
+        status_sasl_mechanism,
+        status_username,
+    ) = get_broker_topic_and_username_from_uri(args.status_topic)
     status_reporter = StatusReporter(
         update_handlers,
-        create_producer(status_broker),
+        create_producer(
+            status_broker,
+            status_sasl_mechanism,
+            status_username,
+            args.status_topic_sasl_password,
+        ),
         status_topic,
         args.service_id,
         version,
@@ -101,9 +131,26 @@ if __name__ == "__main__":
         statistic_reporter.start()
 
     if args.storage_topic:
-        store_broker, store_topic = get_broker_and_topic_from_uri(args.storage_topic)
+        (
+            store_broker,
+            store_topic,
+            store_sasl_mechanism,
+            store_username,
+        ) = get_broker_topic_and_username_from_uri(args.storage_topic)
         configuration_store = ConfigurationStore(
-            create_producer(store_broker), create_consumer(store_broker), store_topic
+            create_producer(
+                store_broker,
+                store_sasl_mechanism,
+                store_username,
+                args.storage_topic_sasl_password,
+            ),
+            create_consumer(
+                store_broker,
+                store_sasl_mechanism,
+                store_username,
+                args.storage_topic_sasl_password,
+            ),
+            store_topic,
         )
         if not args.skip_retrieval:
             try:

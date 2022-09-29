@@ -26,12 +26,16 @@ forwarder_launch.py --help
 ```
 
 Required arguments:
- * config-topic - Kafka broker/topic to listen for commands relating to PVs to be forwarded on
- * status-topic - Kafka broker/topic to publish regular status updates on
- * output-broker - Kafka broker to forward PV data into
+ * config-topic - Kafka username/broker/topic (`user@broker:port/topic`) to listen for commands relating to PVs to be forwarded on
+ * status-topic - Kafka username/broker/topic (`user@broker:port/topic`) to publish regular status updates on
+ * output-broker - Kafka username/broker (`user@broker:port`) to forward PV data into
 
 Optional arguments:
- * storage-topic - Kafka broker/topic for storage of the current forwarding details; these will be reapplied when the forwarder is restarted
+ * config-topic-sasl-password - Password for SASL Kafka authentication. Note that the username is specified in the `config-topic` argument
+ * status-topic-sasl-password - Password for SASL Kafka authentication. Note that the username is specified in the `status-topic` argument
+ * output-broker-sasl-password - Password for SASL Kafka authentication. Note that the username is specified in the `output-broker` argument
+ * storage-topic - Kafka username/broker/topic for storage of the current forwarding details; these will be reapplied when the forwarder is restarted
+ * storage-topic-sasl-password - Password for SASL Kafka authentication. Note that the username is specified in the `storage-topic` argument
  * skip-retrieval - do not reapply stored forwarding details on start-up
  * graylog-logger-address - Graylog logger instance to log to
  * log-file - name of the file to log to
@@ -48,6 +52,14 @@ The configuration file consists of 'key=value' pairs, e.g.
 output-broker=localhost:9092
 pv-update-period=1000
 ```
+
+### Kafka authentication
+
+The supported Kafka authentication SASL mechanisms are `SCRAM-SHA-256` (default), `SCRAM-SHA-512` and `PLAIN`.
+Only non-TLS channels (`SASL_PLAINTEXT`) are currently supported.
+
+The SASL mechanism can be specified as part of the username/broker string as follows: `sasl_mechanism\username@broker:port/topic`.
+Example: `SCRAM-SHA-256\alice@10.123.123.1:9092/topic`.
 
 ## Configuring EPICS PVs to be forwarded
 
