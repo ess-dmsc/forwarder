@@ -79,20 +79,20 @@ def create_consumer(
     return Consumer(consumer_config)
 
 
-def parse_kafka_uri(uri: str, is_topic_required=True) -> Tuple[str, str, str, str]:
+def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
     topic = uri.split("/")[-1]
-    if is_topic_required and ("/" not in uri or not topic):
+    if "/" not in uri or not topic:
         raise RuntimeError(
             f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092/topic"
         )
     broker_and_username = "".join(uri.split("/")[:-1])
-    broker, sasl_mechanism, username = _get_broker_and_username_from_uri(
+    broker, sasl_mechanism, username = get_broker_and_username_from_uri(
         broker_and_username
     )
     return broker, topic, sasl_mechanism, username
 
 
-def _get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
+def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
     if "/" in uri:
         raise RuntimeError(
             f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092"
