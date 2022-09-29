@@ -3,7 +3,7 @@ import pytest
 from forwarder.kafka.kafka_helpers import (
     get_broker_and_username_from_uri,
     get_broker_topic_and_username_from_uri,
-    sasl_config,
+    get_sasl_config,
 )
 
 
@@ -64,7 +64,7 @@ def test_uri_with_username_port_and_topic():
     assert topic == test_topic
     assert (
         test_username
-        == sasl_config(sasl_mechanism, username, "some_password")["sasl.username"]
+        == get_sasl_config(sasl_mechanism, username, "some_password")["sasl.username"]
     )
 
 
@@ -83,7 +83,7 @@ def test_uri_with_sasl_mechanism_username_port_and_topic():
     assert topic == test_topic
     assert (
         test_sasl_mechanism
-        == sasl_config(sasl_mechanism, username, "some_password")["sasl.mechanism"]
+        == get_sasl_config(sasl_mechanism, username, "some_password")["sasl.mechanism"]
     )
 
 
@@ -101,7 +101,7 @@ def test_raises_exception_if_uri_has_unsupported_sasl_mechanism():
     assert broker == test_broker
     assert topic == test_topic
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, username, "some_password")
+        get_sasl_config(sasl_mechanism, username, "some_password")
 
 
 def test_raises_exception_if_username_or_password_not_provided():
@@ -111,14 +111,14 @@ def test_raises_exception_if_username_or_password_not_provided():
     """
     sasl_mechanism = "PLAIN"
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, "username", None)
+        get_sasl_config(sasl_mechanism, "username", None)
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, None, "password")
+        get_sasl_config(sasl_mechanism, None, "password")
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, None, None)
+        get_sasl_config(sasl_mechanism, None, None)
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, "username", "")
+        get_sasl_config(sasl_mechanism, "username", "")
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, "", "password")
+        get_sasl_config(sasl_mechanism, "", "password")
     with pytest.raises(RuntimeError):
-        sasl_config(sasl_mechanism, "", "")
+        get_sasl_config(sasl_mechanism, "", "")

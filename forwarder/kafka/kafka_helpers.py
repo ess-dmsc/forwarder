@@ -14,7 +14,7 @@ from .kafka_producer import KafkaProducer
 DEFAULT_SASL_MECHANISM = "SCRAM-SHA-256"
 
 
-def sasl_config(
+def get_sasl_config(
     mechanism: str, username: Optional[str] = None, password: Optional[str] = None
 ) -> dict:
     """Return a dict with SASL configuration parameters.
@@ -54,7 +54,7 @@ def create_producer(
         "message.max.bytes": "20000000",
     }
     if sasl_mechanism:
-        producer_config.update(sasl_config(sasl_mechanism, username, password))
+        producer_config.update(get_sasl_config(sasl_mechanism, username, password))
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -75,7 +75,7 @@ def create_consumer(
         "default.topic.config": {"auto.offset.reset": "latest"},
     }
     if sasl_mechanism:
-        consumer_config.update(sasl_config(sasl_mechanism, username, password))
+        consumer_config.update(get_sasl_config(sasl_mechanism, username, password))
     return Consumer(consumer_config)
 
 
