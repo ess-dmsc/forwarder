@@ -102,3 +102,23 @@ def test_raises_exception_if_uri_has_unsupported_sasl_mechanism():
     assert topic == test_topic
     with pytest.raises(RuntimeError):
         sasl_config(sasl_mechanism, username, "some_password")
+
+
+def test_raises_exception_if_username_or_password_not_provided():
+    """All currently supported mechanisms require username and password.
+    This test may require changes if support for SASL mechanisms that do not
+    require username or password is implemented.
+    """
+    sasl_mechanism = "PLAIN"
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, "username", None)
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, None, "password")
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, None, None)
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, "username", "")
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, "", "password")
+    with pytest.raises(RuntimeError):
+        sasl_config(sasl_mechanism, "", "")

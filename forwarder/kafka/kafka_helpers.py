@@ -15,29 +15,29 @@ DEFAULT_SASL_MECHANISM = "SCRAM-SHA-256"
 
 
 def sasl_config(
-    mechanism, username: Optional[str] = None, password: Optional[str] = None
+    mechanism: str, username: Optional[str] = None, password: Optional[str] = None
 ) -> dict:
     """Return a dict with SASL configuration parameters.
-    Supported mechanisms: PLAIN, SCRAM-SHA-512, SCRAM-SHA-256.
     Supported protocols: SASL_PLAINTEXT (i.e. without TLS)
+    Supported mechanisms: PLAIN, SCRAM-SHA-512, SCRAM-SHA-256.
+    Note that whereas some SASL mechanisms do not require user/password, the three
+    we currently support do.
     """
     supported_sasl_mechanisms = ["PLAIN", "SCRAM-SHA-512", "SCRAM-SHA-256"]
-    if not username or not password:
-        return {}
     if mechanism not in supported_sasl_mechanisms:
         raise RuntimeError(
             f"SASL mechanism {mechanism} not supported, use one of {supported_sasl_mechanisms}"
         )
+    if not username or not password:
+        raise RuntimeError(
+            f"Username and password must be provided to use SASL {mechanism}"
+        )
     sasl_config = {
         "sasl.mechanism": mechanism,
         "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT for plaintext, SASL_SSL for encrypted
+        "sasl.username": username,
+        "sasl.password": password,
     }
-    sasl_config.update(
-        {
-            "sasl.username": username,
-            "sasl.password": password,
-        }
-    )
     return sasl_config
 
 
@@ -53,7 +53,8 @@ def create_producer(
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    producer_config.update(sasl_config(sasl_mechanism, username, password))
+    if sasl_mechanism:
+        producer_config.update(sasl_config(sasl_mechanism, username, password))
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -73,7 +74,8 @@ def create_consumer(
         "group.id": uuid.uuid4(),
         "default.topic.config": {"auto.offset.reset": "latest"},
     }
-    consumer_config.update(sasl_config(sasl_mechanism, username, password))
+    if sasl_mechanism:
+        consumer_config.update(sasl_config(sasl_mechanism, username, password))
     return Consumer(consumer_config)
 
 
