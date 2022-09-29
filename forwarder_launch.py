@@ -12,8 +12,7 @@ from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
     create_consumer,
     create_producer,
-    get_broker_and_username_from_uri,
-    get_broker_topic_and_username_from_uri,
+    parse_kafka_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import Channel, parse_config_update
@@ -64,9 +63,10 @@ if __name__ == "__main__":
     # Kafka
     (
         output_broker,
+        _,
         output_sasl_mechanism,
         output_username,
-    ) = get_broker_and_username_from_uri(args.output_broker)
+    ) = parse_kafka_uri(args.output_broker, is_topic_required=False)
     producer = create_producer(
         output_broker,
         output_sasl_mechanism,
@@ -83,7 +83,7 @@ if __name__ == "__main__":
         config_topic,
         config_sasl_mechanism,
         config_username,
-    ) = get_broker_topic_and_username_from_uri(args.config_topic)
+    ) = parse_kafka_uri(args.config_topic)
     consumer = create_consumer(
         config_broker,
         config_sasl_mechanism,
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         status_topic,
         status_sasl_mechanism,
         status_username,
-    ) = get_broker_topic_and_username_from_uri(args.status_topic)
+    ) = parse_kafka_uri(args.status_topic)
     status_reporter = StatusReporter(
         update_handlers,
         create_producer(
@@ -136,7 +136,7 @@ if __name__ == "__main__":
             store_topic,
             store_sasl_mechanism,
             store_username,
-        ) = get_broker_topic_and_username_from_uri(args.storage_topic)
+        ) = parse_kafka_uri(args.storage_topic)
         configuration_store = ConfigurationStore(
             create_producer(
                 store_broker,
@@ -216,7 +216,7 @@ if __name__ == "__main__":
         if statistic_reporter:
             statistic_reporter.stop()
 
-        for _, handler in update_handlers.items():
+        for __, handler in update_handlers.items():
             handler.stop()
         consumer.close()
         producer.close()
