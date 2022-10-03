@@ -11,8 +11,6 @@ from forwarder.utils import Counter
 
 from .kafka_producer import KafkaProducer
 
-DEFAULT_SASL_MECHANISM = "SCRAM-SHA-256"
-
 
 def get_sasl_config(
     mechanism: str, username: Optional[str] = None, password: Optional[str] = None
@@ -83,7 +81,7 @@ def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str
     topic = uri.split("/")[-1]
     if "/" not in uri or not topic:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092/topic"
+            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092/topic"
         )
     broker_and_username = "".join(uri.split("/")[:-1])
     broker, sasl_mechanism, username = get_broker_and_username_from_uri(
@@ -95,12 +93,14 @@ def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str
 def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
     if "/" in uri:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [[SASL_MECHANISM\\]username@]localhost:9092"
+            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092"
         )
     username = "".join(uri.split("@")[:-1]).split("\\")[-1]
     sasl_mechanism = "".join("".join(uri.split("@")[:-1]).split("\\")[:-1])
-    if not sasl_mechanism:
-        sasl_mechanism = DEFAULT_SASL_MECHANISM
+    if username and not sasl_mechanism:
+        raise RuntimeError(
+            f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]localhost:9092"
+        )
     broker = uri.split("@")[-1]
     broker = broker.strip("/")
     return broker, sasl_mechanism, username

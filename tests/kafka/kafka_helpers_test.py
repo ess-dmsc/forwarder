@@ -51,21 +51,13 @@ def test_raises_exception_if_broker_only_uri_contains_slash():
         get_broker_and_username_from_uri(test_uri)
 
 
-def test_uri_with_username_port_and_topic():
+def test_raises_exception_if_uri_with_username_and_no_sasl_mechanism():
     test_username = "some_user"
     test_broker = "localhost:9092"
     test_topic = "some_topic"
     test_uri = f"{test_username}@{test_broker}/{test_topic}"
-    broker, topic, sasl_mechanism, username = get_broker_topic_and_username_from_uri(
-        test_uri
-    )
-    assert username == test_username
-    assert broker == test_broker
-    assert topic == test_topic
-    assert (
-        test_username
-        == get_sasl_config(sasl_mechanism, username, "some_password")["sasl.username"]
-    )
+    with pytest.raises(RuntimeError):
+        get_broker_topic_and_username_from_uri(test_uri)
 
 
 def test_uri_with_sasl_mechanism_username_port_and_topic():

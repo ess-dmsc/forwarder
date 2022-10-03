@@ -26,9 +26,9 @@ forwarder_launch.py --help
 ```
 
 Required arguments:
- * config-topic - Kafka username/broker/topic (`user@broker:port/topic`) to listen for commands relating to PVs to be forwarded on
- * status-topic - Kafka username/broker/topic (`user@broker:port/topic`) to publish regular status updates on
- * output-broker - Kafka username/broker (`user@broker:port`) to forward PV data into
+ * config-topic - Kafka username/broker/topic (`sasl_mechanism\user@broker:port/topic`) to listen for commands relating to PVs to be forwarded on
+ * status-topic - Kafka username/broker/topic (`sasl_mechanism\user@broker:port/topic`) to publish regular status updates on
+ * output-broker - Kafka username/broker (`sasl_mechanism\user@broker:port`) to forward PV data into
 
 Optional arguments:
  * config-topic-sasl-password - Password for SASL Kafka authentication. Note that the username is specified in the `config-topic` argument
@@ -55,7 +55,9 @@ pv-update-period=1000
 
 ### Kafka authentication
 
-The supported Kafka authentication SASL mechanisms are `SCRAM-SHA-256` (default), `SCRAM-SHA-512` and `PLAIN`.
+Authentication is disabled by default. To enable it, you must provide the SASL mechanism, username and password as arguments.
+
+The supported Kafka authentication SASL mechanisms are `SCRAM-SHA-256`, `SCRAM-SHA-512` and `PLAIN`.
 Only non-TLS channels (`SASL_PLAINTEXT`) are currently supported.
 
 The SASL mechanism can be specified as part of the username/broker string as follows: `sasl_mechanism\username@broker:port/topic`.
