@@ -22,6 +22,43 @@ from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from forwarder.utils import Counter
 
+
+def create_epics_producer(
+    broker_uri, broker_sasl_password, update_message_counter, update_buffer_err_counter
+):
+    (
+        output_broker,
+        output_sasl_mechanism,
+        output_username,
+    ) = get_broker_and_username_from_uri(broker_uri)
+    producer = create_producer(
+        output_broker,
+        output_sasl_mechanism,
+        output_username,
+        broker_sasl_password,
+        counter=update_message_counter,
+        buffer_err_counter=update_buffer_err_counter,
+    )
+    return producer
+
+
+def create_config_consumer(broker_uri, broker_sasl_password):
+    (
+        config_broker,
+        config_topic,
+        config_sasl_mechanism,
+        config_username,
+    ) = get_broker_topic_and_username_from_uri(broker_uri)
+    consumer = create_consumer(
+        config_broker,
+        config_sasl_mechanism,
+        config_username,
+        broker_sasl_password,
+    )
+    consumer.subscribe([config_topic])
+    return consumer
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -62,33 +99,15 @@ if __name__ == "__main__":
     update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
     # Kafka
-    (
-        output_broker,
-        output_sasl_mechanism,
-        output_username,
-    ) = get_broker_and_username_from_uri(args.output_broker)
-    producer = create_producer(
-        output_broker,
-        output_sasl_mechanism,
-        output_username,
+    producer = create_epics_producer(
+        args.output_broker,
         args.output_broker_sasl_password,
-        counter=update_message_counter,
-        buffer_err_counter=update_buffer_err_counter,
+        update_message_counter,
+        update_buffer_err_counter,
     )
-
-    (
-        config_broker,
-        config_topic,
-        config_sasl_mechanism,
-        config_username,
-    ) = get_broker_topic_and_username_from_uri(args.config_topic)
-    consumer = create_consumer(
-        config_broker,
-        config_sasl_mechanism,
-        config_username,
-        args.config_topic_sasl_password,
+    consumer = create_config_consumer(
+        args.config_topic, args.config_topic_sasl_password
     )
-    consumer.subscribe([config_topic])
 
     (
         status_broker,
