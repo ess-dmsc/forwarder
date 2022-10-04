@@ -78,19 +78,26 @@ def create_consumer(
 
 
 def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
+    """Parse Kafka connection URI.
+    A broker hostname/ip must be present.
+    If username is provided, a SASL mechanism must also be provided.
+    Any other validation must be performed in the calling code.
+    """
     tail = uri
-    topic = ""
     sasl_mechanism = ""
     username = ""
-    broker = None
     if "@" in uri:
         mechanism_and_user, tail = uri.split("@", 1)
         if "\\" not in mechanism_and_user:
             raise RuntimeError(
-                f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]localhost:9092"
+                f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
             )
         sasl_mechanism, username = mechanism_and_user.split("\\")
     broker, topic = tail.split("/") if "/" in tail else (tail, "")
+    if not broker:
+        raise RuntimeError(
+            f"Unable to parse URI {uri}, broker not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
+        )
     return broker, topic, sasl_mechanism, username
 
 

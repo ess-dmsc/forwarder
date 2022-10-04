@@ -11,8 +11,8 @@ def test_null_topic_if_not_present():
     broker, topic, mechanism, username = get_broker_topic_and_username_from_uri(
         test_uri
     )
-    assert broker == "localhost:9092"
     assert not topic
+    assert broker == "localhost:9092"
     assert mechanism == "SCRAM-SHA-256"
     assert username == "user"
 
@@ -73,6 +73,16 @@ def test_uri_with_sasl_mechanism_username_port_and_topic():
     )
 
 
+def test_uri_with_no_broker():
+    test_sasl_mechanism = "PLAIN"
+    test_username = "some_user"
+    test_broker = ""
+    test_topic = "some_topic"
+    test_uri = f"{test_sasl_mechanism}\\{test_username}@{test_broker}/{test_topic}"
+    with pytest.raises(RuntimeError):
+        get_broker_topic_and_username_from_uri(test_uri)
+
+
 def test_raises_exception_if_uri_has_unsupported_sasl_mechanism():
     test_sasl_mechanism = "xPLAIN"
     test_username = "some_user"
@@ -82,10 +92,6 @@ def test_raises_exception_if_uri_has_unsupported_sasl_mechanism():
     broker, topic, sasl_mechanism, username = get_broker_topic_and_username_from_uri(
         test_uri
     )
-    assert sasl_mechanism == test_sasl_mechanism
-    assert username == test_username
-    assert broker == test_broker
-    assert topic == test_topic
     with pytest.raises(RuntimeError):
         get_sasl_config(sasl_mechanism, username, "some_password")
 
