@@ -12,7 +12,6 @@ from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
     create_consumer,
     create_producer,
-    get_broker_and_username_from_uri,
     get_broker_topic_and_username_from_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
@@ -28,9 +27,10 @@ def create_epics_producer(
 ):
     (
         output_broker,
+        _,
         output_sasl_mechanism,
         output_username,
-    ) = get_broker_and_username_from_uri(broker_uri)
+    ) = get_broker_topic_and_username_from_uri(broker_uri)
     producer = create_producer(
         output_broker,
         output_sasl_mechanism,

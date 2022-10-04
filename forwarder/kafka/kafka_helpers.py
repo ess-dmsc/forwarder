@@ -78,32 +78,20 @@ def create_consumer(
 
 
 def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
-    topic = uri.split("/")[-1]
-    if "/" not in uri or not topic:
-        raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092/topic"
-        )
-    broker_and_username = "".join(uri.split("/")[:-1])
-    broker, sasl_mechanism, username = get_broker_and_username_from_uri(
-        broker_and_username
-    )
+    tail = uri
+    topic = ""
+    sasl_mechanism = ""
+    username = ""
+    broker = None
+    if "@" in uri:
+        mechanism_and_user, tail = uri.split("@", 1)
+        if "\\" not in mechanism_and_user:
+            raise RuntimeError(
+                f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]localhost:9092"
+            )
+        sasl_mechanism, username = mechanism_and_user.split("\\")
+    broker, topic = tail.split("/") if "/" in tail else (tail, "")
     return broker, topic, sasl_mechanism, username
-
-
-def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
-    if "/" in uri:
-        raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092"
-        )
-    username = "".join(uri.split("@")[:-1]).split("\\")[-1]
-    sasl_mechanism = "".join("".join(uri.split("@")[:-1]).split("\\")[:-1])
-    if username and not sasl_mechanism:
-        raise RuntimeError(
-            f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]localhost:9092"
-        )
-    broker = uri.split("@")[-1]
-    broker = broker.strip("/")
-    return broker, sasl_mechanism, username
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
