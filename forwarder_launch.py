@@ -58,8 +58,8 @@ if __name__ == "__main__":
     update_handlers: Dict[Channel, UpdateHandler] = {}
 
     grafana_carbon_address = args.grafana_carbon_address
-    update_message_counter = Counter()
-    update_buffer_err_counter = Counter()
+    update_message_counter = Counter() if grafana_carbon_address else None
+    update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
     # Kafka
     (
@@ -72,10 +72,8 @@ if __name__ == "__main__":
         output_sasl_mechanism,
         output_username,
         args.output_broker_sasl_password,
-        counter=update_message_counter if grafana_carbon_address else None,
-        buffer_err_counter=update_buffer_err_counter
-        if grafana_carbon_address
-        else None,
+        counter=update_message_counter,
+        buffer_err_counter=update_buffer_err_counter,
     )
 
     (
@@ -122,8 +120,8 @@ if __name__ == "__main__":
         statistic_reporter = StatisticsReporter(
             grafana_carbon_address,
             update_handlers,
-            update_message_counter,
-            update_buffer_err_counter,
+            update_message_counter,  # type: ignore
+            update_buffer_err_counter,  # type: ignore
             get_logger(),
             prefix=f"{prefix}.throughput",
             update_interval_s=args.statistics_update_interval,
