@@ -59,6 +59,80 @@ def create_config_consumer(broker_uri, broker_sasl_password):
     return consumer
 
 
+def create_status_reporter(
+    update_handlers, broker_uri, broker_sasl_password, service_id, version, logger
+):
+    (
+        status_broker,
+        status_topic,
+        status_sasl_mechanism,
+        status_username,
+    ) = get_broker_topic_and_username_from_uri(broker_uri)
+    status_reporter = StatusReporter(
+        update_handlers,
+        create_producer(
+            status_broker,
+            status_sasl_mechanism,
+            status_username,
+            broker_sasl_password,
+        ),
+        status_topic,
+        service_id,
+        version,
+        logger,
+    )
+    return status_reporter
+
+
+def create_configuration_store(storage_topic, storage_topic_sasl_password):
+    (
+        store_broker,
+        store_topic,
+        store_sasl_mechanism,
+        store_username,
+    ) = get_broker_topic_and_username_from_uri(storage_topic)
+    configuration_store = ConfigurationStore(
+        create_producer(
+            store_broker,
+            store_sasl_mechanism,
+            store_username,
+            storage_topic_sasl_password,
+        ),
+        create_consumer(
+            store_broker,
+            store_sasl_mechanism,
+            store_username,
+            storage_topic_sasl_password,
+        ),
+        store_topic,
+    )
+    return configuration_store
+
+
+def create_statistics_reporter(
+    service_id,
+    grafana_carbon_address,
+    update_handlers,
+    update_message_counter,
+    update_buffer_err_counter,
+    logger,
+    prefix,
+    statistics_update_interval,
+):
+    metric_hostname = gethostname().replace(".", "_")
+    prefix = f"Forwarder.{metric_hostname}.{service_id}".replace(" ", "").lower()
+    statistics_reporter = StatisticsReporter(
+        grafana_carbon_address,
+        update_handlers,
+        update_message_counter,  # type: ignore
+        update_buffer_err_counter,  # type: ignore
+        logger,
+        prefix=f"{prefix}.throughput",
+        update_interval_s=statistics_update_interval,
+    )
+    return statistics_reporter
+
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -108,22 +182,10 @@ if __name__ == "__main__":
     consumer = create_config_consumer(
         args.config_topic, args.config_topic_sasl_password
     )
-
-    (
-        status_broker,
-        status_topic,
-        status_sasl_mechanism,
-        status_username,
-    ) = get_broker_topic_and_username_from_uri(args.status_topic)
-    status_reporter = StatusReporter(
+    status_reporter = create_status_reporter(
         update_handlers,
-        create_producer(
-            status_broker,
-            status_sasl_mechanism,
-            status_username,
-            args.status_topic_sasl_password,
-        ),
-        status_topic,
+        args.status_topic,
+        args.status_topic_sasl_password,
         args.service_id,
         version,
         get_logger(),
@@ -132,42 +194,21 @@ if __name__ == "__main__":
 
     statistic_reporter = None
     if grafana_carbon_address:
-        metric_hostname = gethostname().replace(".", "_")
-        prefix = f"Forwarder.{metric_hostname}.{args.service_id}".replace(
-            " ", ""
-        ).lower()
-        statistic_reporter = StatisticsReporter(
+        statistics_reporter = create_statistics_reporter(
+            args.service_id,
             grafana_carbon_address,
             update_handlers,
-            update_message_counter,  # type: ignore
-            update_buffer_err_counter,  # type: ignore
+            update_message_counter,
+            update_buffer_err_counter,
             get_logger(),
-            prefix=f"{prefix}.throughput",
-            update_interval_s=args.statistics_update_interval,
+            args.prefix,
+            args.statistics_update_interval,
         )
-        statistic_reporter.start()
+        statistic_reporter.start()  # type: ignore
 
     if args.storage_topic:
-        (
-            store_broker,
-            store_topic,
-            store_sasl_mechanism,
-            store_username,
-        ) = get_broker_topic_and_username_from_uri(args.storage_topic)
-        configuration_store = ConfigurationStore(
-            create_producer(
-                store_broker,
-                store_sasl_mechanism,
-                store_username,
-                args.storage_topic_sasl_password,
-            ),
-            create_consumer(
-                store_broker,
-                store_sasl_mechanism,
-                store_username,
-                args.storage_topic_sasl_password,
-            ),
-            store_topic,
+        configuration_store = create_configuration_store(
+            args.storage_topic, args.storage_topic_sasl_password
         )
         if not args.skip_retrieval:
             try:
