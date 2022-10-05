@@ -26,15 +26,15 @@ def create_epics_producer(
     broker_uri, broker_sasl_password, update_message_counter, update_buffer_err_counter
 ):
     (
-        output_broker,
+        broker,
         _,
-        output_sasl_mechanism,
-        output_username,
+        sasl_mechanism,
+        username,
     ) = parse_kafka_uri(broker_uri)
     producer = create_producer(
-        output_broker,
-        output_sasl_mechanism,
-        output_username,
+        broker,
+        sasl_mechanism,
+        username,
         broker_sasl_password,
         counter=update_message_counter,
         buffer_err_counter=update_buffer_err_counter,
@@ -44,18 +44,22 @@ def create_epics_producer(
 
 def create_config_consumer(broker_uri, broker_sasl_password):
     (
-        config_broker,
-        config_topic,
-        config_sasl_mechanism,
-        config_username,
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
     ) = parse_kafka_uri(broker_uri)
+
+    if not topic:
+        raise RuntimeError("Configuration consumer must have a config topic")
+
     consumer = create_consumer(
-        config_broker,
-        config_sasl_mechanism,
-        config_username,
+        broker,
+        sasl_mechanism,
+        username,
         broker_sasl_password,
     )
-    consumer.subscribe([config_topic])
+    consumer.subscribe([topic])
     return consumer
 
 
@@ -63,20 +67,24 @@ def create_status_reporter(
     update_handlers, broker_uri, broker_sasl_password, service_id, version, logger
 ):
     (
-        status_broker,
-        status_topic,
-        status_sasl_mechanism,
-        status_username,
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
     ) = parse_kafka_uri(broker_uri)
+
+    if not topic:
+        raise RuntimeError("Status reporter must have a topic")
+
     status_reporter = StatusReporter(
         update_handlers,
         create_producer(
-            status_broker,
-            status_sasl_mechanism,
-            status_username,
+            broker,
+            sasl_mechanism,
+            username,
             broker_sasl_password,
         ),
-        status_topic,
+        topic,
         service_id,
         version,
         logger,
@@ -86,25 +94,29 @@ def create_status_reporter(
 
 def create_configuration_store(storage_topic, storage_topic_sasl_password):
     (
-        store_broker,
-        store_topic,
-        store_sasl_mechanism,
-        store_username,
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
     ) = parse_kafka_uri(storage_topic)
+
+    if not topic:
+        raise RuntimeError("Configuration store must have a storage topic")
+
     configuration_store = ConfigurationStore(
         create_producer(
-            store_broker,
-            store_sasl_mechanism,
-            store_username,
+            broker,
+            sasl_mechanism,
+            username,
             storage_topic_sasl_password,
         ),
         create_consumer(
-            store_broker,
-            store_sasl_mechanism,
-            store_username,
+            broker,
+            sasl_mechanism,
+            username,
             storage_topic_sasl_password,
         ),
-        store_topic,
+        topic,
     )
     return configuration_store
 

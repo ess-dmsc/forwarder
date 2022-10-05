@@ -79,6 +79,7 @@ def create_consumer(
 
 def parse_kafka_uri(uri: str) -> Tuple[str, str, str, str]:
     """Parse Kafka connection URI.
+
     A broker hostname/ip must be present.
     If username is provided, a SASL mechanism must also be provided.
     Any other validation must be performed in the calling code.
