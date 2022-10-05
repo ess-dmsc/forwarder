@@ -97,7 +97,7 @@ def _unsubscribe_from_pv(
 def _unsubscribe_from_all(
     update_handlers: Dict[Channel, UpdateHandler], logger: Logger
 ):
-    for _, update_handler in update_handlers.items():
+    for update_handler in update_handlers.values():
         update_handler.stop()
     update_handlers.clear()
     logger.info("Unsubscribed from all PVs")
