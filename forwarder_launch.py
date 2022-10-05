@@ -12,8 +12,7 @@ from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
     create_consumer,
     create_producer,
-    get_broker_and_username_from_uri,
-    get_broker_topic_and_username_from_uri,
+    parse_kafka_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import Channel, parse_config_update
@@ -21,6 +20,130 @@ from forwarder.statistics_reporter import StatisticsReporter
 from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from forwarder.utils import Counter
+
+
+def create_epics_producer(
+    broker_uri, broker_sasl_password, update_message_counter, update_buffer_err_counter
+):
+    (
+        broker,
+        _,
+        sasl_mechanism,
+        username,
+    ) = parse_kafka_uri(broker_uri)
+    producer = create_producer(
+        broker,
+        sasl_mechanism,
+        username,
+        broker_sasl_password,
+        counter=update_message_counter,
+        buffer_err_counter=update_buffer_err_counter,
+    )
+    return producer
+
+
+def create_config_consumer(broker_uri, broker_sasl_password):
+    (
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
+    ) = parse_kafka_uri(broker_uri)
+
+    if not topic:
+        raise RuntimeError("Configuration consumer must have a config topic")
+
+    consumer = create_consumer(
+        broker,
+        sasl_mechanism,
+        username,
+        broker_sasl_password,
+    )
+    consumer.subscribe([topic])
+    return consumer
+
+
+def create_status_reporter(
+    update_handlers, broker_uri, broker_sasl_password, service_id, version, logger
+):
+    (
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
+    ) = parse_kafka_uri(broker_uri)
+
+    if not topic:
+        raise RuntimeError("Status reporter must have a topic")
+
+    status_reporter = StatusReporter(
+        update_handlers,
+        create_producer(
+            broker,
+            sasl_mechanism,
+            username,
+            broker_sasl_password,
+        ),
+        topic,
+        service_id,
+        version,
+        logger,
+    )
+    return status_reporter
+
+
+def create_configuration_store(storage_topic, storage_topic_sasl_password):
+    (
+        broker,
+        topic,
+        sasl_mechanism,
+        username,
+    ) = parse_kafka_uri(storage_topic)
+
+    if not topic:
+        raise RuntimeError("Configuration store must have a storage topic")
+
+    configuration_store = ConfigurationStore(
+        create_producer(
+            broker,
+            sasl_mechanism,
+            username,
+            storage_topic_sasl_password,
+        ),
+        create_consumer(
+            broker,
+            sasl_mechanism,
+            username,
+            storage_topic_sasl_password,
+        ),
+        topic,
+    )
+    return configuration_store
+
+
+def create_statistics_reporter(
+    service_id,
+    grafana_carbon_address,
+    update_handlers,
+    update_message_counter,
+    update_buffer_err_counter,
+    logger,
+    prefix,
+    statistics_update_interval,
+):
+    metric_hostname = gethostname().replace(".", "_")
+    prefix = f"Forwarder.{metric_hostname}.{service_id}".replace(" ", "").lower()
+    statistics_reporter = StatisticsReporter(
+        grafana_carbon_address,
+        update_handlers,
+        update_message_counter,  # type: ignore
+        update_buffer_err_counter,  # type: ignore
+        logger,
+        prefix=f"{prefix}.throughput",
+        update_interval_s=statistics_update_interval,
+    )
+    return statistics_reporter
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -58,55 +181,23 @@ if __name__ == "__main__":
     update_handlers: Dict[Channel, UpdateHandler] = {}
 
     grafana_carbon_address = args.grafana_carbon_address
-    update_message_counter = Counter()
-    update_buffer_err_counter = Counter()
+    update_message_counter = Counter() if grafana_carbon_address else None
+    update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
     # Kafka
-    (
-        output_broker,
-        output_sasl_mechanism,
-        output_username,
-    ) = get_broker_and_username_from_uri(args.output_broker)
-    producer = create_producer(
-        output_broker,
-        output_sasl_mechanism,
-        output_username,
+    producer = create_epics_producer(
+        args.output_broker,
         args.output_broker_sasl_password,
-        counter=update_message_counter if grafana_carbon_address else None,
-        buffer_err_counter=update_buffer_err_counter
-        if grafana_carbon_address
-        else None,
+        update_message_counter,
+        update_buffer_err_counter,
     )
-
-    (
-        config_broker,
-        config_topic,
-        config_sasl_mechanism,
-        config_username,
-    ) = get_broker_topic_and_username_from_uri(args.config_topic)
-    consumer = create_consumer(
-        config_broker,
-        config_sasl_mechanism,
-        config_username,
-        args.config_topic_sasl_password,
+    consumer = create_config_consumer(
+        args.config_topic, args.config_topic_sasl_password
     )
-    consumer.subscribe([config_topic])
-
-    (
-        status_broker,
-        status_topic,
-        status_sasl_mechanism,
-        status_username,
-    ) = get_broker_topic_and_username_from_uri(args.status_topic)
-    status_reporter = StatusReporter(
+    status_reporter = create_status_reporter(
         update_handlers,
-        create_producer(
-            status_broker,
-            status_sasl_mechanism,
-            status_username,
-            args.status_topic_sasl_password,
-        ),
-        status_topic,
+        args.status_topic,
+        args.status_topic_sasl_password,
         args.service_id,
         version,
         get_logger(),
@@ -115,42 +206,21 @@ if __name__ == "__main__":
 
     statistic_reporter = None
     if grafana_carbon_address:
-        metric_hostname = gethostname().replace(".", "_")
-        prefix = f"Forwarder.{metric_hostname}.{args.service_id}".replace(
-            " ", ""
-        ).lower()
-        statistic_reporter = StatisticsReporter(
+        statistics_reporter = create_statistics_reporter(
+            args.service_id,
             grafana_carbon_address,
             update_handlers,
             update_message_counter,
             update_buffer_err_counter,
             get_logger(),
-            prefix=f"{prefix}.throughput",
-            update_interval_s=args.statistics_update_interval,
+            args.prefix,
+            args.statistics_update_interval,
         )
-        statistic_reporter.start()
+        statistic_reporter.start()  # type: ignore
 
     if args.storage_topic:
-        (
-            store_broker,
-            store_topic,
-            store_sasl_mechanism,
-            store_username,
-        ) = get_broker_topic_and_username_from_uri(args.storage_topic)
-        configuration_store = ConfigurationStore(
-            create_producer(
-                store_broker,
-                store_sasl_mechanism,
-                store_username,
-                args.storage_topic_sasl_password,
-            ),
-            create_consumer(
-                store_broker,
-                store_sasl_mechanism,
-                store_username,
-                args.storage_topic_sasl_password,
-            ),
-            store_topic,
+        configuration_store = create_configuration_store(
+            args.storage_topic, args.storage_topic_sasl_password
         )
         if not args.skip_retrieval:
             try:

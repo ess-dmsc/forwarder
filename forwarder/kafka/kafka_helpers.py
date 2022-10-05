@@ -77,33 +77,25 @@ def create_consumer(
     return Consumer(consumer_config)
 
 
-def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
-    topic = uri.split("/")[-1]
-    if "/" not in uri or not topic:
-        raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092/topic"
-        )
-    broker_and_username = "".join(uri.split("/")[:-1])
-    broker, sasl_mechanism, username = get_broker_and_username_from_uri(
-        broker_and_username
-    )
-    return broker, topic, sasl_mechanism, username
+def parse_kafka_uri(uri: str) -> Tuple[str, str, str, str]:
+    """Parse Kafka connection URI.
 
-
-def get_broker_and_username_from_uri(uri: str) -> Tuple[str, str, str]:
-    if "/" in uri:
+    A broker hostname/ip must be present.
+    If username is provided, a SASL mechanism must also be provided.
+    Any other validation must be performed in the calling code.
+    """
+    sasl_mechanism, tail = uri.split("\\") if "\\" in uri else ("", uri)
+    username, tail = tail.split("@") if "@" in tail else ("", tail)
+    broker, topic = tail.split("/") if "/" in tail else (tail, "")
+    if not broker:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, should be of form [SASL_MECHANISM\\username@]localhost:9092"
+            f"Unable to parse URI {uri}, broker not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
         )
-    username = "".join(uri.split("@")[:-1]).split("\\")[-1]
-    sasl_mechanism = "".join("".join(uri.split("@")[:-1]).split("\\")[:-1])
     if username and not sasl_mechanism:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]localhost:9092"
+            f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
         )
-    broker = uri.split("@")[-1]
-    broker = broker.strip("/")
-    return broker, sasl_mechanism, username
+    return broker, topic, sasl_mechanism, username
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:
