@@ -12,7 +12,7 @@ from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
     create_consumer,
     create_producer,
-    get_broker_topic_and_username_from_uri,
+    parse_kafka_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import Channel, parse_config_update
@@ -30,7 +30,7 @@ def create_epics_producer(
         _,
         output_sasl_mechanism,
         output_username,
-    ) = get_broker_topic_and_username_from_uri(broker_uri)
+    ) = parse_kafka_uri(broker_uri)
     producer = create_producer(
         output_broker,
         output_sasl_mechanism,
@@ -48,7 +48,7 @@ def create_config_consumer(broker_uri, broker_sasl_password):
         config_topic,
         config_sasl_mechanism,
         config_username,
-    ) = get_broker_topic_and_username_from_uri(broker_uri)
+    ) = parse_kafka_uri(broker_uri)
     consumer = create_consumer(
         config_broker,
         config_sasl_mechanism,
@@ -67,7 +67,7 @@ def create_status_reporter(
         status_topic,
         status_sasl_mechanism,
         status_username,
-    ) = get_broker_topic_and_username_from_uri(broker_uri)
+    ) = parse_kafka_uri(broker_uri)
     status_reporter = StatusReporter(
         update_handlers,
         create_producer(
@@ -90,7 +90,7 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
         store_topic,
         store_sasl_mechanism,
         store_username,
-    ) = get_broker_topic_and_username_from_uri(storage_topic)
+    ) = parse_kafka_uri(storage_topic)
     configuration_store = ConfigurationStore(
         create_producer(
             store_broker,

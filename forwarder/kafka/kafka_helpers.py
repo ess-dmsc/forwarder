@@ -77,7 +77,7 @@ def create_consumer(
     return Consumer(consumer_config)
 
 
-def get_broker_topic_and_username_from_uri(uri: str) -> Tuple[str, str, str, str]:
+def parse_kafka_uri(uri: str) -> Tuple[str, str, str, str]:
     """Parse Kafka connection URI.
     A broker hostname/ip must be present.
     If username is provided, a SASL mechanism must also be provided.
