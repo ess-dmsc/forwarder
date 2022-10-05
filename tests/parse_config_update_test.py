@@ -155,7 +155,7 @@ def test_remove_config_is_valid_if_channel_name_not_specified_but_topic_is():
     assert streams[0].output_topic == test_topic
 
 
-def test_parse_streams_skips_stream_info_if_remove_config_and_channel_name_schema_and_topic_not_specified():
+def test_parse_streams_skips_stream_on_remove_command_if_no_details_supplied():
     message = serialise_rf5k(
         UpdateType.REMOVE,
         [StreamInfo("", "", "", Protocol.PVA)],
@@ -165,7 +165,7 @@ def test_parse_streams_skips_stream_info_if_remove_config_and_channel_name_schem
     assert not streams
 
 
-def test_parse_streams_skips_stream_info_if_remove_config_and_schema_present_but_not_recognised():
+def test_parse_streams_skips_stream_on_remove_config_if_schema_not_recognised():
     nonexistent_schema = "NONEXISTENT"
     message = serialise_rf5k(
         UpdateType.REMOVE,
