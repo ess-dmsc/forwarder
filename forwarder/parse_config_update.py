@@ -67,6 +67,7 @@ config_protocol_to_epics_protocol = {
 def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
         config_update = deserialise_rf5k(config_update_payload)
+        command_type = config_change_to_command_type[config_update.config_change]
     except (RuntimeError, flatbuffer_struct.error):
         logger.warning(
             "Unable to deserialise payload of received configuration update message"
@@ -75,12 +76,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     except WrongSchemaException:
         logger.warning("Ignoring received message as it had the wrong schema")
         return ConfigUpdate(CommandType.INVALID, None)
-
-    try:
-        command_type = config_change_to_command_type[config_update.config_change]
     except KeyError:
         logger.warning(
-            "Unrecogised configuration change type in configuration update message"
+            "Unrecognised configuration change type in configuration update message"
         )
         return ConfigUpdate(CommandType.INVALID, None)
 
