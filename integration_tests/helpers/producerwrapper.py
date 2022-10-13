@@ -6,6 +6,8 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import
     Protocol,
 )
 
+from forwarder.kafka.kafka_helpers import get_sasl_config
+
 from .forwarderconfig import ForwarderConfig
 
 
@@ -28,6 +30,7 @@ class ProducerWrapper:
     def _set_up_producer(self, server: str):
         conf = {"bootstrap.servers": server}
         try:
+            conf.update(get_sasl_config("PLAIN", "client", "client-secret"))
             self.producer = Producer(**conf)
 
             if not self.topic_exists(self.topic, server):
@@ -65,6 +68,7 @@ class ProducerWrapper:
     @staticmethod
     def topic_exists(topic_name: str, server: str) -> bool:
         conf = {"bootstrap.servers": server, "group.id": uuid.uuid4()}
+        conf.update(get_sasl_config("PLAIN", "client", "client-secret"))
         consumer = Consumer(**conf)
         try:
             consumer.subscribe([topic_name])

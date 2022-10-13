@@ -1,7 +1,7 @@
 venv
 __pycache__
 .idea
-system_tests/logs/*.log
+integration_tests/logs/*.log
 .mypy_cache
 .pytest_cache
 .tox
