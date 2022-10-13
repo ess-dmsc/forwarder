@@ -4,13 +4,11 @@ from caproto import ReadNotifyResponse
 from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
-from forwarder.update_handlers.base_update_handler import (
-    BaseUpdateHandler,
-    SerialiserTracker,
-)
+from forwarder.application_logger import get_logger
+from forwarder.update_handlers.base_update_handler import SerialiserTracker
 
 
-class CAUpdateHandler(BaseUpdateHandler):
+class CAUpdateHandler:
     """
     Monitors via EPICS v3 Channel Access (CA),
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -23,7 +21,8 @@ class CAUpdateHandler(BaseUpdateHandler):
         pv_name: str,
         serialiser_tracker_list: List[SerialiserTracker],
     ):
-        super().__init__(serialiser_tracker_list)
+        self._logger = get_logger()
+        self.serialiser_tracker_list: List[SerialiserTracker] = serialiser_tracker_list
         self._current_unit = None
         self._pv_name = pv_name
 
@@ -87,5 +86,6 @@ class CAUpdateHandler(BaseUpdateHandler):
         """
         Stop periodic updates and unsubscribe from PV
         """
-        super().stop()
+        for serialiser in self.serialiser_tracker_list:
+            serialiser.stop()
         self._pv.unsubscribe_all()
