@@ -9,7 +9,7 @@ from forwarder.parse_config_update import EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from forwarder.update_handlers.base_update_handler import create_serialiser_list
+from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 
 UpdateHandler = Union[CAUpdateHandler, PVAUpdateHandler, FakeUpdateHandler]
 
