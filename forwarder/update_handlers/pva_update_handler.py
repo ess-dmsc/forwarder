@@ -1,12 +1,12 @@
 from typing import List
+
 from p4p.client.thread import Context as PVAContext
-from forwarder.update_handlers.base_update_handler import (
-    BaseUpdateHandler,
-    SerialiserTracker,
-)
+
+from forwarder.application_logger import get_logger
+from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 
 
-class PVAUpdateHandler(BaseUpdateHandler):
+class PVAUpdateHandler:
     """
     Monitors via EPICS v4 Process Variable Access (PVA),
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -19,7 +19,8 @@ class PVAUpdateHandler(BaseUpdateHandler):
         pv_name: str,
         serialiser_tracker_list: List[SerialiserTracker],
     ):
-        super().__init__(serialiser_tracker_list)
+        self._logger = get_logger()
+        self.serialiser_tracker_list: List[SerialiserTracker] = serialiser_tracker_list
         self._pv_name = pv_name
         self._unit = None
 
@@ -62,5 +63,6 @@ class PVAUpdateHandler(BaseUpdateHandler):
         """
         Stop periodic updates and unsubscribe from PV
         """
-        super().stop()
+        for serialiser in self.serialiser_tracker_list:
+            serialiser.stop()
         self._sub.close()
