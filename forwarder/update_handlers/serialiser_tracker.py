@@ -1,21 +1,22 @@
+import time
 from datetime import datetime, timedelta, timezone
-from typing import Optional, Union, List
-
 from threading import Lock
+from typing import List, Optional, Union
+
+from confluent_kafka.error import (
+    KafkaException,
+    KeySerializationError,
+    ValueSerializationError,
+)
+
 from forwarder.application_logger import get_logger
 from forwarder.kafka.kafka_helpers import (
     _nanoseconds_to_milliseconds,
     seconds_to_nanoseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
-from confluent_kafka.error import (
-    KafkaException,
-    ValueSerializationError,
-    KeySerializationError,
-)
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
-import time
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
@@ -153,19 +154,3 @@ def create_serialiser_list(
         )
     )
     return return_list
-
-
-class BaseUpdateHandler:
-    def __init__(
-        self,
-        serialiser_tracker_list: List[SerialiserTracker],
-    ):
-        self._logger = get_logger()
-        self.serialiser_tracker_list: List[SerialiserTracker] = serialiser_tracker_list
-
-    def stop(self):
-        """
-        Stop periodic updates and unsubscribe from PV
-        """
-        for serialiser in self.serialiser_tracker_list:
-            serialiser.stop()
