@@ -16,7 +16,7 @@ from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
-from forwarder.update_handlers.base_update_handler import create_serialiser_list
+from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.p4p_fakes import FakeContext
 
@@ -70,7 +70,7 @@ def test_update_handler_publishes_float_update(pv_value, pv_type):
     context = FakeContext()
 
     source_name = ""
-    got_value = None
+    got_value = 0.0
 
     def check_payload(payload):
         nonlocal source_name, got_value
@@ -209,10 +209,10 @@ def test_update_handler_publishes_alarm_update():
         )
     )
 
-    assert result.value == pv_value
-    assert result.source_name == pv_source_name
-    assert result.alarm_status == AlarmStatus.HIGH
-    assert result.alarm_severity == AlarmSeverity.MINOR
+    assert result.value == pv_value  # type: ignore
+    assert result.source_name == pv_source_name  # type: ignore
+    assert result.alarm_status == AlarmStatus.HIGH  # type: ignore
+    assert result.alarm_severity == AlarmSeverity.MINOR  # type: ignore
 
     pva_update_handler.stop()
 
@@ -241,8 +241,8 @@ def test_update_handler_publishes_periodic_update():
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
 
-    assert result.value == pv_value
-    assert result.source_name == pv_source_name
+    assert result.value == pv_value  # type: ignore
+    assert result.source_name == pv_source_name  # type: ignore
 
     sleep(0.05)
     assert (
@@ -289,7 +289,7 @@ def test_empty_update_is_not_forwarded():
         producer.messages_published == 2
     ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep00)"
     assert (
-        result.timestamps.size > 0
+        result.timestamps.size > 0  # type: ignore
     ), "Expected the published PV update not to be empty"
 
     pva_update_handler.stop()
@@ -343,8 +343,8 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert producer.published_payload is not None
-    assert result.type == state_enum
-    assert result.source_name == pv_source_name
+    assert result.type == state_enum  # type: ignore
+    assert result.source_name == pv_source_name  # type: ignore
 
     pva_update_handler.stop()
 
