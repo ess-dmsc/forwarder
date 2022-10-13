@@ -4,6 +4,8 @@ from typing import Optional, Tuple
 from confluent_kafka import Consumer, TopicPartition
 from pytictoc import TicToc
 
+from forwarder.kafka.kafka_helpers import get_sasl_config
+
 
 class MsgErrorException(Exception):
     pass
@@ -81,6 +83,7 @@ def poll_for_valid_message(
                 message_file_id == expected_file_identifier
             ), f"Expected message to have schema id of {expected_file_identifier}, but it has {message_file_id}"
             return msg.value(), msg.key()
+        print("Waiting for message")
 
 
 def create_consumer(offset_reset="earliest"):
@@ -89,5 +92,6 @@ def create_consumer(offset_reset="earliest"):
         "default.topic.config": {"auto.offset.reset": offset_reset},
         "group.id": uuid.uuid4(),
     }
+    consumer_config.update(get_sasl_config("PLAIN", "client", "client-secret"))
     cons = Consumer(**consumer_config)
     return cons

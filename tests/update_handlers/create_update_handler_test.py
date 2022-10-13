@@ -64,6 +64,7 @@ def test_pva_handler_created_when_pva_protocol_specified():
     )
     handler = create_update_handler(producer, None, context, channel_with_pva_protocol, 20000)  # type: ignore
     assert isinstance(handler, PVAUpdateHandler)
+    handler.stop()
 
 
 def test_ca_handler_created_when_ca_protocol_specified():
@@ -72,3 +73,4 @@ def test_ca_handler_created_when_ca_protocol_specified():
     channel_with_ca_protocol = Channel("name", EpicsProtocol.CA, "output_topic", "f142")
     handler = create_update_handler(producer, context, None, channel_with_ca_protocol, 20000)  # type: ignore
     assert isinstance(handler, CAUpdateHandler)
+    handler.stop()

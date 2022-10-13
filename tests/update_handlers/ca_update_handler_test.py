@@ -16,6 +16,7 @@ from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
+from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.ca_fakes import FakeContext
 
@@ -29,7 +30,7 @@ def test_update_handler_throws_if_schema_not_recognised():
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
     with pytest.raises(ValueError):
-        CAUpdateHandler(producer, context, "source_name", "output_topic", non_existing_schema)  # type: ignore
+        CAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema))  # type: ignore
 
 
 @pytest.mark.parametrize(
@@ -46,7 +47,7 @@ def test_update_handler_publishes_float_update(
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -76,7 +77,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_caproto_type, pv_numpy
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
 
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -120,7 +121,7 @@ def test_update_handler_publishes_floatarray_update(
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
 
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -153,7 +154,7 @@ def test_update_handler_publishes_alarm_update():
     alarm_status = 6  # AlarmStatus.LOW
     alarm_severity = 1  # AlarmSeverity.MINOR
 
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
 
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -187,7 +188,7 @@ def test_update_handler_publishes_periodic_update():
     pv_source_name = "source_name"
 
     update_period_ms = 10
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142", update_period_ms)  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", update_period_ms))  # type: ignore
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -213,7 +214,7 @@ def test_update_handler_publishes_periodic_update():
     update_handler.stop()
 
 
-def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequent_updates():
+def test_update_handler_always_includes_alarm_status():
     producer = FakeProducer()
     context = FakeContext()
 
@@ -224,7 +225,7 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
     alarm_status = 6  # AlarmStatus.LOW
     alarm_severity = 1  # AlarmSeverity.MINOR
 
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -250,8 +251,8 @@ def test_update_handler_does_not_include_alarm_details_if_unchanged_in_subsequen
 
     assert producer.messages_published == 2
     pv_update_output = deserialise_f142(producer.published_payload)
-    assert pv_update_output.alarm_status == AlarmStatus.NO_CHANGE
-    assert pv_update_output.alarm_severity == AlarmSeverity.NO_CHANGE
+    assert pv_update_output.alarm_status == AlarmStatus.LOW
+    assert pv_update_output.alarm_severity == AlarmSeverity.MINOR
 
     update_handler.stop()
 
@@ -262,7 +263,7 @@ def test_update_handler_publishes_enum_update():
 
     pv_caproto_type = ChannelType.TIME_ENUM
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
 
     # Nothing gets published when ENUM type update is received, the handler will resubscribe using STRING
     # type as the string is more useful to forwarder to the filewriter than the enum int
@@ -296,7 +297,7 @@ def test_empty_update_is_not_forwarded():
     pv_numpy_type = np.int32
     pv_source_name = "chopper"
 
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct"))  # type: ignore
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
     # First update, with non-empty timestamp array
@@ -348,7 +349,7 @@ def test_empty_update_is_not_cached():
 
     # Set an update period to enable PV update caching, so that we can test
     auto_update_period = 5000
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "tdct", auto_update_period)  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", auto_update_period))  # type: ignore
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
     # Update with empty timestamp array
@@ -364,7 +365,7 @@ def test_empty_update_is_not_cached():
     )
 
     assert (
-        update_handler._cached_update is None
+        update_handler.serialiser_tracker_list[0]._cached_update is None
     ), "Expected the empty update not to have been cached"
 
     update_handler.stop()
@@ -384,7 +385,7 @@ def test_handler_publishes_connection_state_change(state_string, state_enum):
     context = FakeContext()
 
     pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(producer, context, pv_source_name, "output_topic", "f142")  # type: ignore
+    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
 
     context.call_connection_state_callback_with_fake_state_change(state_string)
 

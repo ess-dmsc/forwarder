@@ -2,7 +2,6 @@ import configparser
 import logging
 from os import getpid
 from pathlib import Path
-from socket import gethostname
 
 import configargparse
 
@@ -63,31 +62,59 @@ def parse_args():
     parser.add_argument(
         "--config-topic",
         required=True,
-        help="<host[:port][/topic]> Kafka broker/topic to listen for commands",
+        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to listen for commands",
         type=str,
         env_var="CONFIG_TOPIC",
     )
     parser.add_argument(
+        "--config-topic-sasl-password",
+        required=False,
+        help="Password for Kafka SASL authentication",
+        type=str,
+        env_var="CONFIG_TOPIC_SASL_PASSWORD",
+    )
+    parser.add_argument(
         "--status-topic",
         required=True,
-        help="<host[:port][/topic]> Kafka broker/topic to publish status updates on",
+        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to publish status updates on",
         type=str,
         env_var="STATUS_TOPIC",
     )
     parser.add_argument(
+        "--status-topic-sasl-password",
+        required=False,
+        help="Password for Kafka SASL authentication",
+        type=str,
+        env_var="STATUS_TOPIC_SASL_PASSWORD",
+    )
+    parser.add_argument(
         "--output-broker",
         required=True,
-        help="<host[:port]> Kafka broker to forward data into",
+        help="<[SASL_MECHANISM\\username@]host[:port]> Kafka broker to forward data into",
         type=str,
         env_var="OUTPUT_BROKER",
     )
     parser.add_argument(
+        "--output-broker-sasl-password",
+        required=False,
+        help="Password for Kafka SASL authentication",
+        type=str,
+        env_var="OUTPUT_BROKER_SASL_PASSWORD",
+    )
+    parser.add_argument(
         "--storage-topic",
         required=False,
-        help="<host[:port][/topic]> Kafka broker/topic for storage of the "
+        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic for storage of the "
         "last known forwarding details",
         type=str,
         env_var="STORAGE_TOPIC",
+    )
+    parser.add_argument(
+        "--storage-topic-sasl-password",
+        required=False,
+        help="Password for Kafka SASL authentication",
+        type=str,
+        env_var="STORAGE_TOPIC_SASL_PASSWORD",
     )
     parser.add_argument(
         "-s",
@@ -136,8 +163,8 @@ def parse_args():
     parser.add_argument(
         "--service-id",
         required=False,
-        help='Identifier for this particular instance of the Forwarder, defaults to "Forwarder.<HOSTNAME>.<PID>',
-        default=f"Forwarder.{gethostname()}.{getpid()}",
+        help='Identifier for this particular instance of the Forwarder, defaults to "<PID>',
+        default=f"{getpid()}",
         env_var="SERVICE_ID",
         type=str,
     )

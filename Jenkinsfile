@@ -33,7 +33,6 @@ builders = pipeline_builder.createBuilders { container ->
   }  // stage
 
   pipeline_builder.stage("${container.key}: Dependencies") {
-    def conan_remote = "ess-dmsc-local"
     container.sh """
       /opt/miniconda/bin/conda init bash
       export PATH=/opt/miniconda/bin:$PATH
@@ -43,7 +42,6 @@ builders = pipeline_builder.createBuilders { container ->
   } // stage
 
   pipeline_builder.stage("${container.key}: Formatting (black) ") {
-    def conan_remote = "ess-dmsc-local"
     container.sh """
       export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
@@ -52,7 +50,6 @@ builders = pipeline_builder.createBuilders { container ->
   } // stage
 
   pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
-    def conan_remote = "ess-dmsc-local"
     container.sh """
       export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
@@ -61,7 +58,6 @@ builders = pipeline_builder.createBuilders { container ->
   } // stage
 
   pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
-    def conan_remote = "ess-dmsc-local"
     container.sh """
       export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
@@ -92,7 +88,7 @@ node {
   }
 
   if ( env.CHANGE_ID ) {
-      builders['system tests'] = get_system_tests_pipeline()
+      builders['integration tests'] = get_integration_tests_pipeline()
   }
 
   try {
@@ -105,16 +101,16 @@ node {
   cleanWs()
 }
 
-def get_system_tests_pipeline() {
+def get_integration_tests_pipeline() {
   return {
-    node('system-test') {
+    node('docker') {
       cleanWs()
       dir("${pipeline_builder.project}") {
         try {
-          stage("System tests: Checkout") {
+          stage("Integration tests: Checkout") {
             checkout scm
           }  // stage
-          stage("System tests: Install requirements") {
+          stage("Integration tests: Install requirements") {
             sh """
             python3 --version
             python3 -m venv test_env
@@ -123,34 +119,34 @@ def get_system_tests_pipeline() {
             pwd
             pip3 install --upgrade pip
             pip3 install -r requirements-dev.txt
-            pip3 install -r system_tests/requirements.txt
+            pip3 install -r integration_tests/requirements.txt
             """
           }  // stage
-          stage("System tests: Run") {
+          stage("Integration tests: Run") {
             // Stop and remove any containers that may have been from the job before,
             // i.e. if a Jenkins job has been aborted.
             sh "docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true"
             timeout(time: 30, activity: true){
               sh """
               source test_env/bin/activate
-              cd system_tests/
-              python3 -m pytest -s --junitxml=./SystemTestsOutput.xml .
+              cd integration_tests/
+              python3 -m pytest -s --junitxml=./IntegrationTestsOutput.xml .
               """
             }
           }  // stage
         } finally {
-          stage ("System tests: Clean Up") {
+          stage ("Integration tests: Clean Up") {
             // The statements below return true because the build should pass
             // even if there are no docker containers or output files to be
             // removed.
             sh """
             rm -rf test_env
-            rm -rf system_tests/output-files/* || true
+            rm -rf integration_tests/output-files/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
-          stage("System tests: Archive") {
-            junit "system_tests/SystemTestsOutput.xml"
+          stage("Integration tests: Archive") {
+            junit "integration_tests/IntegrationTestsOutput.xml"
           }
         }  // try/finally
       } // dir
