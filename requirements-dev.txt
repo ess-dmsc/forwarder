@@ -10,7 +10,7 @@ wheel
 black==22.3.0
 flake8==3.9.2
 mypy==v0.790
-isort==5.9.3
+isort==5.10.1
 
 # For integration tests
 docker-compose
