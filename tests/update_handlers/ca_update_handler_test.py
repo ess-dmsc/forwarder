@@ -16,7 +16,7 @@ from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
-from forwarder.update_handlers.base_update_handler import create_serialiser_list
+from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.ca_fakes import FakeContext
 

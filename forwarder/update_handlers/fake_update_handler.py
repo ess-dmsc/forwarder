@@ -1,17 +1,15 @@
-from typing import List
 from random import randint
+from typing import List
 
 import numpy as np
 from p4p.nt import NTScalar
 
+from forwarder.application_logger import get_logger
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.base_update_handler import (
-    BaseUpdateHandler,
-    SerialiserTracker,
-)
+from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 
 
-class FakeUpdateHandler(BaseUpdateHandler):
+class FakeUpdateHandler:
     """
     Periodically generate a random integer as a PV value instead of monitoring a real EPICS PV
     serialises updates in FlatBuffers and passes them onto an Kafka Producer.
@@ -23,7 +21,8 @@ class FakeUpdateHandler(BaseUpdateHandler):
         schema: str,
         fake_pv_period_ms: int,
     ):
-        super().__init__(serialiser_tracker_list)
+        self._logger = get_logger()
+        self.serialiser_tracker_list: List[SerialiserTracker] = serialiser_tracker_list
         self._schema = schema
 
         self._repeating_timer = RepeatTimer(
@@ -56,5 +55,6 @@ class FakeUpdateHandler(BaseUpdateHandler):
         """
         Stop periodic updates
         """
-        super().stop()
+        for serialiser in self.serialiser_tracker_list:
+            serialiser.stop()
         self._repeating_timer.cancel()
