@@ -5,7 +5,7 @@ from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
 from forwarder.application_logger import get_logger
-from forwarder.update_handlers.base_update_handler import SerialiserTracker
+from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 
 
 class CAUpdateHandler:

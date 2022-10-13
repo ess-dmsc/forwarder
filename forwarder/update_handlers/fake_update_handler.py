@@ -6,7 +6,7 @@ from p4p.nt import NTScalar
 
 from forwarder.application_logger import get_logger
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.base_update_handler import SerialiserTracker
+from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 
 
 class FakeUpdateHandler:

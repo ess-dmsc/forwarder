@@ -3,7 +3,7 @@ from typing import List
 from p4p.client.thread import Context as PVAContext
 
 from forwarder.application_logger import get_logger
-from forwarder.update_handlers.base_update_handler import SerialiserTracker
+from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 
 
 class PVAUpdateHandler:
