@@ -9,7 +9,7 @@ from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 class PVAUpdateHandler:
     """
     Monitors via EPICS v4 Process Variable Access (PVA),
-    serialises updates in FlatBuffers and passes them onto an Kafka Producer.
+    serialises updates in FlatBuffers and passes them onto a Kafka Producer.
     PVA support from p4p library.
     """
 
