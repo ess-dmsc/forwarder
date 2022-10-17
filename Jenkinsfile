@@ -112,14 +112,14 @@ def get_integration_tests_pipeline() {
           }  // stage
           stage("Integration tests: Install requirements") {
             sh """
-            python3 --version
-            python3 -m venv test_env
+            scl enable rh-python38 -- python --version
+            scl enable rh-python38 -- python -m venv test_env
             source test_env/bin/activate
-            which python3
+            which python
             pwd
-            pip3 install --upgrade pip
-            pip3 install -r requirements-dev.txt
-            pip3 install -r integration_tests/requirements.txt
+            pip install --upgrade pip
+            pip install -r requirements-dev.txt
+            pip install -r integration_tests/requirements.txt
             """
           }  // stage
           stage("Integration tests: Run") {
@@ -130,7 +130,7 @@ def get_integration_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd integration_tests/
-              python3 -m pytest -s --junitxml=./IntegrationTestsOutput.xml .
+              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml .
               """
             }
           }  // stage
