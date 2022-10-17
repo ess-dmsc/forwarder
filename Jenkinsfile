@@ -112,8 +112,8 @@ def get_integration_tests_pipeline() {
           }  // stage
           stage("Integration tests: Install requirements") {
             sh """
-            python --version
-            python -m venv test_env
+            scl enable rh-python38 -- python --version
+            scl enable rh-python38 -- python -m venv test_env
             source test_env/bin/activate
             which python
             pwd
