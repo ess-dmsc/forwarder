@@ -128,18 +128,19 @@ def create_statistics_reporter(
     update_message_counter,
     update_buffer_err_counter,
     logger,
-    prefix,
     statistics_update_interval,
 ):
     metric_hostname = gethostname().replace(".", "_")
-    prefix = f"Forwarder.{metric_hostname}.{service_id}".replace(" ", "").lower()
+    prefix = f"Forwarder.{metric_hostname}.{service_id}.throughput".replace(
+        " ", ""
+    ).lower()
     statistics_reporter = StatisticsReporter(
         grafana_carbon_address,
         update_handlers,
         update_message_counter,  # type: ignore
         update_buffer_err_counter,  # type: ignore
         logger,
-        prefix=f"{prefix}.throughput",
+        prefix=prefix,
         update_interval_s=statistics_update_interval,
     )
     return statistics_reporter
@@ -213,7 +214,6 @@ if __name__ == "__main__":
             update_message_counter,
             update_buffer_err_counter,
             get_logger(),
-            args.prefix,
             args.statistics_update_interval,
         )
         statistic_reporter.start()  # type: ignore
