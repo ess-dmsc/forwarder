@@ -140,13 +140,24 @@ def create_statistics_reporter(
         update_message_counter,  # type: ignore
         update_buffer_err_counter,  # type: ignore
         logger,
-        prefix=prefix,
-        update_interval_s=statistics_update_interval,
+        prefix,
+        statistics_update_interval,
     )
     return statistics_reporter
 
 
 if __name__ == "__main__":
+    (configuration_store, statistics_reporter, status_reporter, consumer, producer,) = (
+        None,
+        None,
+        None,
+        None,
+        None,
+    )
+    # Using dictionary with Channel as key to ensure we avoid having multiple
+    # handlers active for identical configurations: serialising updates from
+    # same pv with same schema and publishing to same topic
+    update_handlers: Dict[Channel, UpdateHandler] = {}
     args = parse_args()
 
     if args.log_file:
@@ -173,84 +184,80 @@ if __name__ == "__main__":
 
     version = get_version()
     get_logger().info(f"Forwarder v{version} started, service Id: {args.service_id}")
-    # EPICS
-    ca_ctx = CaContext()
-    pva_ctx = PvaContext("pva", nt=False)
-    # Using dictionary with Channel as key to ensure we avoid having multiple
-    # handlers active for identical configurations: serialising updates from
-    # same pv with same schema and publishing to same topic
-    update_handlers: Dict[Channel, UpdateHandler] = {}
+    try:
+        # EPICS
+        ca_ctx = CaContext()
+        pva_ctx = PvaContext("pva", nt=False)
 
-    grafana_carbon_address = args.grafana_carbon_address
-    update_message_counter = Counter() if grafana_carbon_address else None
-    update_buffer_err_counter = Counter() if grafana_carbon_address else None
+        grafana_carbon_address = args.grafana_carbon_address
+        update_message_counter = Counter() if grafana_carbon_address else None
+        update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
-    # Kafka
-    producer = create_epics_producer(
-        args.output_broker,
-        args.output_broker_sasl_password,
-        update_message_counter,
-        update_buffer_err_counter,
-    )
-    consumer = create_config_consumer(
-        args.config_topic, args.config_topic_sasl_password
-    )
-    status_reporter = create_status_reporter(
-        update_handlers,
-        args.status_topic,
-        args.status_topic_sasl_password,
-        args.service_id,
-        version,
-        get_logger(),
-    )
-    status_reporter.start()
-
-    statistics_reporter = None
-    if grafana_carbon_address:
-        statistics_reporter = create_statistics_reporter(
-            args.service_id,
-            grafana_carbon_address,
-            update_handlers,
+        # Kafka
+        producer = create_epics_producer(
+            args.output_broker,
+            args.output_broker_sasl_password,
             update_message_counter,
             update_buffer_err_counter,
+        )
+        consumer = create_config_consumer(
+            args.config_topic, args.config_topic_sasl_password
+        )
+        status_reporter = create_status_reporter(
+            update_handlers,
+            args.status_topic,
+            args.status_topic_sasl_password,
+            args.service_id,
+            version,
             get_logger(),
-            args.statistics_update_interval,
         )
-        statistics_reporter.start()
+        status_reporter.start()
 
-    if args.storage_topic:
-        configuration_store = create_configuration_store(
-            args.storage_topic, args.storage_topic_sasl_password
-        )
-        if not args.skip_retrieval:
-            try:
-                restore_config_command = parse_config_update(
-                    configuration_store.retrieve_configuration()
-                )
-                handle_configuration_change(
-                    restore_config_command,
-                    args.fake_pv_period,
-                    args.pv_update_period,
-                    update_handlers,
-                    producer,
-                    ca_ctx,
-                    pva_ctx,
-                    get_logger(),
-                    status_reporter,
-                    configuration_store,
-                )
-            except RuntimeError as error:
-                get_logger().error(
-                    "Could not retrieve stored configuration on start-up: " f"{error}"
-                )
-    else:
-        configuration_store = NullConfigurationStore
+        if grafana_carbon_address:
+            statistics_reporter = create_statistics_reporter(
+                args.service_id,
+                grafana_carbon_address,
+                update_handlers,
+                update_message_counter,
+                update_buffer_err_counter,
+                get_logger(),
+                args.statistics_update_interval,
+            )
+            statistics_reporter.start()
 
-    # Metrics
-    # use https://github.com/Jetsetter/graphyte ?
-    # https://julien.danjou.info/atomic-lock-free-counters-in-python/
+        if args.storage_topic:
+            configuration_store = create_configuration_store(
+                args.storage_topic, args.storage_topic_sasl_password
+            )
+            if not args.skip_retrieval:
+                try:
+                    restore_config_command = parse_config_update(
+                        configuration_store.retrieve_configuration()
+                    )
+                    handle_configuration_change(
+                        restore_config_command,
+                        args.fake_pv_period,
+                        args.pv_update_period,
+                        update_handlers,
+                        producer,
+                        ca_ctx,
+                        pva_ctx,
+                        get_logger(),
+                        status_reporter,
+                        configuration_store,
+                    )
+                except RuntimeError as error:
+                    get_logger().error(
+                        "Could not retrieve stored configuration on start-up: "
+                        f"{error}"
+                    )
+        else:
+            configuration_store = NullConfigurationStore
 
-    try:
+        # Metrics
+        # use https://github.com/Jetsetter/graphyte ?
+        # https://julien.danjou.info/atomic-lock-free-counters-in-python/
+
         while True:
             msg = consumer.poll(timeout=0.5)
             if msg is None:
@@ -282,14 +289,18 @@ if __name__ == "__main__":
         get_logger().exception(e)
 
     finally:
-        status_reporter.stop()
+        if status_reporter:
+            status_reporter.stop()
         if statistics_reporter:
             statistics_reporter.stop()
 
-        for _, handler in update_handlers.items():
-            handler.stop()
-        consumer.close()
-        producer.close()
+        if update_handlers:
+            for _, handler in update_handlers.items():
+                handler.stop()
+        if consumer:
+            consumer.close()
+        if producer:
+            producer.close()
         try:
             if configuration_store is not None:
                 configuration_store._producer.close()
