@@ -205,7 +205,7 @@ if __name__ == "__main__":
     )
     status_reporter.start()
 
-    statistic_reporter = None
+    statistics_reporter = None
     if grafana_carbon_address:
         statistics_reporter = create_statistics_reporter(
             args.service_id,
@@ -216,7 +216,7 @@ if __name__ == "__main__":
             get_logger(),
             args.statistics_update_interval,
         )
-        statistic_reporter.start()  # type: ignore
+        statistics_reporter.start()
 
     if args.storage_topic:
         configuration_store = create_configuration_store(
@@ -283,8 +283,8 @@ if __name__ == "__main__":
 
     finally:
         status_reporter.stop()
-        if statistic_reporter:
-            statistic_reporter.stop()
+        if statistics_reporter:
+            statistics_reporter.stop()
 
         for _, handler in update_handlers.items():
             handler.stop()
