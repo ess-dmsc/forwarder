@@ -294,9 +294,8 @@ if __name__ == "__main__":
         if statistics_reporter:
             statistics_reporter.stop()
 
-        if update_handlers:
-            for _, handler in update_handlers.items():
-                handler.stop()
+        for _, handler in update_handlers.items():
+            handler.stop()
         if consumer:
             consumer.close()
         if producer:
