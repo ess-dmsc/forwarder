@@ -44,12 +44,7 @@ class PVAUpdateHandler:
             )
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                (
-                    new_message,
-                    new_timestamp,
-                ) = serialiser_tracker.serialiser.pva_serialise(response)
-                if new_message is not None:
-                    serialiser_tracker.set_new_message(new_message, new_timestamp)
+                serialiser_tracker.process_pva_message(response)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling PVA update. Message was: {str(e)}"
