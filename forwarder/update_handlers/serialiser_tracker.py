@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, timezone
 from threading import Lock
 from typing import List, Optional, Union
 
+from caproto import ReadNotifyResponse
+from caproto.threading.client import PV
 from confluent_kafka.error import (
     KafkaException,
     KeySerializationError,
@@ -69,6 +71,19 @@ class SerialiserTracker:
             exception_string = f"Got uncaught exception in SerialiserTracker._publish_cached_update. The message was: {str(e)}"
             self._logger.error(exception_string)
             self._logger.exception(e)
+
+    def process_ca_message(self, response: ReadNotifyResponse):
+        new_message, new_timestamp = self.serialiser.ca_serialise(response)
+        if new_message is not None:
+            self.set_new_message(new_message, new_timestamp)
+
+    def process_ca_connection(self, pv: PV, state: str):
+        (
+            new_message,
+            new_timestamp,
+        ) = self.serialiser.ca_conn_serialise(pv, state)
+        if new_message is not None:
+            self.set_new_message(new_message, new_timestamp)
 
     def set_new_message(self, message: bytes, timestamp_ns: Union[int, float]):
         if message is None:
