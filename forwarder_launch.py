@@ -1,5 +1,6 @@
 import os.path as osp
 import sys
+from contextlib import ExitStack
 from socket import gethostname
 from typing import Dict
 
@@ -185,113 +186,111 @@ if __name__ == "__main__":
     update_message_counter = Counter() if grafana_carbon_address else None
     update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
-    # Kafka
-    producer = create_epics_producer(
-        args.output_broker,
-        args.output_broker_sasl_password,
-        update_message_counter,
-        update_buffer_err_counter,
-    )
-    consumer = create_config_consumer(
-        args.config_topic, args.config_topic_sasl_password
-    )
-    status_reporter = create_status_reporter(
-        update_handlers,
-        args.status_topic,
-        args.status_topic_sasl_password,
-        args.service_id,
-        version,
-        get_logger(),
-    )
-    status_reporter.start()
+    with ExitStack() as exit_stack:
 
-    statistics_reporter = None
-    if grafana_carbon_address:
-        statistics_reporter = create_statistics_reporter(
-            args.service_id,
-            grafana_carbon_address,
-            update_handlers,
+        # Kafka
+        producer = create_epics_producer(
+            args.output_broker,
+            args.output_broker_sasl_password,
             update_message_counter,
             update_buffer_err_counter,
+        )
+        exit_stack.callback(producer.close)
+
+        consumer = create_config_consumer(
+            args.config_topic, args.config_topic_sasl_password
+        )
+        exit_stack.callback(consumer.close)
+
+        status_reporter = create_status_reporter(
+            update_handlers,
+            args.status_topic,
+            args.status_topic_sasl_password,
+            args.service_id,
+            version,
             get_logger(),
-            args.statistics_update_interval,
         )
-        statistics_reporter.start()
+        exit_stack.callback(status_reporter.stop)
+        status_reporter.start()
 
-    if args.storage_topic:
-        configuration_store = create_configuration_store(
-            args.storage_topic, args.storage_topic_sasl_password
-        )
-        if not args.skip_retrieval:
-            try:
-                restore_config_command = parse_config_update(
-                    configuration_store.retrieve_configuration()
-                )
-                handle_configuration_change(
-                    restore_config_command,
-                    args.fake_pv_period,
-                    args.pv_update_period,
-                    update_handlers,
-                    producer,
-                    ca_ctx,
-                    pva_ctx,
-                    get_logger(),
-                    status_reporter,
-                    configuration_store,
-                )
-            except RuntimeError as error:
-                get_logger().error(
-                    "Could not retrieve stored configuration on start-up: " f"{error}"
-                )
-    else:
-        configuration_store = NullConfigurationStore
+        if grafana_carbon_address:
+            statistics_reporter = create_statistics_reporter(
+                args.service_id,
+                grafana_carbon_address,
+                update_handlers,
+                update_message_counter,
+                update_buffer_err_counter,
+                get_logger(),
+                args.statistics_update_interval,
+            )
+            exit_stack.callback(statistics_reporter.stop)
+            statistics_reporter.start()
 
-    # Metrics
-    # use https://github.com/Jetsetter/graphyte ?
-    # https://julien.danjou.info/atomic-lock-free-counters-in-python/
+        if args.storage_topic:
+            configuration_store = create_configuration_store(
+                args.storage_topic, args.storage_topic_sasl_password
+            )
+            exit_stack.callback(configuration_store.stop)
+            if not args.skip_retrieval:
+                try:
+                    restore_config_command = parse_config_update(
+                        configuration_store.retrieve_configuration()
+                    )
+                    handle_configuration_change(
+                        restore_config_command,
+                        args.fake_pv_period,
+                        args.pv_update_period,
+                        update_handlers,
+                        producer,
+                        ca_ctx,
+                        pva_ctx,
+                        get_logger(),
+                        status_reporter,
+                        configuration_store,
+                    )
+                except RuntimeError as error:
+                    get_logger().error(
+                        "Could not retrieve stored configuration on start-up: "
+                        f"{error}"
+                    )
+        else:
+            configuration_store = NullConfigurationStore
 
-    try:
-        while True:
-            msg = consumer.poll(timeout=0.5)
-            if msg is None:
-                continue
-            if msg.error():
-                get_logger().error(msg.error())
-            else:
-                get_logger().info("Received config message")
-                config_change = parse_config_update(msg.value())
-                handle_configuration_change(
-                    config_change,
-                    args.fake_pv_period,
-                    args.pv_update_period,
-                    update_handlers,
-                    producer,
-                    ca_ctx,
-                    pva_ctx,
-                    get_logger(),
-                    status_reporter,
-                    configuration_store,
-                )
+        # Metrics
+        # use https://github.com/Jetsetter/graphyte ?
+        # https://julien.danjou.info/atomic-lock-free-counters-in-python/
 
-    except KeyboardInterrupt:
-        get_logger().info("%% Aborted by user")
-    except BaseException as e:
-        get_logger().error(
-            f"Got an exception in the application main loop. The exception message was: {e}"
-        )
-        get_logger().exception(e)
-
-    finally:
-        status_reporter.stop()
-        if statistics_reporter:
-            statistics_reporter.stop()
-
-        for _, handler in update_handlers.items():
-            handler.stop()
-        consumer.close()
-        producer.close()
         try:
-            if configuration_store is not None:
-                configuration_store._producer.close()
-        except AttributeError:
-            pass
+            while True:
+                msg = consumer.poll(timeout=0.5)
+                if msg is None:
+                    continue
+                if msg.error():
+                    get_logger().error(msg.error())
+                else:
+                    get_logger().info("Received config message")
+                    config_change = parse_config_update(msg.value())
+                    handle_configuration_change(
+                        config_change,
+                        args.fake_pv_period,
+                        args.pv_update_period,
+                        update_handlers,
+                        producer,
+                        ca_ctx,
+                        pva_ctx,
+                        get_logger(),
+                        status_reporter,
+                        configuration_store,
+                    )
+
+        except KeyboardInterrupt:
+            get_logger().info("%% Aborted by user")
+        except BaseException as e:
+            get_logger().error(
+                f"Got an exception in the application main loop. The exception message was: {e}"
+            )
+            get_logger().exception(e)
+
+        finally:
+            for handler in update_handlers.values():
+                handler.stop()
