@@ -50,11 +50,7 @@ class CAUpdateHandler:
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                new_message, new_timestamp = serialiser_tracker.serialiser.ca_serialise(
-                    response
-                )
-                if new_message is not None:
-                    serialiser_tracker.set_new_message(new_message, new_timestamp)
+                serialiser_tracker.process_ca_message(response)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling CA update. Message was: {str(e)}"
@@ -67,12 +63,7 @@ class CAUpdateHandler:
     def _connection_state_callback(self, pv: PV, state: str):
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                (
-                    new_message,
-                    new_timestamp,
-                ) = serialiser_tracker.serialiser.ca_conn_serialise(pv, state)
-                if new_message is not None:
-                    serialiser_tracker.set_new_message(new_message, new_timestamp)
+                serialiser_tracker.process_ca_connection(pv, state)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling CA connection status. Message was: {str(e)}"
