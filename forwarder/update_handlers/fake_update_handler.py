@@ -13,7 +13,7 @@ from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
 class FakeUpdateHandler:
     """
     Periodically generate a random integer as a PV value instead of monitoring a real EPICS PV
-    serialises updates in FlatBuffers and passes them onto an Kafka Producer.
+    serialises updates in FlatBuffers and passes them onto a Kafka Producer.
     """
 
     def __init__(
