@@ -1,3 +1,4 @@
+import time
 from random import randint
 from typing import List
 
@@ -34,18 +35,14 @@ class FakeUpdateHandler:
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
             data = np.array([randint(0, 100)]).astype(np.int32)
-            update = NTScalar("ai").wrap(data)
+            response = NTScalar("ai").wrap(data)
         else:
             # Otherwise 0D (scalar) is fine
-            update = NTScalar("i").wrap(randint(0, 100))
+            response = NTScalar("i").wrap(randint(0, 100))
+        response.timeStamp["secondsPastEpoch"] = int(time.time())
         try:
             for serialiser_tracker in self.serialiser_tracker_list:
-                (
-                    new_message,
-                    new_timestamp,
-                ) = serialiser_tracker.serialiser.pva_serialise(update)
-                if new_message is not None:
-                    serialiser_tracker.set_new_message(new_message, new_timestamp)
+                serialiser_tracker.process_pva_message(response)
         except (RuntimeError, ValueError) as e:
             self._logger.error(
                 f"Got error when handling PVA update. Message was: {str(e)}"
