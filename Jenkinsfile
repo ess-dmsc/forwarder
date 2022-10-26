@@ -146,7 +146,7 @@ def get_integration_tests_pipeline() {
             """
           }  // stage
           stage("Integration tests: Archive") {
-            junit "integration_tests/IntegrationTestsOutput.xml"
+            junit "contract_tests/IntegrationTestsOutput.xml"
           }
         }  // try/finally
       } // dir
