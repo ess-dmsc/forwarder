@@ -129,8 +129,8 @@ def get_integration_tests_pipeline() {
             timeout(time: 30, activity: true){
               sh """
               source test_env/bin/activate
-              cd integration_tests/
-              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml .
+              cd contract_tests/
+              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml test_kafka_contract.py
               """
             }
           }  // stage
