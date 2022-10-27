@@ -23,6 +23,8 @@ services:
 
   simpleioc:
     image: dockerregistry.esss.dk/ecdc_group/build-node-images/simpleioc:latest
+    depends_on:
+      - kafka
     tty: true
     ports:
       - "5064:5065"
