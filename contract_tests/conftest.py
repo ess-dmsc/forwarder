@@ -91,7 +91,8 @@ def start_kafka(request):
 
     cmd.up(options)
     print("Started kafka containers", flush=True)
-    wait_until_kafka_ready(cmd, options)
+    # wait_until_kafka_ready(cmd, options)
+    time.sleep(60)
 
     def fin():
         print("Stopping zookeeper and kafka", flush=True)
