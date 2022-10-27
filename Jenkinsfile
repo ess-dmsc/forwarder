@@ -130,7 +130,7 @@ def get_integration_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd contract_tests/
-              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml test_kafka_contract.py
+              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml test_caproto_contract.py
               """
             }
           }  // stage

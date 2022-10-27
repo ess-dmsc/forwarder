@@ -85,7 +85,7 @@ def start_kafka(request):
     print("Starting zookeeper and kafka", flush=True)
     options = common_options
     options["--project-name"] = "kafka"
-    options["--file"] = ["docker-compose-kafka.yml"]
+    options["--file"] = ["docker-compose.yml"]
     project = project_from_options(os.path.dirname(__file__), options)
     cmd = TopLevelCommand(project)
 
@@ -97,7 +97,7 @@ def start_kafka(request):
         print("Stopping zookeeper and kafka", flush=True)
         options["--timeout"] = 30
         options["--project-name"] = "kafka"
-        options["--file"] = ["docker-compose-kafka.yml"]
+        options["--file"] = ["docker-compose.yml"]
         cmd.down(options)
 
     request.addfinalizer(fin)
