@@ -135,7 +135,7 @@ def get_contract_tests_pipeline() {
               cd contract_tests/
               docker-compose up &
               sleep 30
-              docker exec contract_tests-bash-1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
+              docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
               """
             }
           }  // stage
