@@ -133,7 +133,7 @@ def get_contract_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd contract_tests/
-              docker compose up &
+              docker-compose up &
               sleep 30
               docker exec contract_tests-bash-1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
               """
@@ -141,9 +141,8 @@ def get_contract_tests_pipeline() {
           }  // stage
         } finally {
           stage ("Contract tests: Clean Up") {
-            // The statements below return true because the build should pass
-            // even if there are no docker containers or output files to be
-            // removed.
+            // The statements below return true because cleaning up should
+            // not affect the results of the tests.
             sh """
             rm -rf test_env || true
             rm -rf contract_tests/output-files/* || true
