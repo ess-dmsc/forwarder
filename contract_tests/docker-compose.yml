@@ -27,8 +27,6 @@ services:
 
   simpleioc:
     image: dockerregistry.esss.dk/ecdc_group/build-node-images/simpleioc:latest
-#    depends_on:
-#      - kafka
     tty: true
     ports:
       - "5064:5065"
@@ -40,11 +38,14 @@ services:
 
   bash:
     image: test_runner
-#    depends_on:
-#      - kafka
+    depends_on:
+      - kafka
+      - simpleioc
     tty: true
     networks:
       - frontend
+    volumes:
+    - ./results:/forwarder/contract_tests/results:rw
 
 networks:
   frontend:

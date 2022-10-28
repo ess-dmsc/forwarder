@@ -25,7 +25,7 @@ def read_value(pvname):
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 2:
+        if time.monotonic() > start_time + 5:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 
@@ -316,7 +316,7 @@ def test_monitor_disconnects_raises():
 
     start_time = time.monotonic()
     while not raises_exception:
-        if time.monotonic() > start_time + 2:
+        if time.monotonic() > start_time + 5:
             assert False, "timed out for some reason"
 
     assert raises_exception

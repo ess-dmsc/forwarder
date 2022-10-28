@@ -26,7 +26,7 @@ def read_value(pvname, data_type):
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 2:
+        if time.monotonic() > start_time + 5:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 
@@ -247,7 +247,7 @@ def test_value_callback_when_units_change():
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 2:
+        if time.monotonic() > start_time + 5:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 
@@ -258,7 +258,7 @@ def test_value_callback_when_units_change():
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 2:
+        if time.monotonic() > start_time + 5:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 
