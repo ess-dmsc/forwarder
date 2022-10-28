@@ -88,7 +88,7 @@ node {
   }
 
   if ( env.CHANGE_ID ) {
-      builders['integration tests'] = get_integration_tests_pipeline()
+      builders['integration tests'] = get_contract_tests_pipeline()
   }
 
   try {
@@ -101,52 +101,45 @@ node {
   cleanWs()
 }
 
-def get_integration_tests_pipeline() {
+def get_contract_tests_pipeline() {
   return {
     node('docker') {
       cleanWs()
       dir("${pipeline_builder.project}") {
         try {
-          stage("Integration tests: Checkout") {
+          stage("Contract tests: Checkout") {
             checkout scm
           }  // stage
-          stage("Integration tests: Install requirements") {
-            sh """
-            scl enable rh-python38 -- python --version
-            scl enable rh-python38 -- python -m venv test_env
-            source test_env/bin/activate
-            which python
-            pwd
-            pip install --upgrade pip
-            pip install -r requirements-dev.txt
-            pip install -r integration_tests/requirements.txt
-            """
-          }  // stage
-          stage("Integration tests: Run") {
+          stage("Contract tests: Run") {
             // Stop and remove any containers that may have been from the job before,
             // i.e. if a Jenkins job has been aborted.
-            sh "docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true"
-            timeout(time: 30, activity: true){
+            sh """
+            mkdir contract_tests/output-files | true
+            rm -rf contract_tests/output-files/*
+            docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
+            """
+            timeout(time: 60, activity: true){
               sh """
-              source test_env/bin/activate
               cd contract_tests/
-              python -m pytest -s --junitxml=./IntegrationTestsOutput.xml test_caproto_contract.py
+              docker build -t test_runner .
+              docker compose up &
+              sleep 30
+              docker exec contract_tests-bash-1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
               """
             }
           }  // stage
         } finally {
-          stage ("Integration tests: Clean Up") {
+          stage ("Contract tests: Clean Up") {
             // The statements below return true because the build should pass
             // even if there are no docker containers or output files to be
             // removed.
             sh """
-            rm -rf test_env
-            rm -rf integration_tests/output-files/* || true
+            rm -rf contract_tests/output-files/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
-          stage("Integration tests: Archive") {
-            junit "contract_tests/IntegrationTestsOutput.xml"
+          stage("Contract tests: Archive") {
+            junit "contract_tests/ContractTestsOutput.xml"
           }
         }  // try/finally
       } // dir
