@@ -37,7 +37,7 @@ services:
       - frontend
 
   bash:
-    image: test_runner
+    image: dockerregistry.esss.dk/ecdc_group/build-node-images/forwarder_contract_runner
     depends_on:
       - kafka
       - simpleioc

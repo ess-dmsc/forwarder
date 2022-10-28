@@ -121,7 +121,6 @@ def get_contract_tests_pipeline() {
             timeout(time: 60, activity: true){
               sh """
               cd contract_tests/
-              docker build -t test_runner .
               docker compose up &
               sleep 30
               docker exec contract_tests-bash-1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
