@@ -7,10 +7,14 @@ from confluent_kafka import KafkaException
 
 from forwarder.kafka.kafka_producer import KafkaProducer
 
+# Use the host in the docker compose file.
+# Change this if you want to run against another instance, e.g. localhost
+KAFKA_HOST = "kafka"
+
 
 def _create_producer():
     producer_config = {
-        "bootstrap.servers": "localhost:9092",
+        "bootstrap.servers": f"{KAFKA_HOST}:9092",
         "message.max.bytes": "20000000",
     }
     return KafkaProducer(confluent_kafka.Producer(producer_config))
@@ -18,7 +22,7 @@ def _create_producer():
 
 def _create_consumer():
     consumer_config = {
-        "bootstrap.servers": "localhost:9092",
+        "bootstrap.servers": f"{KAFKA_HOST}:9092",
         "group.id": uuid.uuid4(),
         "auto.offset.reset": "latest",
     }
