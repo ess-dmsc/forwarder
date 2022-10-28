@@ -150,7 +150,7 @@ def get_contract_tests_pipeline() {
             """
           }  // stage
           stage("Contract tests: Archive") {
-            junit "contract_tests/ContractTestsOutput.xml"
+            junit "contract_tests/output-files/ContractTestsOutput.xml"
           }
         }  // try/finally
       } // dir
