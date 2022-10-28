@@ -5,6 +5,9 @@ import numpy as np
 from caproto.sync.client import write
 from caproto.threading.client import Context
 
+TIMEOUT = 5
+
+
 # To get both the timestamps and the units for a particular PV
 # it is necessary to create two subscriptions to the PV.
 # This is because of how CA works.
@@ -247,7 +250,7 @@ def test_value_callback_when_units_change():
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 5:
+        if time.monotonic() > start_time + TIMEOUT:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 
@@ -258,7 +261,7 @@ def test_value_callback_when_units_change():
 
     start_time = time.monotonic()
     while not result:
-        if time.monotonic() > start_time + 5:
+        if time.monotonic() > start_time + TIMEOUT:
             assert False, "timed out for some reason"
         time.sleep(0.1)
 

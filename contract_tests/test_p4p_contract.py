@@ -5,6 +5,8 @@ import time
 import numpy as np
 from p4p.client.thread import Context
 
+TIMEOUT = 5
+
 
 @contextlib.contextmanager
 def read_value(pvname):
@@ -316,7 +318,7 @@ def test_monitor_disconnects_raises():
 
     start_time = time.monotonic()
     while not raises_exception:
-        if time.monotonic() > start_time + 5:
+        if time.monotonic() > start_time + TIMEOUT:
             assert False, "timed out for some reason"
 
     assert raises_exception
