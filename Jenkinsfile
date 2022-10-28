@@ -136,6 +136,7 @@ def get_contract_tests_pipeline() {
               docker-compose up &
               sleep 30
               docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml.xml .'
+              cp output-files/ContractTestsOutput.xml .
               """
             }
           }  // stage
@@ -150,7 +151,7 @@ def get_contract_tests_pipeline() {
             """
           }  // stage
           stage("Contract tests: Archive") {
-            junit "contract_tests/output-files/ContractTestsOutput.xml"
+            junit "contract_tests/ContractTestsOutput.xml"
           }
         }  // try/finally
       } // dir
