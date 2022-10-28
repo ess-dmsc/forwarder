@@ -110,16 +110,28 @@ def get_contract_tests_pipeline() {
           stage("Contract tests: Checkout") {
             checkout scm
           }  // stage
+          stage("Integration tests: Install requirements") {
+            sh """
+            scl enable rh-python38 -- python --version
+            scl enable rh-python38 -- python -m venv test_env
+            source test_env/bin/activate
+            which python
+            pwd
+            pip install --upgrade pip
+            pip install docker-compose
+            """
+          }  // stage
           stage("Contract tests: Run") {
             // Stop and remove any containers that may have been from the job before,
             // i.e. if a Jenkins job has been aborted.
             sh """
-            mkdir contract_tests/output-files | true
+            mkdir contract_tests/output-files || true
             rm -rf contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
             timeout(time: 60, activity: true){
               sh """
+              source test_env/bin/activate
               cd contract_tests/
               docker compose up &
               sleep 30
@@ -133,6 +145,7 @@ def get_contract_tests_pipeline() {
             // even if there are no docker containers or output files to be
             // removed.
             sh """
+            rm -rf test_env || true
             rm -rf contract_tests/output-files/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
