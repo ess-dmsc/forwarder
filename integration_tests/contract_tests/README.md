@@ -14,9 +14,21 @@ changed to handle this.
 cd contract_tests
 docker compose up
 # Give docker a few seconds to start up
-# From another terminal, checkout the correct branch and then run the tests:
+# From another terminal, clone the repo, checkout the correct branch and then run the tests:
+docker exec contract_tests_bash_1 bash -c 'git clone https://github.com/ess-dmsc/forwarder.git'
 docker exec contract_tests_bash_1 bash -c 'cd forwarder/; git fetch; git checkout <BRANCH_NAME>; git reset --hard HEAD; git pull'
+docker exec contract_tests_bash_1 bash -c 'cd forwarder/; python -m pip install requirements-dev.txt'
 docker exec contract_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest .'
+```
+Alternatively, one can rsync the local copy of the repo on to the docker image rather than clone it:
+```
+# On the local machine from the repo's top directory
+rsync -av . shared_volume/forwarder --exclude=shared_volume --exclude=".*" 
+```
+Then:
+```
+docker exec contract_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install requirements-dev.txt'
+docker exec contract_tests_bash_1 bash -c 'cd /shared_source/forwarder/integration_tests/contract_tests; pytest .'
 ```
 
 ### What is going on?
