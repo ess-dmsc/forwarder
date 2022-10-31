@@ -126,10 +126,10 @@ def get_contract_tests_pipeline() {
             // i.e. if a Jenkins job has been aborted.
             // Then pull the latest image versions
             sh """
-            mkdir contract_tests/output-files || true
-            rm -rf contract_tests/output-files/*
+            mkdir integration_tests/contract_tests/output-files || true
+            rm -rf integration_tests/contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            cd contract_tests/
+            cd integration_tests/contract_tests/
             grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
             """
           }  // stage
@@ -137,10 +137,10 @@ def get_contract_tests_pipeline() {
             timeout(time: 120, activity: true){
               sh """
               source test_env/bin/activate
-              cd contract_tests/
+              cd integration_tests/contract_tests/
               docker-compose up &
               sleep 60
-              docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml'
+              docker exec contract_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml'
               cp output-files/ContractTestsOutput.xml .
               """
             }
@@ -153,12 +153,12 @@ def get_contract_tests_pipeline() {
             source test_env/bin/activate
             docker-compose down || true
             rm -rf test_env || true
-            rm -rf contract_tests/output-files/* || true
+            rm -rf integration_tests/contract_tests/output-files/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
           stage("Contract tests: Archive") {
-            junit "contract_tests/ContractTestsOutput.xml"
+            junit "integration_tests/contract_tests/ContractTestsOutput.xml"
           }
         }  // try/finally
       } // dir
