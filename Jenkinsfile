@@ -21,8 +21,6 @@ properties([[
   ]
 ]]);
 
-scmVars = checkout scm
-echo ${scmVars.GIT_COMMIT}
 
 pipeline_builder = new PipelineBuilder(this, container_build_nodes)
 pipeline_builder.activateEmailFailureNotifications()
@@ -37,6 +35,7 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Dependencies") {
     container.sh """
+      echo ${scmVars.GIT_COMMIT}
       /opt/miniconda/bin/conda init bash
       export PATH=/opt/miniconda/bin:$PATH
       python --version
