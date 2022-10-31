@@ -124,12 +124,13 @@ def get_contract_tests_pipeline() {
           stage("Contract tests: Prepare") {
             // Stop and remove any containers that may have been from the job before,
             // i.e. if a Jenkins job has been aborted.
+            // Then pull the latest image versions
             sh """
             mkdir contract_tests/output-files || true
             rm -rf contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            docker pull wurstmeister/kafka:2.12-2.1.0
-            docker pull zookeeper:3.4
+            cd contract_tests/
+            grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull $class; done
             """
           }  // stage
           stage("Contract tests: Run") {

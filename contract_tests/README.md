@@ -15,7 +15,7 @@ cd contract_tests
 docker compose up
 # Give docker a few seconds to start up
 # From another terminal
-docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=results/test_output.xml .'
+docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest .'
 ```
 
 ### What is going on?
