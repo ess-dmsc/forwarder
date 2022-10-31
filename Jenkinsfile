@@ -35,7 +35,6 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Dependencies") {
     container.sh """
-      echo ${scmVars.GIT_COMMIT}
       /opt/miniconda/bin/conda init bash
       export PATH=/opt/miniconda/bin:$PATH
       python --version
@@ -114,6 +113,7 @@ def get_contract_tests_pipeline() {
           }  // stage
           stage("Contract tests: Install requirements") {
             sh """
+            echo ${scmVars.GIT_COMMIT}
             scl enable rh-python38 -- python --version
             scl enable rh-python38 -- python -m venv test_env
             source test_env/bin/activate
