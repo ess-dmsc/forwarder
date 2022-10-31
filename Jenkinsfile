@@ -131,12 +131,12 @@ def get_contract_tests_pipeline() {
             """
           }  // stage
           stage("Contract tests: Run") {
-            timeout(time: 60, activity: true){
+            timeout(time: 120, activity: true){
               sh """
               source test_env/bin/activate
               cd contract_tests/
               docker-compose up &
-              sleep 30
+              sleep 60
               docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml'
               cp output-files/ContractTestsOutput.xml .
               """
