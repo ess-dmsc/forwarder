@@ -9,7 +9,7 @@ changed to handle this.
 
 * Install Docker and Docker Compose
 
-* Run the tests
+* Run the contract tests
 ```commandline
 cd contract_tests
 docker compose up

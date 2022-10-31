@@ -20,9 +20,9 @@ def _create_producer():
     return KafkaProducer(confluent_kafka.Producer(producer_config))
 
 
-def _create_consumer():
+def create_consumer(host):
     consumer_config = {
-        "bootstrap.servers": f"{KAFKA_HOST}:9092",
+        "bootstrap.servers": f"{host}:9092",
         "group.id": uuid.uuid4(),
         "auto.offset.reset": "latest",
     }
@@ -30,7 +30,7 @@ def _create_consumer():
     return confluent_kafka.Consumer(consumer_config)
 
 
-def _assign_topic(consumer, topic):
+def assign_topic(consumer, topic):
     metadata = consumer.list_topics(timeout=10)
     if topic not in metadata.topics:
         raise Exception("Topic does not exist")
@@ -64,7 +64,7 @@ def _assign_topic(consumer, topic):
 class TestKafkaContract:
     @pytest.fixture(autouse=True)
     def prepare(self):
-        self.consumer = _create_consumer()
+        self.consumer = create_consumer(KAFKA_HOST)
         self.producer = _create_producer()
         yield
         self.consumer.close()
@@ -72,14 +72,14 @@ class TestKafkaContract:
 
     def test_write_and_read_message(self):
         topic = "test_write_and_read_message"
-        _assign_topic(self.consumer, topic)
+        assign_topic(self.consumer, topic)
 
         message = f"hello {uuid.uuid4()}"
         self.producer.produce(topic, message.encode(), int(time.time() * 1000))
 
         start_time = time.monotonic()
         while not (msg := self.consumer.poll(timeout=0.5)):
-            if time.monotonic() > start_time + 2:
+            if time.monotonic() > start_time + 5:
                 assert False, "timed out for some reason"
             time.sleep(0.1)
 
