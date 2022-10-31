@@ -130,7 +130,7 @@ def get_contract_tests_pipeline() {
             rm -rf contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             cd contract_tests/
-            grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull $class; done
+            grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
             """
           }  // stage
           stage("Contract tests: Run") {
