@@ -128,6 +128,8 @@ def get_contract_tests_pipeline() {
             mkdir contract_tests/output-files || true
             rm -rf contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
+            docker pull wurstmeister/kafka:2.12-2.1.0
+            docker pull zookeeper:3.4
             """
           }  // stage
           stage("Contract tests: Run") {
