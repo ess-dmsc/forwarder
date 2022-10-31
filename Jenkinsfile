@@ -141,9 +141,9 @@ def get_contract_tests_pipeline() {
               cd integration_tests
               docker-compose up &
               sleep 60
-              rsync -av .. shared_volume --exclude=shared_volume --exclude=".*"
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
-              cp shared_volume/integration_tests/contract_tests/ContractTestsOutput.xml .
+              rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*"
+              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
+              cp shared_volume/forwarder/integration_tests/contract_tests/ContractTestsOutput.xml .
               """
             }
           }  // stage
@@ -155,7 +155,7 @@ def get_contract_tests_pipeline() {
             source test_env/bin/activate
             docker-compose down || true
             rm -rf test_env || true
-            rm -rf integration_tests/contract_tests/output-files/* || true
+            rm -rf integration_tests/shared_source/* || true
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
