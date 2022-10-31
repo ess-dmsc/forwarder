@@ -126,8 +126,8 @@ def get_contract_tests_pipeline() {
             // i.e. if a Jenkins job has been aborted.
             // Then pull the latest image versions
             sh """
-            mkdir integration_tests/contract_tests/output-files || true
-            rm -rf integration_tests/contract_tests/output-files/*
+            mkdir integration_tests/output-files || true
+            rm -rf integration_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             cd integration_tests
             grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
@@ -140,7 +140,7 @@ def get_contract_tests_pipeline() {
               cd integration_tests
               docker-compose up &
               sleep 60
-              docker exec contract_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml'
+              docker exec integration_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest --junitxml=../output-files/ContractTestsOutput.xml'
               cp output-files/ContractTestsOutput.xml .
               """
             }
@@ -158,7 +158,7 @@ def get_contract_tests_pipeline() {
             """
           }  // stage
           stage("Contract tests: Archive") {
-            junit "integration_tests/contract_tests/ContractTestsOutput.xml"
+            junit "integration_tests/ContractTestsOutput.xml"
           }
         }  // try/finally
       } // dir

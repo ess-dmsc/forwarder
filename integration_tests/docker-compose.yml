@@ -45,7 +45,7 @@ services:
     networks:
       - frontend
     volumes:
-    - ./output-files:/forwarder/contract_tests/output-files:rw
+    - ./output-files:/forwarder/integration_tests/output-files:rw
 
 networks:
   frontend:
