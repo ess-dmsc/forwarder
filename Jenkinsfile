@@ -21,6 +21,9 @@ properties([[
   ]
 ]]);
 
+scmVars = checkout scm
+echo ${scmVars.GIT_COMMIT}
+
 pipeline_builder = new PipelineBuilder(this, container_build_nodes)
 pipeline_builder.activateEmailFailureNotifications()
 
@@ -126,8 +129,8 @@ def get_contract_tests_pipeline() {
             // i.e. if a Jenkins job has been aborted.
             // Then pull the latest image versions
             sh """
-            mkdir integration_tests/output-files || true
-            rm -rf integration_tests/output-files/*
+            mkdir integration_tests/shared_volume || true
+            rm -rf integration_tests/shared_volume/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             cd integration_tests
             grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
@@ -141,8 +144,8 @@ def get_contract_tests_pipeline() {
               docker-compose up &
               sleep 60
               rsync -av ../../forwarder shared_volume --exclude=shared_volume --exclude=".*"
-              docker exec integration_tests_bash_1 bash -c 'cd shared_volume/forwarder/integration_tests/contract_tests; pytest --junitxml=../output-files/ContractTestsOutput.xml'
-              cp output-files/ContractTestsOutput.xml
+              docker exec integration_tests_bash_1 bash -c 'cd shared_source/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
+              cp shared_volume/integration_tests/contract_tests/ContractTestsOutput.xml .
               """
             }
           }  // stage
