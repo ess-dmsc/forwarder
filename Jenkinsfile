@@ -142,7 +142,7 @@ def get_contract_tests_pipeline() {
               cd integration_tests
               docker-compose up &
               sleep 60
-              rsync -av ../../forwarder shared_volume --exclude=shared_volume --exclude=".*"
+              rsync -av .. shared_volume --exclude=shared_volume --exclude=".*"
               docker exec integration_tests_bash_1 bash -c 'cd shared_source/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
               cp shared_volume/integration_tests/contract_tests/ContractTestsOutput.xml .
               """
