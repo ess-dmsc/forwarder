@@ -14,8 +14,9 @@ changed to handle this.
 cd contract_tests
 docker compose up
 # Give docker a few seconds to start up
-# From another terminal
-docker exec contract_tests_bash_1 bash -c 'cd forwarder/contract_tests; pytest .'
+# From another terminal, checkout the correct branch and then run the tests:
+docker exec contract_tests_bash_1 bash -c 'cd forwarder/; git fetch; git checkout <BRANCH_NAME>; git reset --hard HEAD; git pull'
+docker exec contract_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest .'
 ```
 
 ### What is going on?
