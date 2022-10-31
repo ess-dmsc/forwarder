@@ -113,7 +113,6 @@ def get_contract_tests_pipeline() {
           }  // stage
           stage("Contract tests: Install requirements") {
             sh """
-            echo ${scmVars.GIT_COMMIT}
             scl enable rh-python38 -- python --version
             scl enable rh-python38 -- python -m venv test_env
             source test_env/bin/activate
