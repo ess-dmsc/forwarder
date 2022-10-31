@@ -1,3 +1,4 @@
+# Docker image for running the forwarder integration tests
 FROM ubuntu:jammy
 
 USER root

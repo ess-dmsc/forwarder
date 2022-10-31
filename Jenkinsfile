@@ -129,7 +129,7 @@ def get_contract_tests_pipeline() {
             mkdir integration_tests/contract_tests/output-files || true
             rm -rf integration_tests/contract_tests/output-files/*
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            cd integration_tests/contract_tests/
+            cd integration_tests
             grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
             """
           }  // stage
@@ -137,7 +137,7 @@ def get_contract_tests_pipeline() {
             timeout(time: 120, activity: true){
               sh """
               source test_env/bin/activate
-              cd integration_tests/contract_tests/
+              cd integration_tests
               docker-compose up &
               sleep 60
               docker exec contract_tests_bash_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest --junitxml=output-files/ContractTestsOutput.xml'
