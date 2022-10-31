@@ -140,7 +140,7 @@ def get_contract_tests_pipeline() {
               cd integration_tests
               docker-compose up &
               sleep 60
-              docker exec integration_tests_bash_1 bash -c 'cd forwarder; git fetch; git checkout ${scm.branches[0].name}; git reset --hard HEAD; git pull; cd integration_tests/contract_tests; pytest --junitxml=../output-files/ContractTestsOutput.xml'
+              docker exec integration_tests_bash_1 bash -c 'cd forwarder; git fetch; git checkout contract_tests; git reset --hard HEAD; git pull; cd integration_tests/contract_tests; pytest --junitxml=../output-files/ContractTestsOutput.xml'
               cp output-files/ContractTestsOutput.xml
               """
             }
