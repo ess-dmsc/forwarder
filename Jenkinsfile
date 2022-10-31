@@ -141,8 +141,8 @@ def get_contract_tests_pipeline() {
               cd integration_tests
               docker-compose up &
               sleep 60
-              rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*"
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy https://192.168.1.1:8123  -r requirements-dev.txt'
+              rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*" --exclude=test_env
+              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123  -r requirements-dev.txt'
               docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/contract_tests/ContractTestsOutput.xml .
               """
