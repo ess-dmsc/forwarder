@@ -45,4 +45,4 @@ EPICS in a Docker image doesn't play well with the standard EPICS tools (pvget, 
 To get round this we create this testing image which is used to run the tests.
 
 This image has a copy of the repo on it, so logging onto it means one can play around with it. The command for this is:
-`docker exec -it integration_tests_forwarder_1 bash `
+`docker exec -it integration_tests_forwarder_1 bash`
