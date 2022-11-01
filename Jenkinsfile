@@ -213,7 +213,7 @@ def get_smoke_tests_pipeline() {
               rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*" --exclude=test_env
               docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
               docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
-              docker exec integration_tests_bash_1 bash -c 'cd shared_volume/forwarder; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              docker exec integration_tests_bash_1 bash -c 'cd shared_volume/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
               sleep 30
               docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
