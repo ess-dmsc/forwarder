@@ -89,8 +89,7 @@ node {
   }
 
   if ( env.CHANGE_ID ) {
-      builders['contract tests'] = get_contract_tests_pipeline()
-      builders['smoke tests'] = get_smoke_tests_pipeline()
+      builders['integration tests'] = get_contract_tests_pipeline()
   }
 
   try {
@@ -109,10 +108,10 @@ def get_contract_tests_pipeline() {
       cleanWs()
       dir("${pipeline_builder.project}") {
         try {
-          stage("Contract tests: Checkout") {
+          stage("Integration tests: Checkout") {
             checkout scm
           }  // stage
-          stage("Contract tests: Install requirements") {
+          stage("Integration tests: Install requirements") {
             sh """
             scl enable rh-python38 -- python --version
             scl enable rh-python38 -- python -m venv test_env
@@ -123,7 +122,7 @@ def get_contract_tests_pipeline() {
             pip install docker-compose
             """
           }  // stage
-          stage("Contract tests: Prepare") {
+          stage("Integration tests: Prepare") {
             // Stop and remove any containers that may have been from the job before,
             // i.e. if a Jenkins job has been aborted.
             // Then pull the latest image versions
@@ -150,8 +149,20 @@ def get_contract_tests_pipeline() {
               """
             }
           }  // stage
+          stage("Smoke tests: Run") {
+            timeout(time: 150, activity: true){
+              sh """
+              source test_env/bin/activate
+              cd integration_tests
+              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              sleep 30
+              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
+              cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
+              """
+            }
+          }  // stage
         } finally {
-          stage ("Contract tests: Clean Up") {
+          stage ("Integration tests: Clean Up") {
             // The statements below return true because cleaning up should
             // not affect the results of the tests.
             sh """
@@ -162,8 +173,9 @@ def get_contract_tests_pipeline() {
             docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
             """
           }  // stage
-          stage("Contract tests: Archive") {
+          stage("Integration tests: Archive") {
             junit "integration_tests/ContractTestsOutput.xml"
+            junit "integration_tests/SmokeTestsOutput.xml"
           }
         }  // try/finally
       } // dir
