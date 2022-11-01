@@ -89,8 +89,8 @@ node {
   }
 
   if ( env.CHANGE_ID ) {
-      builders['integration tests'] = get_contract_tests_pipeline()
-      builders['integration tests'] = get_smoke_tests_pipeline()
+      builders['contract tests'] = get_contract_tests_pipeline()
+      builders['smoke tests'] = get_smoke_tests_pipeline()
   }
 
   try {
