@@ -1,4 +1,0 @@
-pytest
-docker-compose
-docker
-pytictoc

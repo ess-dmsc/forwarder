@@ -57,13 +57,14 @@ def test_too_futuristic_timestamp():
     handler.stop()
 
 
-def test_out_of_order_timestamps():
+def test_out_of_order_timestamps_ignored():
     mock_producer, handler = create_handler()
 
     handler.set_new_message(b"", datetime.now().timestamp() * 1e9)
     handler.set_new_message(
         b"", (datetime.now() - timedelta(seconds=1)).timestamp() * 1e9
     )
+    handler.set_new_message(b"", datetime.now().timestamp() * 1e9)
 
-    assert mock_producer.produce.call_count == 1
+    assert mock_producer.produce.call_count == 2
     handler.stop()
