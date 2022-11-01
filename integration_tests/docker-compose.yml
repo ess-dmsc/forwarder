@@ -14,7 +14,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_MESSAGE_MAX_BYTES: 10000000
       KAFKA_BROKER_ID: 0
-      KAFKA_CREATE_TOPICS: "test_write_and_read_message:1:1;forwarder_commands:1:1;forwarder_status:1:1;forwarder_storage:1:1;forwarder_data:1:1"
+      KAFKA_CREATE_TOPICS: "test_write_and_read_message:1:1,forwarder_commands:1:1,forwarder_status:1:1,forwarder_storage:1:1,forwarder_data:1:1"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
