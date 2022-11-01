@@ -142,9 +142,9 @@ def get_contract_tests_pipeline() {
               docker-compose up &
               sleep 60
               rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*" --exclude=test_env
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/contract_tests; pytest --junitxml=ContractTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/contract_tests/ContractTestsOutput.xml .
               """
             }
@@ -154,9 +154,9 @@ def get_contract_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd integration_tests
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
               sleep 30
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
               """
             }
@@ -223,11 +223,11 @@ def get_smoke_tests_pipeline() {
               docker-compose up &
               sleep 60
               rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*" --exclude=test_env
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
               sleep 30
-              docker exec integration_tests_bash_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
               """
             }

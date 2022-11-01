@@ -36,7 +36,7 @@ services:
     networks:
       - frontend
 
-  bash:
+  forwarder:
     image: dockerregistry.esss.dk/ecdc_group/build-node-images/python310_test_runner
     depends_on:
       - kafka

@@ -1,25 +1,28 @@
-## Contract tests
+## Smoke tests
 
-These tests test the contract/API of the key third-party services that are used by this application. E.g. Kafka and EPICS.
+These tests test that the software basically works as expected with all the components running.
 
-If these tests fail when a library is updated then it likely means that a library has changed their API and our code needs to be 
-changed to handle this.
+If these tests fail then it is likely that a change to the "system" has broken something.
+
+https://en.wikipedia.org/wiki/Smoke_testing_(software)
 
 ### Usage
 
 * Install Docker and Docker Compose
 
-* Run the contract tests
+* Run the smoke tests
 ```commandline
 cd integration_tests
 docker compose up
 # Give docker a few seconds to start up
-# From another terminal, clone the repo, checkout the correct branch and then run the tests:
+# From another terminal, clone the repo, checkout the correct branch and then run the forwarder:
 docker exec integration_tests_forwarder_1 bash -c 'git clone https://github.com/ess-dmsc/forwarder.git'
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; git fetch; git checkout <BRANCH_NAME>; git pull'
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; python -m pip install -r requirements.txt'
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; python -m pip install pytest'
-docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/integration_tests/contract_tests; pytest .'
+docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000'
+# From another terminal, run the smoke tests:
+docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest'       
 ```
 Alternatively, one can rsync the local copy of the repo on to the docker image rather than clone it:
 ```
