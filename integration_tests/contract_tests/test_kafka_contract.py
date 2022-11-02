@@ -53,7 +53,7 @@ def assign_topic(consumer, topic):
         seek_done = False
         start_time = time.monotonic()
         while not seek_done:
-            if time.monotonic() > start_time + 3:
+            if time.monotonic() > start_time + 5:
                 raise RuntimeError("timed out when trying to seek topic end")
             try:
                 consumer.seek(tp)
