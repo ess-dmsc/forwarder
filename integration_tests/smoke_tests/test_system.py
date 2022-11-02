@@ -16,32 +16,17 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType impo
 )
 from streaming_data_types.forwarder_config_update_rf5k import Protocol, StreamInfo
 
-from ..contract_tests.test_kafka_contract import (
-    assign_topic,
-    create_consumer,
-    create_topic,
+from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
+from .create_topics import (
+    CONFIG_TOPIC,
+    DATA_TOPIC,
+    KAFKA_HOST,
+    STATUS_TOPIC,
+    STORAGE_TOPIC,
 )
-
-# Use the host in the docker compose file.
-# Change this if you want to run against another instance, e.g. localhost
-KAFKA_HOST = "kafka1"
-
-CONFIG_TOPIC = "forwarder_commands"
-STATUS_TOPIC = "forwarder_status"
-STORAGE_TOPIC = "forwarder_storage"
-DATA_TOPIC = "forwarder_data"
-
-
-def create_topics():
-    create_topic(KAFKA_HOST, CONFIG_TOPIC)
-    create_topic(KAFKA_HOST, STATUS_TOPIC)
-    create_topic(KAFKA_HOST, STORAGE_TOPIC)
-    create_topic(KAFKA_HOST, DATA_TOPIC)
 
 
 def test_check_forwarder_works_as_expected():
-    create_topics()
-
     # Configure PVs to forward
     streams = [
         StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
