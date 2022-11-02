@@ -154,18 +154,3 @@ pre-commit run --all-files
 ```
 This command can also be used to run the hooks manually.
 
-## Docker
-
-To build a docker image
-```
-docker build . -t forwarder
-```
-
-Use environment variables to pass command line arguments, for example
-```
-docker run -e CONFIG_TOPIC="localhost/config" -e STATUS_TOPIC="localhost/status" forwarder
-```
-
-## Making a release
-
-Version should be set in `setup.cfg`. The application picks up its version from that file.
