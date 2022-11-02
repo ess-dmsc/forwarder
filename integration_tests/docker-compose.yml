@@ -36,10 +36,17 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'BROKERS:PLAINTEXT'
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKERS
 
+  simpleioc:
+    image: dockerregistry.esss.dk/ecdc_group/build-node-images/simpleioc:latest
+    tty: true
+    networks:
+      - frontend
+
   forwarder:
     image: dockerregistry.esss.dk/ecdc_group/build-node-images/python310_test_runner
     depends_on:
       - kafka1
+      - simpleioc
     tty: true
     networks:
       - frontend
