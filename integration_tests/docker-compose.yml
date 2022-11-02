@@ -5,9 +5,6 @@ services:
     container_name: zookeeper
     hostname: zookeeper
     image: confluentinc/cp-zookeeper:7.2.1
-    restart: always
-    volumes:
-    - ./zookeeper_server_jaas.conf:/etc/kafka/zookeeper_server_jaas.conf:rw
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
