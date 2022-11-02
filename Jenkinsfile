@@ -154,7 +154,8 @@ def get_contract_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd integration_tests
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; python create_topics.py'
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka1:9092/forwarder_commands --status-topic=kafka1:9092/forwarder_status --storage-topic=kafka1:9092/forwarder_storage --output-broker=kafka1:9092 --pv-update-period=10000' &
               sleep 30
               docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
@@ -175,76 +176,6 @@ def get_contract_tests_pipeline() {
           }  // stage
           stage("Integration tests: Archive") {
             junit "integration_tests/ContractTestsOutput.xml"
-            junit "integration_tests/SmokeTestsOutput.xml"
-          }
-        }  // try/finally
-      } // dir
-    }  // node
-  }  // return
-} // def
-
-def get_smoke_tests_pipeline() {
-  return {
-    node('docker') {
-      cleanWs()
-      dir("${pipeline_builder.project}") {
-        try {
-          stage("Smoke tests: Checkout") {
-            checkout scm
-          }  // stage
-          stage("Smoke tests: Install requirements") {
-            sh """
-            scl enable rh-python38 -- python --version
-            scl enable rh-python38 -- python -m venv test_env
-            source test_env/bin/activate
-            which python
-            pwd
-            pip install --upgrade pip
-            pip install docker-compose
-            """
-          }  // stage
-          stage("Smoke tests: Prepare") {
-            // Stop and remove any containers that may have been from the job before,
-            // i.e. if a Jenkins job has been aborted.
-            // Then pull the latest image versions
-            sh """
-            mkdir integration_tests/shared_volume || true
-            rm -rf integration_tests/shared_volume/*
-            docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            cd integration_tests
-            grep "image:" docker-compose.yml | sed 's/image://g' | while read -r class; do docker pull \$class; done
-            """
-          }  // stage
-          stage("Smoke tests: Run") {
-            timeout(time: 150, activity: true){
-              sh """
-              source test_env/bin/activate
-              cd integration_tests
-              docker-compose up &
-              sleep 60
-              rsync -av .. shared_volume/forwarder --exclude=shared_volume --exclude=".*" --exclude=test_env
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 -r requirements.txt'
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python -m pip install --proxy http://192.168.1.1:8123 pytest'
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
-              sleep 30
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
-              cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
-              """
-            }
-          }  // stage
-        } finally {
-          stage ("Smoke tests: Clean Up") {
-            // The statements below return true because cleaning up should
-            // not affect the results of the tests.
-            sh """
-            source test_env/bin/activate
-            docker-compose down || true
-            rm -rf test_env || true
-            rm -rf integration_tests/shared_source/* || true
-            docker stop \$(docker ps -a -q) && docker rm \$(docker ps -a -q) || true
-            """
-          }  // stage
-          stage("Smoke tests: Archive") {
             junit "integration_tests/SmokeTestsOutput.xml"
           }
         }  // try/finally

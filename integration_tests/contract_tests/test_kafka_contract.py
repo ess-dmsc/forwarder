@@ -4,17 +4,18 @@ import uuid
 import confluent_kafka
 import pytest
 from confluent_kafka import KafkaException
+from confluent_kafka.admin import AdminClient, NewTopic
 
 from forwarder.kafka.kafka_producer import KafkaProducer
 
 # Use the host in the docker compose file.
 # Change this if you want to run against another instance, e.g. localhost
-KAFKA_HOST = "kafka"
+KAFKA_HOST = "kafka1"
 
 
-def _create_producer():
+def _create_producer(host):
     producer_config = {
-        "bootstrap.servers": f"{KAFKA_HOST}:9092",
+        "bootstrap.servers": f"{host}:9092",
         "message.max.bytes": "20000000",
     }
     return KafkaProducer(confluent_kafka.Producer(producer_config))
@@ -52,7 +53,7 @@ def assign_topic(consumer, topic):
         seek_done = False
         start_time = time.monotonic()
         while not seek_done:
-            if time.monotonic() > start_time + 3:
+            if time.monotonic() > start_time + 5:
                 raise RuntimeError("timed out when trying to seek topic end")
             try:
                 consumer.seek(tp)
@@ -61,17 +62,26 @@ def assign_topic(consumer, topic):
                 time.sleep(0.5)
 
 
+def create_topic(host, name):
+    admin_client = AdminClient({"bootstrap.servers": f"{host}:9092"})
+    topic = NewTopic(name, 1, 1)
+    future = admin_client.create_topics([topic])
+    while not future[name].done():
+        pass
+
+
 class TestKafkaContract:
     @pytest.fixture(autouse=True)
     def prepare(self):
         self.consumer = create_consumer(KAFKA_HOST)
-        self.producer = _create_producer()
+        self.producer = _create_producer(KAFKA_HOST)
         yield
         self.consumer.close()
         self.producer.close()
 
     def test_write_and_read_message(self):
         topic = "test_write_and_read_message"
+        create_topic(KAFKA_HOST, topic)
         assign_topic(self.consumer, topic)
 
         message = f"hello {uuid.uuid4()}"

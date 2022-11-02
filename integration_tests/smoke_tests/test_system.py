@@ -17,15 +17,13 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType impo
 from streaming_data_types.forwarder_config_update_rf5k import Protocol, StreamInfo
 
 from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
-
-# Use the host in the docker compose file.
-# Change this if you want to run against another instance, e.g. localhost
-KAFKA_HOST = "kafka"
-
-CONFIG_TOPIC = "forwarder_commands"
-STATUS_TOPIC = "forwarder_status"
-STORAGE_TOPIC = "forwarder_storage"
-DATA_TOPIC = "forwarder_data"
+from .create_topics import (
+    CONFIG_TOPIC,
+    DATA_TOPIC,
+    KAFKA_HOST,
+    STATUS_TOPIC,
+    STORAGE_TOPIC,
+)
 
 
 def test_check_forwarder_works_as_expected():
@@ -53,7 +51,7 @@ def test_check_forwarder_works_as_expected():
     latest_msg = None
     start_time = time.monotonic()
     while True:
-        if time.monotonic() > start_time + 5:
+        if time.monotonic() > start_time + 10:
             break
         msg = consumer.poll(timeout=0.5)
         if msg:
