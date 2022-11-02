@@ -20,6 +20,7 @@ docker exec integration_tests_forwarder_1 bash -c 'git clone https://github.com/
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; git fetch; git checkout <BRANCH_NAME>; git pull'
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; python -m pip install -r requirements.txt'
 docker exec integration_tests_forwarder_1 bash -c 'cd forwarder/; python -m pip install pytest'
+docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; python create_topics.py'
 docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000'
 # From another terminal, run the smoke tests:
 docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest'       
