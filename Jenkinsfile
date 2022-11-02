@@ -154,7 +154,7 @@ def get_contract_tests_pipeline() {
               sh """
               source test_env/bin/activate
               cd integration_tests
-              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka:9092/forwarder_commands --status-topic=kafka:9092/forwarder_status --storage-topic=kafka:9092/forwarder_storage --output-broker=kafka:9092 --pv-update-period=10000' &
+              docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/; python forwarder_launch.py --config-topic=kafka1:9092/forwarder_commands --status-topic=kafka1:9092/forwarder_status --storage-topic=kafka1:9092/forwarder_storage --output-broker=kafka1:9092 --pv-update-period=10000' &
               sleep 30
               docker exec integration_tests_forwarder_1 bash -c 'cd shared_source/forwarder/integration_tests/smoke_tests; pytest --junitxml=SmokeTestsOutput.xml'
               cp shared_volume/forwarder/integration_tests/smoke_tests/SmokeTestsOutput.xml .
