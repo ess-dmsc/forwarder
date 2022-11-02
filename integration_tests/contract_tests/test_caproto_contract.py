@@ -118,6 +118,7 @@ def test_mbbi_contract_time():
 def test_mbbi_contract_control():
     with read_value("SIMPLE:ENUM", "control") as result:
         assert result.metadata.enum_strings == (b"INIT", b"START", b"STOP")
+        assert not hasattr(result.metadata, "units")
 
 
 def test_binary_contract_time():
@@ -139,9 +140,10 @@ def test_binary_contract_time():
         assert result.data[0] == 0
 
 
-def test_bi_contract_control():
+def test_binary_contract_control():
     with read_value("SIMPLE:BOOL", "control") as result:
         assert result.metadata.enum_strings == (b"ZERO", b"ONE")
+        assert not hasattr(result.metadata, "units")
 
 
 def test_numeric_waveform_contract_time():

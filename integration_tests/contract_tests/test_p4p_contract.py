@@ -154,6 +154,8 @@ def test_mbbi_contract():
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
 
+        assert "display" not in result
+
     # Set using int
     ctx.put("SIMPLE:ENUM", 2, wait=True)
 
@@ -188,6 +190,8 @@ def test_binary_contract():
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
 
+        assert "display" not in result
+
     # Set using string
     ctx.put("SIMPLE:BOOL", 0, wait=True)
 
@@ -221,6 +225,10 @@ def test_numeric_waveform_contract():
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
 
+        assert "display" in result
+        assert "units" in result["display"]
+        assert isinstance(result["display"]["units"], str)
+
 
 def test_char_waveform_contract():
     ctx = Context("pva", nt=False)
@@ -248,6 +256,10 @@ def test_char_waveform_contract():
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
 
+        assert "display" in result
+        assert "units" in result["display"]
+        assert isinstance(result["display"]["units"], str)
+
 
 def test_str_waveform_contract():
     ctx = Context("pva", nt=False)
@@ -273,6 +285,10 @@ def test_str_waveform_contract():
         }
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
+
+        assert "display" in result
+        assert "units" in result["display"]
+        assert isinstance(result["display"]["units"], str)
 
 
 def test_analog_array_contract():
@@ -300,6 +316,10 @@ def test_analog_array_contract():
         }
         assert isinstance(result["timeStamp"]["secondsPastEpoch"], numbers.Number)
         assert isinstance(result["timeStamp"]["nanoseconds"], numbers.Number)
+
+        assert "display" in result
+        assert "units" in result["display"]
+        assert isinstance(result["display"]["units"], str)
 
 
 def test_monitor_disconnects_raises():
