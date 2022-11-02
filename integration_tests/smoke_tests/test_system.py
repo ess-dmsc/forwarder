@@ -66,7 +66,7 @@ def test_check_forwarder_works_as_expected():
     latest_msg = None
     start_time = time.monotonic()
     while True:
-        if time.monotonic() > start_time + 5:
+        if time.monotonic() > start_time + 10:
             break
         msg = consumer.poll(timeout=0.5)
         if msg:
