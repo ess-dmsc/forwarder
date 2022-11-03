@@ -11,7 +11,6 @@ from streaming_data_types.forwarder_config_update_rf5k import StreamInfo, serial
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 )
-print(sys.path)
 
 from integration_tests.contract_tests.test_kafka_contract import create_topic
 
@@ -33,15 +32,16 @@ def create_topics():
 
 
 def create_storage_item():
-    stream = (
+    streams = [
         StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
-    )
+    ]
+    print(streams[0])
     producer_config = {
         "bootstrap.servers": f"{KAFKA_HOST}:9092",
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
-    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, [stream]))
+    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, streams))
     producer.flush(timeout=5)
 
 
