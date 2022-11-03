@@ -17,13 +17,7 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType impo
 from streaming_data_types.forwarder_config_update_rf5k import Protocol, StreamInfo
 
 from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
-from .create_topics import (
-    CONFIG_TOPIC,
-    DATA_TOPIC,
-    KAFKA_HOST,
-    STATUS_TOPIC,
-    STORAGE_TOPIC,
-)
+from .prepare import CONFIG_TOPIC, DATA_TOPIC, KAFKA_HOST, STATUS_TOPIC, STORAGE_TOPIC
 
 
 def test_check_forwarder_works_as_expected():
@@ -59,7 +53,7 @@ def test_check_forwarder_works_as_expected():
     assert {
         "channel_name": "SIMPLE:DOUBLE",
         "protocol": "PVA",
-        "output_topic": "forwarder_data",
+        "output_topic": DATA_TOPIC,
         "schema": "f142",
     } in status["streams"]
 
@@ -92,8 +86,8 @@ def test_check_forwarder_works_as_expected():
 
     # Configure PVs to forward
     streams = [
-        StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
-        StreamInfo("SIMPLE:DOUBLE2", "f142", "forwarder_data", Protocol.Protocol.CA),
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA),
+        StreamInfo("SIMPLE:DOUBLE2", "f142", DATA_TOPIC, Protocol.Protocol.CA),
     ]
 
     storage_consumer = create_consumer(KAFKA_HOST)
@@ -127,13 +121,13 @@ def test_check_forwarder_works_as_expected():
     assert {
         "channel_name": "SIMPLE:DOUBLE2",
         "protocol": "CA",
-        "output_topic": "forwarder_data",
+        "output_topic": DATA_TOPIC,
         "schema": "f142",
     } in status["streams"]
     assert {
         "channel_name": "SIMPLE:DOUBLE",
         "protocol": "PVA",
-        "output_topic": "forwarder_data",
+        "output_topic": DATA_TOPIC,
         "schema": "f142",
     } in status["streams"]
 

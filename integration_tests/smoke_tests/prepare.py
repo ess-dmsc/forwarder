@@ -33,7 +33,7 @@ def create_topics():
 
 def create_storage_item():
     streams = [
-        StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA),
     ]
     print(streams[0])
     producer_config = {
@@ -41,7 +41,7 @@ def create_storage_item():
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
-    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, streams))
+    producer.produce(STORAGE_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, streams))
     producer.flush(timeout=5)
 
 
