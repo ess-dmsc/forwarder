@@ -41,7 +41,7 @@ def create_storage_item():
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
-    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, [stream]))
+    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, [stream]))
     producer.flush(timeout=5)
 
 
