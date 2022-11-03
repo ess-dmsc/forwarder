@@ -17,30 +17,82 @@ from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType impo
 from streaming_data_types.forwarder_config_update_rf5k import Protocol, StreamInfo
 
 from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
-from .create_topics import (
-    CONFIG_TOPIC,
-    DATA_TOPIC,
-    KAFKA_HOST,
-    STATUS_TOPIC,
-    STORAGE_TOPIC,
-)
+from .prepare import CONFIG_TOPIC, DATA_TOPIC, KAFKA_HOST, STATUS_TOPIC, STORAGE_TOPIC
 
 
 def test_check_forwarder_works_as_expected():
-    # Configure PVs to forward
-    streams = [
-        StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
-        StreamInfo("SIMPLE:DOUBLE2", "f142", "forwarder_data", Protocol.Protocol.CA),
-    ]
-
-    storage_consumer = create_consumer(KAFKA_HOST)
-    assign_topic(storage_consumer, STORAGE_TOPIC)
-
     producer_config = {
         "bootstrap.servers": f"{KAFKA_HOST}:9092",
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
+
+    # Check it picks up stored configuration
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, STATUS_TOPIC)
+
+    latest_msg = None
+    start_time = time.monotonic()
+    while True:
+        if time.monotonic() > start_time + 10:
+            break
+        msg = consumer.poll(timeout=0.5)
+        if msg:
+            latest_msg = msg
+        time.sleep(0.1)
+
+    consumer.close()
+
+    if not latest_msg:
+        assert False, "status timed out"
+
+    msg = deserialise_x5f2(latest_msg.value())
+    status = json.loads(msg.status_json)
+
+    assert len(status["streams"]) == 1
+    assert {
+        "channel_name": "SIMPLE:DOUBLE",
+        "protocol": "PVA",
+        "output_topic": DATA_TOPIC,
+        "schema": "f142",
+    } in status["streams"]
+
+    # Remove configuration
+    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+    producer.flush(timeout=5)
+
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, STATUS_TOPIC)
+
+    latest_msg = None
+    start_time = time.monotonic()
+    while True:
+        if time.monotonic() > start_time + 10:
+            break
+        msg = consumer.poll(timeout=0.5)
+        if msg:
+            latest_msg = msg
+        time.sleep(0.1)
+
+    consumer.close()
+
+    if not latest_msg:
+        assert False, "status timed out"
+
+    msg = deserialise_x5f2(latest_msg.value())
+    status = json.loads(msg.status_json)
+
+    assert len(status["streams"]) == 0
+
+    # Configure PVs to forward
+    streams = [
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA),
+        StreamInfo("SIMPLE:DOUBLE2", "f142", DATA_TOPIC, Protocol.Protocol.CA),
+    ]
+
+    storage_consumer = create_consumer(KAFKA_HOST)
+    assign_topic(storage_consumer, STORAGE_TOPIC)
+
     producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, streams))
     producer.flush(timeout=5)
 
@@ -69,13 +121,13 @@ def test_check_forwarder_works_as_expected():
     assert {
         "channel_name": "SIMPLE:DOUBLE2",
         "protocol": "CA",
-        "output_topic": "forwarder_data",
+        "output_topic": DATA_TOPIC,
         "schema": "f142",
     } in status["streams"]
     assert {
         "channel_name": "SIMPLE:DOUBLE",
         "protocol": "PVA",
-        "output_topic": "forwarder_data",
+        "output_topic": DATA_TOPIC,
         "schema": "f142",
     } in status["streams"]
 
