@@ -20,6 +20,19 @@ from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
 from .prepare import CONFIG_TOPIC, DATA_TOPIC, KAFKA_HOST, STATUS_TOPIC, STORAGE_TOPIC
 
 
+def _get_messages(consumer, timeout=10):
+    messages = []
+    start_time = time.monotonic()
+    while True:
+        if time.monotonic() > start_time + timeout:
+            break
+        msg = consumer.poll(timeout=0.5)
+        if msg:
+            messages.append(msg.value())
+        time.sleep(0.1)
+    return messages
+
+
 def test_check_forwarder_works_as_expected():
     producer_config = {
         "bootstrap.servers": f"{KAFKA_HOST}:9092",
@@ -30,23 +43,13 @@ def test_check_forwarder_works_as_expected():
     # Check it picks up stored configuration
     consumer = create_consumer(KAFKA_HOST)
     assign_topic(consumer, STATUS_TOPIC)
-
-    latest_msg = None
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 10:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            latest_msg = msg
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer)
     consumer.close()
 
-    if not latest_msg:
+    if not messages:
         assert False, "status timed out"
 
-    msg = deserialise_x5f2(latest_msg.value())
+    msg = deserialise_x5f2(messages[~0])
     status = json.loads(msg.status_json)
 
     assert len(status["streams"]) == 1
@@ -63,23 +66,13 @@ def test_check_forwarder_works_as_expected():
 
     consumer = create_consumer(KAFKA_HOST)
     assign_topic(consumer, STATUS_TOPIC)
-
-    latest_msg = None
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 10:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            latest_msg = msg
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer)
     consumer.close()
 
-    if not latest_msg:
+    if not messages:
         assert False, "status timed out"
 
-    msg = deserialise_x5f2(latest_msg.value())
+    msg = deserialise_x5f2(messages[~0])
     status = json.loads(msg.status_json)
 
     assert len(status["streams"]) == 0
@@ -99,23 +92,13 @@ def test_check_forwarder_works_as_expected():
     # Check forwarder status message contains configuration
     consumer = create_consumer(KAFKA_HOST)
     assign_topic(consumer, STATUS_TOPIC)
-
-    latest_msg = None
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 10:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            latest_msg = msg
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer)
     consumer.close()
 
-    if not latest_msg:
+    if not messages:
         assert False, "status timed out"
 
-    msg = deserialise_x5f2(latest_msg.value())
+    msg = deserialise_x5f2(messages[~0])
     status = json.loads(msg.status_json)
 
     assert {
@@ -132,22 +115,13 @@ def test_check_forwarder_works_as_expected():
     } in status["streams"]
 
     # Check storage updated
-    latest_msg = None
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 5:
-            break
-        msg = storage_consumer.poll(timeout=0.5)
-        if msg:
-            latest_msg = msg
-        time.sleep(0.1)
-
+    messages = _get_messages(storage_consumer)
     storage_consumer.close()
 
-    if not latest_msg:
+    if not messages:
         assert False, "storage timed out"
 
-    msg = deserialise_rf5k(latest_msg.value())
+    msg = deserialise_rf5k(messages[~0])
 
     for s in streams:
         assert s in msg.streams
@@ -160,16 +134,7 @@ def test_check_forwarder_works_as_expected():
     ctx = Context("pva", nt=False)
     ctx.put("SIMPLE:DOUBLE", new_pva_value, wait=True)
 
-    messages = []
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 5:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            messages.append(msg.value())
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer)
     consumer.close()
 
     if not messages:
@@ -191,16 +156,7 @@ def test_check_forwarder_works_as_expected():
     new_ca_value = random.randrange(1000)
     write("SIMPLE:DOUBLE2", new_ca_value, notify=True)
 
-    messages = []
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 5:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            messages.append(msg.value())
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer)
     consumer.close()
 
     if not messages:
@@ -218,17 +174,7 @@ def test_check_forwarder_works_as_expected():
     # Check for periodic updates
     consumer = create_consumer(KAFKA_HOST)
     assign_topic(consumer, DATA_TOPIC)
-
-    messages = []
-    start_time = time.monotonic()
-    while True:
-        if time.monotonic() > start_time + 12:
-            break
-        msg = consumer.poll(timeout=0.5)
-        if msg:
-            messages.append(msg.value())
-        time.sleep(0.1)
-
+    messages = _get_messages(consumer, timeout=12)
     consumer.close()
 
     if not messages:
