@@ -27,6 +27,69 @@ from .create_topics import (
 
 
 def test_check_forwarder_works_as_expected():
+    producer_config = {
+        "bootstrap.servers": f"{KAFKA_HOST}:9092",
+        "message.max.bytes": "20000000",
+    }
+    producer = Producer(producer_config)
+
+    # Check it picks up stored configuration
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, STATUS_TOPIC)
+
+    latest_msg = None
+    start_time = time.monotonic()
+    while True:
+        if time.monotonic() > start_time + 10:
+            break
+        msg = consumer.poll(timeout=0.5)
+        if msg:
+            latest_msg = msg
+        time.sleep(0.1)
+
+    consumer.close()
+
+    if not latest_msg:
+        assert False, "status timed out"
+
+    msg = deserialise_x5f2(latest_msg.value())
+    status = json.loads(msg.status_json)
+
+    assert len(status["streams"]) == 1
+    assert {
+        "channel_name": "SIMPLE:DOUBLE",
+        "protocol": "PVA",
+        "output_topic": "forwarder_data",
+        "schema": "f142",
+    } in status["streams"]
+
+    # Remove configuration
+    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+    producer.flush(timeout=5)
+
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, STATUS_TOPIC)
+
+    latest_msg = None
+    start_time = time.monotonic()
+    while True:
+        if time.monotonic() > start_time + 10:
+            break
+        msg = consumer.poll(timeout=0.5)
+        if msg:
+            latest_msg = msg
+        time.sleep(0.1)
+
+    consumer.close()
+
+    if not latest_msg:
+        assert False, "status timed out"
+
+    msg = deserialise_x5f2(latest_msg.value())
+    status = json.loads(msg.status_json)
+
+    assert len(status["streams"]) == 0
+
     # Configure PVs to forward
     streams = [
         StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
@@ -36,11 +99,6 @@ def test_check_forwarder_works_as_expected():
     storage_consumer = create_consumer(KAFKA_HOST)
     assign_topic(storage_consumer, STORAGE_TOPIC)
 
-    producer_config = {
-        "bootstrap.servers": f"{KAFKA_HOST}:9092",
-        "message.max.bytes": "20000000",
-    }
-    producer = Producer(producer_config)
     producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, streams))
     producer.flush(timeout=5)
 

@@ -1,6 +1,13 @@
 import os
 import sys
 
+from confluent_kafka import Producer
+from streaming_data_types.fbschemas.forwarder_config_update_rf5k import (
+    Protocol,
+    UpdateType,
+)
+from streaming_data_types.forwarder_config_update_rf5k import StreamInfo, serialise_rf5k
+
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 )
@@ -23,6 +30,19 @@ def create_topics():
     create_topic(KAFKA_HOST, STATUS_TOPIC)
     create_topic(KAFKA_HOST, STORAGE_TOPIC)
     create_topic(KAFKA_HOST, DATA_TOPIC)
+
+
+def create_storage_item():
+    stream = (
+        StreamInfo("SIMPLE:DOUBLE", "f142", "forwarder_data", Protocol.Protocol.PVA),
+    )
+    producer_config = {
+        "bootstrap.servers": f"{KAFKA_HOST}:9092",
+        "message.max.bytes": "20000000",
+    }
+    producer = Producer(producer_config)
+    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, [stream]))
+    producer.flush(timeout=5)
 
 
 if __name__ == "__main__":
