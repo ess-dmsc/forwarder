@@ -47,3 +47,4 @@ def create_storage_item():
 
 if __name__ == "__main__":
     create_topics()
+    create_storage_item()
