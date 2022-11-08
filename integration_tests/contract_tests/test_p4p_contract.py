@@ -345,3 +345,57 @@ def test_monitor_disconnects_raises():
 
     subscription.close()
     ctx.close()
+
+
+def test_on_update_only_get_changeset():
+    result = None
+
+    def _callback(response):
+        nonlocal result
+        if not isinstance(response, Exception):
+            result = response
+
+    ctx = Context("pva", nt=False)
+    ctx.put("SIMPLE:DOUBLE3.EGU", "M", wait=True)
+
+    request = ctx.makeRequest("field(value,timeStamp,alarm,control,display)")
+    subscription = ctx.monitor(
+        "SIMPLE:DOUBLE3", _callback, request=request, notify_disconnect=True
+    )
+
+    start_time = time.monotonic()
+    while result is None:
+        if time.monotonic() > start_time + TIMEOUT:
+            assert False, "timed out for some reason"
+        time.sleep(0.5)
+
+    result = None
+    ctx.put("SIMPLE:DOUBLE3.EGU", "K", wait=True)
+
+    start_time = time.monotonic()
+    while result is None:
+        if time.monotonic() > start_time + TIMEOUT:
+            assert False, "timed out for some reason"
+        time.sleep(0.5)
+
+    change_set = result.changedSet()
+
+    assert "display.units" in change_set
+    assert "timeStamp.secondsPastEpoch" in change_set
+    assert "timeStamp.nanoseconds" in change_set
+
+    assert "value" not in change_set
+    assert "alarm.severity" not in change_set
+    assert "alarm.status" not in change_set
+    assert "alarm.message" not in change_set
+
+    assert result["display"]["units"] == "K"
+
+    # Values not in the change set will have "default" values
+    assert result["value"] == 0
+    assert result["alarm"]["severity"] == 0
+    assert result["alarm"]["status"] == 0
+    assert result["alarm"]["message"] == ""
+
+    subscription.close()
+    ctx.close()
