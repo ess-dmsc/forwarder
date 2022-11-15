@@ -18,6 +18,7 @@ from forwarder.kafka.kafka_helpers import (
     seconds_to_nanoseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.parse_config_update import EpicsProtocol
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
@@ -147,13 +148,14 @@ def create_serialiser_list(
     pv_name: str,
     output_topic: str,
     schema: str,
+    protocol: EpicsProtocol,
     periodic_update_ms: Optional[int] = None,
 ) -> List[SerialiserTracker]:
     return_list = []
     try:
         return_list.append(
             SerialiserTracker(
-                schema_serialisers[schema](pv_name),
+                schema_serialisers[protocol][schema](pv_name),
                 producer,
                 pv_name,
                 output_topic,
@@ -162,12 +164,12 @@ def create_serialiser_list(
         )
     except KeyError:
         raise ValueError(
-            f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
+            f"Serialiser not found for protocol={protocol} schema={schema}"
         )
     # Connection status serialiser
     return_list.append(
         SerialiserTracker(
-            schema_serialisers["ep00"](pv_name),
+            schema_serialisers[protocol]["ep00"](pv_name),
             producer,
             pv_name,
             output_topic,
