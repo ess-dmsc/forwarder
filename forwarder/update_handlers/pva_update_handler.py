@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Union
 
 from p4p.client.thread import Context as PVAContext
+from p4p.client.thread import Value
 
 from forwarder.application_logger import get_logger
 from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
@@ -32,12 +33,13 @@ class PVAUpdateHandler:
             notify_disconnect=True,
         )
 
-    def _monitor_callback(self, response):
+    def _monitor_callback(self, response: Union[Value, Exception]):
         old_unit = self._unit
-        try:
-            self._unit = response.display.units
-        except AttributeError:
-            pass
+        if isinstance(response, Value):
+            try:
+                self._unit = response.display.units
+            except AttributeError:
+                pass
         if old_unit is not None and old_unit != self._unit:
             self._logger.error(
                 f'Display unit of (pva) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._unit}".'
