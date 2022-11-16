@@ -52,6 +52,22 @@ class f142_Serialiser:
             timestamp,
         )
 
+
+class CA_f142_Serialiser(f142_Serialiser):
+    def ca_serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        alarm = ca_alarm_status_to_f142[update.metadata.status]
+        severity = epics_alarm_severity_to_f142[update.metadata.severity]
+        timestamp = seconds_to_nanoseconds(update.metadata.timestamp)
+        value = _extract_ca_data(update)
+        return self._serialise(alarm, severity, value, timestamp)
+
+    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+        return None, None
+
+
+class PVA_f142_Serialiser(f142_Serialiser):
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError]
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -64,15 +80,3 @@ class f142_Serialiser:
             update.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + update.timeStamp.nanoseconds
         return self._serialise(alarm, severity, value, timestamp)
-
-    def ca_serialise(
-        self, update: CA_Message, **unused
-    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        alarm = ca_alarm_status_to_f142[update.metadata.status]
-        severity = epics_alarm_severity_to_f142[update.metadata.severity]
-        timestamp = seconds_to_nanoseconds(update.metadata.timestamp)
-        value = _extract_ca_data(update)
-        return self._serialise(alarm, severity, value, timestamp)
-
-    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
-        return None, None
