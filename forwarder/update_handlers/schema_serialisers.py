@@ -9,7 +9,10 @@ from forwarder.update_handlers.f142_serialiser import (
     CA_f142_Serialiser,
     PVA_f142_Serialiser,
 )
-from forwarder.update_handlers.no_op_serialiser import no_op_Serialiser
+from forwarder.update_handlers.no_op_serialiser import (
+    CA_no_op_Serialiser,
+    PVA_no_op_Serialiser,
+)
 from forwarder.update_handlers.nttable_senv_serialiser import (
     CA_nttable_senv_Serialiser,
     PVA_nttable_senv_Serialiser,
@@ -24,21 +27,21 @@ schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
         "f142": CA_f142_Serialiser,
         "tdct": CA_tdct_Serialiser,
         "nttable_senv": CA_nttable_senv_Serialiser,
-        "no_op": no_op_Serialiser,
+        "no_op": CA_no_op_Serialiser,
         "ep00": CA_ep00_Serialiser,
     },
     EpicsProtocol.FAKE: {
         "f142": PVA_f142_Serialiser,
         "tdct": PVA_tdct_Serialiser,
         "nttable_senv": PVA_nttable_senv_Serialiser,
-        "no_op": no_op_Serialiser,
+        "no_op": PVA_no_op_Serialiser,
         "ep00": PVA_ep00_Serialiser,
     },
     EpicsProtocol.PVA: {
         "f142": PVA_f142_Serialiser,
         "tdct": PVA_tdct_Serialiser,
         "nttable_senv": PVA_nttable_senv_Serialiser,
-        "no_op": no_op_Serialiser,
+        "no_op": PVA_no_op_Serialiser,
         "ep00": PVA_ep00_Serialiser,
     },
 }
