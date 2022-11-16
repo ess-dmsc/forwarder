@@ -80,7 +80,7 @@ class SerialiserTracker:
             self.set_new_message(new_message, new_timestamp)
 
     def process_ca_message(self, response: ReadNotifyResponse):
-        new_message, new_timestamp = self.serialiser.ca_serialise(response)
+        new_message, new_timestamp = self.serialiser.serialise(response)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 

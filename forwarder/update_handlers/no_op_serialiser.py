@@ -10,7 +10,7 @@ class no_op_Serialiser:
 
 
 class CA_no_op_Serialiser(no_op_Serialiser):
-    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
+    def serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
         return None, None
 
     def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:

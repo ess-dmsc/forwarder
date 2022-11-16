@@ -32,11 +32,6 @@ class ep00_Serialiser:
 
 
 class CA_ep00_Serialiser(ep00_Serialiser):
-    def ca_serialise(
-        self, update: CA_Message, **unused
-    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        return self.serialise(update, **unused)
-
     def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:

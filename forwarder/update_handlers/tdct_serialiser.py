@@ -36,7 +36,7 @@ class tdct_Serialiser:
 
 
 class CA_tdct_Serialiser(tdct_Serialiser):
-    def ca_serialise(
+    def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if update.data.size == 0:

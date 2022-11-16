@@ -86,7 +86,7 @@ def test_serialise_ca_value():
     pv_name = "some_pv"
     serialiser = CA_ep00_Serialiser(pv_name)
 
-    message, timestamp = serialiser.ca_serialise(1)
+    message, timestamp = serialiser.serialise(1)
 
     assert message is None
     assert timestamp is None

@@ -54,7 +54,7 @@ class f142_Serialiser:
 
 
 class CA_f142_Serialiser(f142_Serialiser):
-    def ca_serialise(
+    def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         alarm = ca_alarm_status_to_f142[update.metadata.status]

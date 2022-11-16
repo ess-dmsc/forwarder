@@ -14,7 +14,7 @@ class nttable_senv_Serialiser:
 
 
 class CA_nttable_senv_Serialiser(nttable_senv_Serialiser):
-    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
+    def serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
         raise RuntimeError(
             "nttable_senv_Serialiser is unable to process channel access data."
         )
