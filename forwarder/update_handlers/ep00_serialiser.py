@@ -1,13 +1,13 @@
-from typing import Tuple, Union, Optional, Dict
-
 import time
+from typing import Dict, Optional, Tuple, Union
+
 import p4p
 from caproto import Message as CA_Message
+from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
 from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
     EventType,
 )
-from p4p.client.thread import Cancelled, Disconnected, RemoteError, Finished
 
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
 
@@ -30,6 +30,31 @@ class ep00_Serialiser:
     def start_state_serialise(self):
         return self._serialise(seconds_to_nanoseconds(time.time()))
 
+
+class CA_ep00_Serialiser(ep00_Serialiser):
+    def ca_serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        return self.serialise(update, **unused)
+
+    def serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        return None, None
+
+    def ca_conn_serialise(
+        self, pv: str, state: str
+    ) -> Tuple[Optional[bytes], Optional[int]]:
+        state_str_to_enum: Dict[str, EventType] = {
+            "connected": EventType.CONNECTED,
+            "disconnected": EventType.DISCONNECTED,
+            "destroyed": EventType.DESTROYED,
+        }
+        self._conn_status = state_str_to_enum.get(state, EventType.UNKNOWN)
+        return self._serialise(seconds_to_nanoseconds(time.time()))
+
+
+class PVA_ep00_Serialiser(ep00_Serialiser):
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -50,20 +75,4 @@ class ep00_Serialiser:
             Finished: EventType.DESTROYED,
         }
         self._conn_status = conn_state_map.get(type(update), EventType.UNKNOWN)
-        return self._serialise(seconds_to_nanoseconds(time.time()))
-
-    def ca_serialise(
-        self, update: CA_Message, **unused
-    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        return None, None
-
-    def ca_conn_serialise(
-        self, pv: str, state: str
-    ) -> Tuple[Optional[bytes], Optional[int]]:
-        state_str_to_enum: Dict[str, EventType] = {
-            "connected": EventType.CONNECTED,
-            "disconnected": EventType.DISCONNECTED,
-            "destroyed": EventType.DESTROYED,
-        }
-        self._conn_status = state_str_to_enum.get(state, EventType.UNKNOWN)
         return self._serialise(seconds_to_nanoseconds(time.time()))
