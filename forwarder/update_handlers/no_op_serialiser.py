@@ -1,13 +1,14 @@
-from caproto import Message as CA_Message
 from typing import Tuple
+
 import p4p
+from caproto import Message as CA_Message
 
 
 class no_op_Serialiser:
     def __init__(self, source_name: str):
         pass
 
-    def pva_serialise(self, update: p4p.Value) -> Tuple[None, None]:
+    def serialise(self, update: p4p.Value) -> Tuple[None, None]:
         return None, None
 
     def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:

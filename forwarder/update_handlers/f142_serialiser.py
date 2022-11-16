@@ -68,7 +68,7 @@ class CA_f142_Serialiser(f142_Serialiser):
 
 
 class PVA_f142_Serialiser(f142_Serialiser):
-    def pva_serialise(
+    def serialise(
         self, update: Union[p4p.Value, RuntimeError]
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):

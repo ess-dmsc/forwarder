@@ -75,7 +75,7 @@ class SerialiserTracker:
             self._logger.exception(e)
 
     def process_pva_message(self, response: Union[Value, Exception]):
-        new_message, new_timestamp = self.serialiser.pva_serialise(response)
+        new_message, new_timestamp = self.serialiser.serialise(response)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 

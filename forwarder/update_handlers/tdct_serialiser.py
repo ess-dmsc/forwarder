@@ -50,7 +50,7 @@ class CA_tdct_Serialiser(tdct_Serialiser):
 
 
 class PVA_tdct_Serialiser(tdct_Serialiser):
-    def pva_serialise(
+    def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):

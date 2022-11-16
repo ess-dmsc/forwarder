@@ -37,7 +37,7 @@ def test_serialise_pva_value():
 
     pv_name = "some_pv"
     serialiser = PVA_ep00_Serialiser(pv_name)
-    message, timestamp = serialiser.pva_serialise(update)
+    message, timestamp = serialiser.serialise(update)
 
     fb_update = deserialise_ep00(message)
 
@@ -45,7 +45,7 @@ def test_serialise_pva_value():
     assert fb_update.timestamp == reference_timestamp
     assert fb_update.type == EventType.EventType.CONNECTED
 
-    message, timestamp = serialiser.pva_serialise(update)
+    message, timestamp = serialiser.serialise(update)
 
     assert message is None
     assert timestamp is None
@@ -54,7 +54,7 @@ def test_serialise_pva_value():
 def test_serialise_pva_disconnected():
     pv_name = "some_pv"
     serialiser = PVA_ep00_Serialiser(pv_name)
-    message, timestamp = serialiser.pva_serialise(Disconnected())
+    message, timestamp = serialiser.serialise(Disconnected())
 
     fb_update = deserialise_ep00(message)
 
@@ -66,7 +66,7 @@ def test_serialise_pva_disconnected():
 def test_serialise_pva_unknown():
     pv_name = "some_pv"
     serialiser = PVA_ep00_Serialiser(pv_name)
-    message, timestamp = serialiser.pva_serialise(3.14)
+    message, timestamp = serialiser.serialise(3.14)
 
     fb_update = deserialise_ep00(message)
 

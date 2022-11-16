@@ -28,7 +28,7 @@ class CA_nttable_senv_Serialiser(nttable_senv_Serialiser):
 
 
 class PVA_nttable_senv_Serialiser(nttable_senv_Serialiser):
-    def pva_serialise(
+    def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):

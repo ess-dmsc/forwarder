@@ -31,7 +31,7 @@ def test_serialise_nttable():
 
     pv_name = "some_pv"
     serialiser = PVA_nttable_senv_Serialiser(pv_name)
-    message, timestamp = serialiser.pva_serialise(update)
+    message, timestamp = serialiser.serialise(update)
 
     fb_update = deserialise_senv(message)
 

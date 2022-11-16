@@ -15,7 +15,7 @@ def test_tdct_serialiser_handles_negative_relative_timestamps():
     update.timeStamp.secondsPastEpoch = 0
     update.timeStamp.nanoseconds = reference_timestamp
 
-    message = serialiser.pva_serialise(update)
+    message = serialiser.serialise(update)
 
     published_data = deserialise_tdct(message[0])
     assert np.array_equal(
@@ -33,7 +33,7 @@ def test_tdct_publisher_publishes_successfully_when_there_is_only_a_single_chopp
     update.timeStamp.nanoseconds = reference_timestamp
 
     serialiser = PVA_tdct_Serialiser("tst_source")
-    message = serialiser.pva_serialise(update)
+    message = serialiser.serialise(update)
 
     published_data = deserialise_tdct(message[0])
     assert np.array_equal(

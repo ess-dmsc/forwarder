@@ -55,7 +55,7 @@ class CA_ep00_Serialiser(ep00_Serialiser):
 
 
 class PVA_ep00_Serialiser(ep00_Serialiser):
-    def pva_serialise(
+    def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, p4p.Value):
