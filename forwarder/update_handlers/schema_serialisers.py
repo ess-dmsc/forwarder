@@ -14,26 +14,29 @@ from forwarder.update_handlers.nttable_senv_serialiser import (
     CA_nttable_senv_Serialiser,
     PVA_nttable_senv_Serialiser,
 )
-from forwarder.update_handlers.tdct_serialiser import tdct_Serialiser
+from forwarder.update_handlers.tdct_serialiser import (
+    CA_tdct_Serialiser,
+    PVA_tdct_Serialiser,
+)
 
 schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
     EpicsProtocol.CA: {
         "f142": CA_f142_Serialiser,
-        "tdct": tdct_Serialiser,
+        "tdct": CA_tdct_Serialiser,
         "nttable_senv": CA_nttable_senv_Serialiser,
         "no_op": no_op_Serialiser,
         "ep00": CA_ep00_Serialiser,
     },
     EpicsProtocol.FAKE: {
         "f142": PVA_f142_Serialiser,
-        "tdct": tdct_Serialiser,
+        "tdct": PVA_tdct_Serialiser,
         "nttable_senv": PVA_nttable_senv_Serialiser,
         "no_op": no_op_Serialiser,
         "ep00": PVA_ep00_Serialiser,
     },
     EpicsProtocol.PVA: {
         "f142": PVA_f142_Serialiser,
-        "tdct": tdct_Serialiser,
+        "tdct": PVA_tdct_Serialiser,
         "nttable_senv": PVA_nttable_senv_Serialiser,
         "no_op": no_op_Serialiser,
         "ep00": PVA_ep00_Serialiser,
