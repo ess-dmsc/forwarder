@@ -12,6 +12,22 @@ class nttable_senv_Serialiser:
         self._source_name = source_name
         self._msg_counter = -1
 
+
+class CA_nttable_senv_Serialiser(nttable_senv_Serialiser):
+    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
+        raise RuntimeError(
+            "nttable_senv_Serialiser is unable to process channel access data."
+        )
+        return None, None
+
+    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+        raise RuntimeError(
+            "nttable_senv_Serialiser is unable to process channel access connection status updates."
+        )
+        return None, None
+
+
+class PVA_nttable_senv_Serialiser(nttable_senv_Serialiser):
     def pva_serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -49,15 +65,3 @@ class nttable_senv_Serialiser:
             ),
             origin_timestamp,
         )
-
-    def ca_serialise(self, update: CA_Message, **unused) -> Tuple[None, None]:
-        raise RuntimeError(
-            "nttable_senv_Serialiser is unable to process channel access data."
-        )
-        return None, None
-
-    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
-        raise RuntimeError(
-            "nttable_senv_Serialiser is unable to process channel access connection status updates."
-        )
-        return None, None

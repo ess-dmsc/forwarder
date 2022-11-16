@@ -5,7 +5,9 @@ from p4p import Value
 from p4p.nt import NTTable
 from streaming_data_types.sample_environment_senv import deserialise_senv
 
-from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_Serialiser
+from forwarder.update_handlers.nttable_senv_serialiser import (
+    PVA_nttable_senv_Serialiser,
+)
 
 
 def test_serialise_nttable():
@@ -28,7 +30,7 @@ def test_serialise_nttable():
     )
 
     pv_name = "some_pv"
-    serialiser = nttable_senv_Serialiser(pv_name)
+    serialiser = PVA_nttable_senv_Serialiser(pv_name)
     message, timestamp = serialiser.pva_serialise(update)
 
     fb_update = deserialise_senv(message)
