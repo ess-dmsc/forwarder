@@ -18,7 +18,7 @@ def _extract_ca_data(update: CA_Message) -> np.ndarray:
     return np.squeeze(np.array(update.data)).astype(data_type)
 
 
-class tdct_Serialiser:
+class CA_tdct_Serialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._msg_counter = -1
@@ -35,8 +35,6 @@ class tdct_Serialiser:
             origin_time,
         )
 
-
-class CA_tdct_Serialiser(tdct_Serialiser, CASerialiser):
     def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -50,7 +48,23 @@ class CA_tdct_Serialiser(tdct_Serialiser, CASerialiser):
         return None, None
 
 
-class PVA_tdct_Serialiser(tdct_Serialiser, PVASerialiser):
+class PVA_tdct_Serialiser(PVASerialiser):
+    def __init__(self, source_name: str):
+        self._source_name = source_name
+        self._msg_counter = -1
+
+    def _serialise(self, value_arr: np.ndarray, origin_time: int) -> Tuple[bytes, int]:
+        timestamps = value_arr + origin_time
+        self._msg_counter += 1
+        return (
+            serialise_tdct(
+                name=self._source_name,
+                timestamps=timestamps.astype(np.uint64),
+                sequence_counter=self._msg_counter,
+            ),
+            origin_time,
+        )
+
     def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:

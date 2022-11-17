@@ -57,18 +57,6 @@ def _serialise(
     )
 
 
-# class f142_Serialiser:
-#     def __init__(self, source_name: str):
-#         self._source_name = source_name
-
-#     def _serialise(self, alarm, severity, value, timestamp) -> Tuple[bytes, int]:
-#         extra_arguments = {"alarm_status": alarm, "alarm_severity": severity}
-#         return (
-#             serialise_f142(value, self._source_name, timestamp, **extra_arguments),
-#             timestamp,
-#         )
-
-
 # to-do: rename classes
 class CA_f142_Serialiser(CASerialiser):
     def __init__(self, source_name: str):
