@@ -10,6 +10,7 @@ from forwarder.epics_to_serialisable_types import (
     numpy_type_from_p4p_type,
 )
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
+from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 
 
 def _extract_ca_data(update: CA_Message) -> np.ndarray:
@@ -35,7 +36,7 @@ class tdct_Serialiser:
         )
 
 
-class CA_tdct_Serialiser(tdct_Serialiser):
+class CA_tdct_Serialiser(tdct_Serialiser, CASerialiser):
     def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -49,7 +50,7 @@ class CA_tdct_Serialiser(tdct_Serialiser):
         return None, None
 
 
-class PVA_tdct_Serialiser(tdct_Serialiser):
+class PVA_tdct_Serialiser(tdct_Serialiser, PVASerialiser):
     def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:

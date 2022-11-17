@@ -20,7 +20,7 @@ from forwarder.kafka.kafka_helpers import (
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.parse_config_update import EpicsProtocol
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.schema_serialisers import SerialiserFactory
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
@@ -155,7 +155,7 @@ def create_serialiser_list(
     try:
         return_list.append(
             SerialiserTracker(
-                schema_serialisers[protocol][schema](pv_name),
+                SerialiserFactory.create_serialiser(protocol, schema, pv_name),
                 producer,
                 pv_name,
                 output_topic,
@@ -169,7 +169,7 @@ def create_serialiser_list(
     # Connection status serialiser
     return_list.append(
         SerialiserTracker(
-            schema_serialisers[protocol]["ep00"](pv_name),
+            SerialiserFactory.create_serialiser(protocol, "ep00", pv_name),
             producer,
             pv_name,
             output_topic,

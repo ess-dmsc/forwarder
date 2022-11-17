@@ -100,8 +100,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 def _parse_streams(
     command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
+
     from forwarder.update_handlers.schema_serialisers import (
-        schema_serialisers,  # imported here as modules have a circular dependency
+        SerialiserFactory,  # imported here as modules have a circular dependency
     )
 
     for stream in streams:
@@ -129,16 +130,15 @@ def _parse_streams(
             )
             continue
 
-        if epics_protocol not in schema_serialisers.keys():
+        if epics_protocol not in SerialiserFactory.get_protocols():
             logger.warning(
                 f'Serialiser for protocol "{stream.protocol}" ({epics_protocol})'
                 f"not found for stream in configuration update message."
             )
             continue
 
-        if (
-            stream.schema
-            and stream.schema not in schema_serialisers[epics_protocol].keys()
+        if stream.schema and stream.schema not in SerialiserFactory.get_schemas(
+            epics_protocol
         ):
             logger.warning(
                 f'Unsupported schema type "{stream.schema}" for protocol "{epics_protocol}"'

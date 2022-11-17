@@ -10,6 +10,18 @@ from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import 
 )
 
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
+from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
+
+# to-do: delete
+# def _serialise(source_name: str, conn_status: EventType, timestamp_ns: int) -> Tuple[bytes, int]:
+#     return (
+#         serialise_ep00(
+#             timestamp_ns=timestamp_ns,
+#             event_type=conn_status,
+#             source_name=source_name,
+#         ),
+#         timestamp_ns,
+#     )
 
 
 class ep00_Serialiser:
@@ -31,7 +43,7 @@ class ep00_Serialiser:
         return self._serialise(seconds_to_nanoseconds(time.time()))
 
 
-class CA_ep00_Serialiser(ep00_Serialiser):
+class CA_ep00_Serialiser(ep00_Serialiser, CASerialiser):
     def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
@@ -49,7 +61,7 @@ class CA_ep00_Serialiser(ep00_Serialiser):
         return self._serialise(seconds_to_nanoseconds(time.time()))
 
 
-class PVA_ep00_Serialiser(ep00_Serialiser):
+class PVA_ep00_Serialiser(ep00_Serialiser, PVASerialiser):
     def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
