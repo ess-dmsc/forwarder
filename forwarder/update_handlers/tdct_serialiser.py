@@ -18,7 +18,7 @@ def _extract_ca_data(update: CA_Message) -> np.ndarray:
     return np.squeeze(np.array(update.data)).astype(data_type)
 
 
-class CA_tdct_Serialiser(CASerialiser):
+class tdct_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._msg_counter = -1
@@ -48,7 +48,7 @@ class CA_tdct_Serialiser(CASerialiser):
         return None, None
 
 
-class PVA_tdct_Serialiser(PVASerialiser):
+class tdct_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._msg_counter = -1

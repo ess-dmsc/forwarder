@@ -8,7 +8,7 @@ from streaming_data_types.sample_environment_senv import serialise_senv
 from forwarder.update_handlers.schema_serialisers import PVASerialiser
 
 
-class PVA_nttable_senv_Serialiser(PVASerialiser):
+class nttable_senv_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._msg_counter = -1

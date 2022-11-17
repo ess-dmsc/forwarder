@@ -15,7 +15,7 @@ class CASerialiser(ABC):
         pass
 
     @abstractmethod
-    def conn_serialise(  # to-do: rename method to conn_serialise
+    def conn_serialise(
         self, pv: str, state: str
     ) -> Tuple[Optional[bytes], Optional[int]]:
         pass
@@ -31,45 +31,45 @@ class PVASerialiser(ABC):
 
 class SerialiserFactory:
     from forwarder.update_handlers.ep00_serialiser import (
-        CA_ep00_Serialiser,
-        PVA_ep00_Serialiser,
+        ep00_CASerialiser,
+        ep00_PVASerialiser,
     )
     from forwarder.update_handlers.f142_serialiser import (
-        CA_f142_Serialiser,
-        PVA_f142_Serialiser,
+        f142_CASerialiser,
+        f142_PVASerialiser,
     )
     from forwarder.update_handlers.no_op_serialiser import (
-        CA_no_op_Serialiser,
-        PVA_no_op_Serialiser,
+        no_op_CASerialiser,
+        no_op_PVASerialiser,
     )
     from forwarder.update_handlers.nttable_senv_serialiser import (
-        PVA_nttable_senv_Serialiser,
+        nttable_senv_PVASerialiser,
     )
     from forwarder.update_handlers.tdct_serialiser import (
-        CA_tdct_Serialiser,
-        PVA_tdct_Serialiser,
+        tdct_CASerialiser,
+        tdct_PVASerialiser,
     )
 
     _schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
         EpicsProtocol.CA: {
-            "f142": CA_f142_Serialiser,
-            "tdct": CA_tdct_Serialiser,
-            "no_op": CA_no_op_Serialiser,
-            "ep00": CA_ep00_Serialiser,
+            "f142": f142_CASerialiser,
+            "tdct": tdct_CASerialiser,
+            "no_op": no_op_CASerialiser,
+            "ep00": ep00_CASerialiser,
         },
         EpicsProtocol.FAKE: {
-            "f142": PVA_f142_Serialiser,
-            "tdct": PVA_tdct_Serialiser,
-            "nttable_senv": PVA_nttable_senv_Serialiser,
-            "no_op": PVA_no_op_Serialiser,
-            "ep00": PVA_ep00_Serialiser,
+            "f142": f142_PVASerialiser,
+            "tdct": tdct_PVASerialiser,
+            "nttable_senv": nttable_senv_PVASerialiser,
+            "no_op": no_op_PVASerialiser,
+            "ep00": ep00_PVASerialiser,
         },
         EpicsProtocol.PVA: {
-            "f142": PVA_f142_Serialiser,
-            "tdct": PVA_tdct_Serialiser,
-            "nttable_senv": PVA_nttable_senv_Serialiser,
-            "no_op": PVA_no_op_Serialiser,
-            "ep00": PVA_ep00_Serialiser,
+            "f142": f142_PVASerialiser,
+            "tdct": tdct_PVASerialiser,
+            "nttable_senv": nttable_senv_PVASerialiser,
+            "no_op": no_op_PVASerialiser,
+            "ep00": ep00_PVASerialiser,
         },
     }
 

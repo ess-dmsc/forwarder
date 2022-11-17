@@ -2,14 +2,14 @@ import numpy as np
 from p4p.nt import NTScalar
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
-from forwarder.update_handlers.tdct_serialiser import PVA_tdct_Serialiser
+from forwarder.update_handlers.tdct_serialiser import tdct_PVASerialiser
 
 
 def test_tdct_serialiser_handles_negative_relative_timestamps():
     input_relative_timestamps = np.array([-3, -2, -1]).astype(np.int32)
     # This is the timestamp of the PV update
     reference_timestamp = 10
-    serialiser = PVA_tdct_Serialiser("tst_source")
+    serialiser = tdct_PVASerialiser("tst_source")
 
     update = NTScalar("ai").wrap(input_relative_timestamps)
     update.timeStamp.secondsPastEpoch = 0
@@ -32,7 +32,7 @@ def test_tdct_publisher_publishes_successfully_when_there_is_only_a_single_chopp
     update.timeStamp.secondsPastEpoch = 0
     update.timeStamp.nanoseconds = reference_timestamp
 
-    serialiser = PVA_tdct_Serialiser("tst_source")
+    serialiser = tdct_PVASerialiser("tst_source")
     message = serialiser.serialise(update)
 
     published_data = deserialise_tdct(message[0])

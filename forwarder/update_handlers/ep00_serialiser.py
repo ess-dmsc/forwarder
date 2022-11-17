@@ -26,7 +26,7 @@ def _serialise(
     )
 
 
-class CA_ep00_Serialiser(CASerialiser):
+class ep00_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._conn_status: EventType = EventType.NEVER_CONNECTED
@@ -55,7 +55,7 @@ class CA_ep00_Serialiser(CASerialiser):
         )
 
 
-class PVA_ep00_Serialiser(PVASerialiser):
+class ep00_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._conn_status: EventType = EventType.NEVER_CONNECTED

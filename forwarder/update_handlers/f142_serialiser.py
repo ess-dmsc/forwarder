@@ -57,8 +57,7 @@ def _serialise(
     )
 
 
-# to-do: rename classes
-class CA_f142_Serialiser(CASerialiser):
+class f142_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
 
@@ -75,7 +74,7 @@ class CA_f142_Serialiser(CASerialiser):
         return None, None
 
 
-class PVA_f142_Serialiser(PVASerialiser):
+class f142_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
 

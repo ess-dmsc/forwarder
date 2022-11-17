@@ -6,8 +6,8 @@ from p4p.nt import NTScalar
 from streaming_data_types.epics_connection_info_ep00 import EventType, deserialise_ep00
 
 from forwarder.update_handlers.ep00_serialiser import (
-    CA_ep00_Serialiser,
-    PVA_ep00_Serialiser,
+    ep00_CASerialiser,
+    ep00_PVASerialiser,
 )
 
 
@@ -23,7 +23,7 @@ def _test_serialise_start(pv_name, serialiser):
 
 def test_serialise_pva_start():
     pv_name = "some_pv"
-    serialiser = PVA_ep00_Serialiser(pv_name)
+    serialiser = ep00_PVASerialiser(pv_name)
 
     return _test_serialise_start(pv_name, serialiser)
 
@@ -36,7 +36,7 @@ def test_serialise_pva_value():
     update.timeStamp.nanoseconds = reference_timestamp
 
     pv_name = "some_pv"
-    serialiser = PVA_ep00_Serialiser(pv_name)
+    serialiser = ep00_PVASerialiser(pv_name)
     message, timestamp = serialiser.serialise(update)
 
     fb_update = deserialise_ep00(message)
@@ -53,7 +53,7 @@ def test_serialise_pva_value():
 
 def test_serialise_pva_disconnected():
     pv_name = "some_pv"
-    serialiser = PVA_ep00_Serialiser(pv_name)
+    serialiser = ep00_PVASerialiser(pv_name)
     message, timestamp = serialiser.serialise(Disconnected())
 
     fb_update = deserialise_ep00(message)
@@ -65,7 +65,7 @@ def test_serialise_pva_disconnected():
 
 def test_serialise_pva_unknown():
     pv_name = "some_pv"
-    serialiser = PVA_ep00_Serialiser(pv_name)
+    serialiser = ep00_PVASerialiser(pv_name)
     message, timestamp = serialiser.serialise(3.14)
 
     fb_update = deserialise_ep00(message)
@@ -77,14 +77,14 @@ def test_serialise_pva_unknown():
 
 def test_serialise_ca_start():
     pv_name = "some_pv"
-    serialiser = CA_ep00_Serialiser(pv_name)
+    serialiser = ep00_CASerialiser(pv_name)
 
     return _test_serialise_start(pv_name, serialiser)
 
 
 def test_serialise_ca_value():
     pv_name = "some_pv"
-    serialiser = CA_ep00_Serialiser(pv_name)
+    serialiser = ep00_CASerialiser(pv_name)
 
     message, timestamp = serialiser.serialise(1)
 
@@ -94,7 +94,7 @@ def test_serialise_ca_value():
 
 def test_serialise_ca_connected():
     pv_name = "some_pv"
-    serialiser = CA_ep00_Serialiser(pv_name)
+    serialiser = ep00_CASerialiser(pv_name)
     message, timestamp = serialiser.conn_serialise(pv_name, "connected")
 
     fb_update = deserialise_ep00(message)
@@ -106,7 +106,7 @@ def test_serialise_ca_connected():
 
 def test_serialise_ca_unknown():
     pv_name = "some_pv"
-    serialiser = CA_ep00_Serialiser(pv_name)
+    serialiser = ep00_CASerialiser(pv_name)
     message, timestamp = serialiser.conn_serialise(pv_name, "3.15")
 
     fb_update = deserialise_ep00(message)

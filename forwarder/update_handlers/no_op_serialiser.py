@@ -6,7 +6,7 @@ from caproto import Message as CA_Message
 from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 
 
-class CA_no_op_Serialiser(CASerialiser):
+class no_op_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         pass
 
@@ -17,7 +17,7 @@ class CA_no_op_Serialiser(CASerialiser):
         return None, None
 
 
-class PVA_no_op_Serialiser(PVASerialiser):
+class no_op_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         pass
 
