@@ -10,12 +10,12 @@ from forwarder.parse_config_update import EpicsProtocol
 class CASerialiser(ABC):
     @abstractmethod
     def serialise(
-        self, update: CA_Message, **unused  # to-do: remove "unused"
+        self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         pass
 
     @abstractmethod
-    def ca_conn_serialise(  # to-do: rename method to conn_serialise
+    def conn_serialise(  # to-do: rename method to conn_serialise
         self, pv: str, state: str
     ) -> Tuple[Optional[bytes], Optional[int]]:
         pass

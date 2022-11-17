@@ -36,7 +36,7 @@ class CA_ep00_Serialiser(CASerialiser):
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         return None, None
 
-    def ca_conn_serialise(
+    def conn_serialise(
         self, pv: str, state: str
     ) -> Tuple[Optional[bytes], Optional[int]]:
         state_str_to_enum: Dict[str, EventType] = {

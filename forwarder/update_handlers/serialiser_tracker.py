@@ -88,7 +88,7 @@ class SerialiserTracker:
         (
             new_message,
             new_timestamp,
-        ) = self.serialiser.ca_conn_serialise(pv, state)
+        ) = self.serialiser.conn_serialise(pv, state)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 

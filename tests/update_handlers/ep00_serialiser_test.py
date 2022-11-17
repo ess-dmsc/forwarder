@@ -95,7 +95,7 @@ def test_serialise_ca_value():
 def test_serialise_ca_connected():
     pv_name = "some_pv"
     serialiser = CA_ep00_Serialiser(pv_name)
-    message, timestamp = serialiser.ca_conn_serialise(pv_name, "connected")
+    message, timestamp = serialiser.conn_serialise(pv_name, "connected")
 
     fb_update = deserialise_ep00(message)
 
@@ -107,7 +107,7 @@ def test_serialise_ca_connected():
 def test_serialise_ca_unknown():
     pv_name = "some_pv"
     serialiser = CA_ep00_Serialiser(pv_name)
-    message, timestamp = serialiser.ca_conn_serialise(pv_name, "3.15")
+    message, timestamp = serialiser.conn_serialise(pv_name, "3.15")
 
     fb_update = deserialise_ep00(message)
 

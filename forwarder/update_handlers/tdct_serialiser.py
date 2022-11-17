@@ -44,7 +44,7 @@ class CA_tdct_Serialiser(CASerialiser):
         value_arr = _extract_ca_data(update)
         return self._serialise(value_arr, origin_time)
 
-    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+    def conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
         return None, None
 
 

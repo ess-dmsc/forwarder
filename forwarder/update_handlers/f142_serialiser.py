@@ -71,7 +71,7 @@ class CA_f142_Serialiser(CASerialiser):
         value = _extract_ca_data(update)
         return _serialise(self._source_name, alarm, severity, value, timestamp)
 
-    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+    def conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
         return None, None
 
 
