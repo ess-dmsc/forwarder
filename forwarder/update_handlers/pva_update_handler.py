@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Union
 
 from p4p.client.thread import Context as PVAContext
+from p4p.client.thread import Value
 
 from forwarder.application_logger import get_logger
 from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
@@ -32,10 +33,10 @@ class PVAUpdateHandler:
             notify_disconnect=True,
         )
 
-    def _monitor_callback(self, response):
+    def _monitor_callback(self, response: Union[Value, Exception]):
         old_unit = self._unit
         try:
-            self._unit = response.display.units
+            self._unit = response.display.units  # type: ignore
         except AttributeError:
             pass
         if old_unit is not None and old_unit != self._unit:
