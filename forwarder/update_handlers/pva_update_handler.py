@@ -35,11 +35,10 @@ class PVAUpdateHandler:
 
     def _monitor_callback(self, response: Union[Value, Exception]):
         old_unit = self._unit
-        if isinstance(response, Value):
-            try:
-                self._unit = response.display.units
-            except AttributeError:
-                pass
+        try:
+            self._unit = response.display.units  # type: ignore
+        except AttributeError:
+            pass
         if old_unit is not None and old_unit != self._unit:
             self._logger.error(
                 f'Display unit of (pva) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._unit}".'
