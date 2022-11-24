@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import Callable, Dict, Iterable, Optional, Tuple, Union
+from abc import abstractmethod
+from typing import Callable, Dict, Iterable, Optional, Protocol, Tuple, Union
 
 from caproto import Message as CA_Message
 from p4p import Value
@@ -7,26 +7,26 @@ from p4p import Value
 from forwarder.parse_config_update import EpicsProtocol
 
 
-class CASerialiser(ABC):
+class CASerialiser(Protocol):
     @abstractmethod
     def serialise(
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        pass
+        raise NotImplementedError
 
     @abstractmethod
     def conn_serialise(
         self, pv: str, state: str
     ) -> Tuple[Optional[bytes], Optional[int]]:
-        pass
+        raise NotImplementedError
 
 
-class PVASerialiser(ABC):
+class PVASerialiser(Protocol):
     @abstractmethod
     def serialise(
         self, update: Union[Value, RuntimeError]
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        pass
+        raise NotImplementedError
 
 
 class SerialiserFactory:
