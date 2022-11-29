@@ -7,4 +7,4 @@ graphyte == 1.7.1
 numpy >= 1.19
 attrs == 22.1.0
 ConfigArgParse == 1.5.3
-ess-streaming-data-types == 0.17.0
+ess-streaming-data-types == 0.18.0
