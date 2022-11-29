@@ -2,8 +2,8 @@ import uuid
 from typing import Dict, Optional, Tuple, Union
 
 from confluent_kafka import Consumer, Producer
-from streaming_data_types.epics_connection_info_ep00 import serialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
+from streaming_data_types.epics_connection_ep01 import serialise_ep01
+from streaming_data_types.fbschemas.epics_connection_ep01.EventType import (
     EventType as ConnectionStatusEventType,
 )
 
@@ -114,7 +114,7 @@ def publish_connection_status_message(
 ):
     producer.produce(
         topic,
-        serialise_ep00(
+        serialise_ep01(
             timestamp_ns,
             _state_str_to_enum.get(state, ConnectionStatusEventType.UNKNOWN),
             pv_name,

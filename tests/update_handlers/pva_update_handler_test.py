@@ -6,8 +6,8 @@ import numpy as np
 import pytest
 from p4p.client.thread import Cancelled, Disconnected, RemoteError
 from p4p.nt import NTEnum, NTScalar
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
+from streaming_data_types.epics_connection_ep01 import deserialise_ep01
+from streaming_data_types.fbschemas.epics_connection_ep01.EventType import (
     EventType as ConnectionEventType,
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
@@ -288,7 +288,7 @@ def test_empty_update_is_not_forwarded():
 
     assert (
         producer.messages_published == 2
-    ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep00)"
+    ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep01)"
     assert (
         result.timestamps.size > 0  # type: ignore
     ), "Expected the published PV update not to be empty"
@@ -331,7 +331,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_ep01(payload)
         except Exception:
             pass
 
@@ -356,7 +356,7 @@ def test_connection_state_change_on_cancel():
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_ep01(payload)
         except Exception:
             pass
 

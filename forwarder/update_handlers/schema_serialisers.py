@@ -30,9 +30,9 @@ class PVASerialiser(Protocol):
 
 
 class SerialiserFactory:
-    from forwarder.update_handlers.ep00_serialiser import (
-        ep00_CASerialiser,
-        ep00_PVASerialiser,
+    from forwarder.update_handlers.ep01_serialiser import (
+        ep01_CASerialiser,
+        ep01_PVASerialiser,
     )
     from forwarder.update_handlers.f142_serialiser import (
         f142_CASerialiser,
@@ -55,21 +55,21 @@ class SerialiserFactory:
             "f142": f142_CASerialiser,
             "tdct": tdct_CASerialiser,
             "no_op": no_op_CASerialiser,
-            "ep00": ep00_CASerialiser,
+            "ep01": ep01_CASerialiser,
         },
         EpicsProtocol.FAKE: {
             "f142": f142_PVASerialiser,
             "tdct": tdct_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "no_op": no_op_PVASerialiser,
-            "ep00": ep00_PVASerialiser,
+            "ep01": ep01_PVASerialiser,
         },
         EpicsProtocol.PVA: {
             "f142": f142_PVASerialiser,
             "tdct": tdct_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "no_op": no_op_PVASerialiser,
-            "ep00": ep00_PVASerialiser,
+            "ep01": ep01_PVASerialiser,
         },
     }
 

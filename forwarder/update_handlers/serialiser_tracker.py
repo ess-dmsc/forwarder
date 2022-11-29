@@ -169,7 +169,7 @@ def create_serialiser_list(
     # Connection status serialiser
     return_list.append(
         SerialiserTracker(
-            SerialiserFactory.create_serialiser(protocol, "ep00", pv_name),
+            SerialiserFactory.create_serialiser(protocol, "ep01", pv_name),
             producer,
             pv_name,
             output_topic,
