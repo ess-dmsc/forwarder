@@ -7,8 +7,8 @@ import numpy as np
 import pytest
 from caproto import ChannelType, ReadNotifyResponse, TimeStamp, timestamp_to_epics
 from streaming_data_types.epics_connection_ep01 import deserialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.EventType import (
-    EventType as ConnectionEventType,
+from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
+    ConnectionInfo as ConnectionInfo,
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
@@ -375,10 +375,13 @@ def test_empty_update_is_not_cached():
 @pytest.mark.parametrize(
     "state_string,state_enum",
     [
-        ("connected", ConnectionEventType.CONNECTED),
-        ("disconnected", ConnectionEventType.DISCONNECTED),
-        ("destroyed", ConnectionEventType.DESTROYED),
-        ("some_unrecognised", ConnectionEventType.UNKNOWN),
+        ("connected", ConnectionInfo.CONNECTED),
+        ("disconnected", ConnectionInfo.DISCONNECTED),
+        ("destroyed", ConnectionInfo.DESTROYED),
+        ("cancelled", ConnectionInfo.CANCELLED),
+        ("finished", ConnectionInfo.FINISHED),
+        ("remote_error", ConnectionInfo.REMOTE_ERROR),
+        ("some_unrecognised", ConnectionInfo.UNKNOWN),
     ],
 )
 def test_handler_publishes_connection_state_change(state_string, state_enum):

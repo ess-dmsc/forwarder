@@ -4,11 +4,11 @@ from typing import List
 
 import numpy as np
 import pytest
-from p4p.client.thread import Cancelled, Disconnected, RemoteError
+from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from p4p.nt import NTEnum, NTScalar
 from streaming_data_types.epics_connection_ep01 import deserialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.EventType import (
-    EventType as ConnectionEventType,
+from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
+    ConnectionInfo as ConnectionInfo,
 )
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
@@ -320,9 +320,11 @@ def test_empty_update_is_not_cached():
 @pytest.mark.parametrize(
     "exception,state_enum",
     [
-        (RemoteError(), ConnectionEventType.DISCONNECTED),
-        (Disconnected(), ConnectionEventType.DISCONNECTED),
-        (RuntimeError("some unrecognised exception"), ConnectionEventType.UNKNOWN),
+        (Disconnected(), ConnectionInfo.DISCONNECTED),
+        (Cancelled(), ConnectionInfo.CANCELLED),
+        (Finished(), ConnectionInfo.FINISHED),
+        (RemoteError(), ConnectionInfo.REMOTE_ERROR),
+        (RuntimeError("some unrecognised exception"), ConnectionInfo.UNKNOWN),
     ],
 )
 def test_handler_publishes_connection_state_change(exception, state_enum):

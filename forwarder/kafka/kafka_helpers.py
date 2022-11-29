@@ -3,8 +3,8 @@ from typing import Dict, Optional, Tuple, Union
 
 from confluent_kafka import Consumer, Producer
 from streaming_data_types.epics_connection_ep01 import serialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.EventType import (
-    EventType as ConnectionStatusEventType,
+from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
+    ConnectionInfo,
 )
 
 from forwarder.utils import Counter
@@ -102,10 +102,13 @@ def _nanoseconds_to_milliseconds(time_ns: int) -> int:
     return int(time_ns) // 1_000_000
 
 
-_state_str_to_enum: Dict[Union[str, Exception], ConnectionStatusEventType] = {
-    "connected": ConnectionStatusEventType.CONNECTED,
-    "disconnected": ConnectionStatusEventType.DISCONNECTED,
-    "destroyed": ConnectionStatusEventType.DESTROYED,
+_state_str_to_enum: Dict[Union[str, Exception], ConnectionInfo] = {
+    "connected": ConnectionInfo.CONNECTED,
+    "disconnected": ConnectionInfo.DISCONNECTED,
+    "destroyed": ConnectionInfo.DESTROYED,
+    "cancelled": ConnectionInfo.CANCELLED,
+    "finished": ConnectionInfo.FINISHED,
+    "remote_error": ConnectionInfo.REMOTE_ERROR,
 }
 
 
@@ -116,7 +119,7 @@ def publish_connection_status_message(
         topic,
         serialise_ep01(
             timestamp_ns,
-            _state_str_to_enum.get(state, ConnectionStatusEventType.UNKNOWN),
+            _state_str_to_enum.get(state, ConnectionInfo.UNKNOWN),
             pv_name,
         ),
         timestamp_ms=_nanoseconds_to_milliseconds(timestamp_ns),
