@@ -10,6 +10,7 @@ from forwarder.epics_to_serialisable_types import (
     numpy_type_from_p4p_type,
 )
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
+from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 
 
 def _extract_ca_data(update: CA_Message) -> np.ndarray:
@@ -17,7 +18,7 @@ def _extract_ca_data(update: CA_Message) -> np.ndarray:
     return np.squeeze(np.array(update.data)).astype(data_type)
 
 
-class tdct_Serialiser:
+class tdct_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
         self._msg_counter = -1
@@ -34,7 +35,37 @@ class tdct_Serialiser:
             origin_time,
         )
 
-    def pva_serialise(
+    def serialise(
+        self, update: CA_Message, **unused
+    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        if update.data.size == 0:
+            return None, None
+        origin_time = seconds_to_nanoseconds(update.metadata.timestamp)
+        value_arr = _extract_ca_data(update)
+        return self._serialise(value_arr, origin_time)
+
+    def conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
+        return None, None
+
+
+class tdct_PVASerialiser(PVASerialiser):
+    def __init__(self, source_name: str):
+        self._source_name = source_name
+        self._msg_counter = -1
+
+    def _serialise(self, value_arr: np.ndarray, origin_time: int) -> Tuple[bytes, int]:
+        timestamps = value_arr + origin_time
+        self._msg_counter += 1
+        return (
+            serialise_tdct(
+                name=self._source_name,
+                timestamps=timestamps.astype(np.uint64),
+                sequence_counter=self._msg_counter,
+            ),
+            origin_time,
+        )
+
+    def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         if isinstance(update, RuntimeError):
@@ -56,15 +87,3 @@ class tdct_Serialiser:
         data_type = numpy_type_from_p4p_type[update.type()["value"][-1]]
         value_arr = np.squeeze(np.array(update.value)).astype(data_type)
         return self._serialise(value_arr, origin_time)
-
-    def ca_serialise(
-        self, update: CA_Message, **unused
-    ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
-        if update.data.size == 0:
-            return None, None
-        origin_time = seconds_to_nanoseconds(update.metadata.timestamp)
-        value_arr = _extract_ca_data(update)
-        return self._serialise(value_arr, origin_time)
-
-    def ca_conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
-        return None, None

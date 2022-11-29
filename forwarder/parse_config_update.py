@@ -16,7 +16,6 @@ from streaming_data_types.forwarder_config_update_rf5k import (
 )
 
 from forwarder.application_logger import get_logger
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
 
 logger = get_logger()
 
@@ -101,6 +100,11 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 def _parse_streams(
     command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
+
+    from forwarder.update_handlers.schema_serialisers import (
+        SerialiserFactory,  # imported here as modules have a circular dependency
+    )
+
     for stream in streams:
         fields_present = (bool(stream.channel), bool(stream.schema), bool(stream.topic))
         if command_type == CommandType.ADD and not all(fields_present):
@@ -117,19 +121,28 @@ def _parse_streams(
             )
             continue
 
-        if stream.schema and stream.schema not in schema_serialisers.keys():
-            logger.warning(
-                f'Unsupported schema type "{stream.schema}" specified for'
-                f"stream in configuration update message."
-            )
-            continue
-
         try:
             epics_protocol = config_protocol_to_epics_protocol[stream.protocol]
         except KeyError:
             logger.warning(
                 f'Unrecognised protocol type "{stream.protocol}" specified for'
                 f"stream in configuration update message."
+            )
+            continue
+
+        if epics_protocol not in SerialiserFactory.get_protocols():
+            logger.warning(
+                f'Serialiser for protocol "{stream.protocol}" ({epics_protocol})'
+                f"not found for stream in configuration update message."
+            )
+            continue
+
+        if stream.schema and stream.schema not in SerialiserFactory.get_schemas(
+            epics_protocol
+        ):
+            logger.warning(
+                f'Unsupported schema type "{stream.schema}" for protocol "{epics_protocol}"'
+                f"specified for stream in configuration update message."
             )
             continue
 

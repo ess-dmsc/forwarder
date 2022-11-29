@@ -15,6 +15,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
+from forwarder.parse_config_update import EpicsProtocol
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
@@ -26,7 +27,7 @@ def test_update_handler_throws_if_schema_not_recognised():
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
     with pytest.raises(ValueError):
-        PVAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema))  # type: ignore
+        PVAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.PVA))  # type: ignore
 
 
 def test_update_handler_publishes_enum_update():
@@ -51,7 +52,7 @@ def test_update_handler_publishes_enum_update():
     pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTEnum(valueAlarm=True).wrap(
             {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
@@ -86,7 +87,7 @@ def test_update_handler_publishes_float_update(pv_value, pv_type):
     pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -121,7 +122,7 @@ def test_update_handler_publishes_int_update(pv_value, pv_type):
     pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -159,7 +160,7 @@ def test_update_handler_publishes_floatarray_update(pv_value, pv_type):
     pv_timestamp_s = time()  # seconds from unix epoch
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -192,7 +193,7 @@ def test_update_handler_publishes_alarm_update():
     alarm_severity = 1  # AlarmSeverity.MINOR
     alarm_message = "HIGH_ALARM"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(
             {
@@ -236,7 +237,7 @@ def test_update_handler_publishes_periodic_update():
     pv_type = "i"
 
     update_period_ms = 10
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", update_period_ms))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA, update_period_ms))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -270,7 +271,7 @@ def test_empty_update_is_not_forwarded():
     pv_value = [1, 2, 3]
     pv_type = "ai"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
 
     # First update with non-empty value
     context.call_monitor_callback_with_fake_pv_update(
@@ -304,7 +305,7 @@ def test_empty_update_is_not_cached():
     pv_value: List = []
     pv_type = "ai"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
@@ -339,7 +340,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
 
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert producer.published_payload is not None
@@ -364,7 +365,7 @@ def test_connection_state_change_on_cancel():
 
     pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142"))  # type: ignore
+    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(Cancelled())
     # "Cancelled" occurs when we intentionally disconnect the client,
     # we don't log this to Kafka as a connection state change

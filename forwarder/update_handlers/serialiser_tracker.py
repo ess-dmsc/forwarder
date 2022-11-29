@@ -18,8 +18,9 @@ from forwarder.kafka.kafka_helpers import (
     seconds_to_nanoseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.parse_config_update import EpicsProtocol
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_serialisers import schema_serialisers
+from forwarder.update_handlers.schema_serialisers import SerialiserFactory
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
@@ -74,12 +75,12 @@ class SerialiserTracker:
             self._logger.exception(e)
 
     def process_pva_message(self, response: Union[Value, Exception]):
-        new_message, new_timestamp = self.serialiser.pva_serialise(response)
+        new_message, new_timestamp = self.serialiser.serialise(response)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 
     def process_ca_message(self, response: ReadNotifyResponse):
-        new_message, new_timestamp = self.serialiser.ca_serialise(response)
+        new_message, new_timestamp = self.serialiser.serialise(response)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 
@@ -87,7 +88,7 @@ class SerialiserTracker:
         (
             new_message,
             new_timestamp,
-        ) = self.serialiser.ca_conn_serialise(pv, state)
+        ) = self.serialiser.conn_serialise(pv, state)
         if new_message is not None:
             self.set_new_message(new_message, new_timestamp)
 
@@ -147,13 +148,14 @@ def create_serialiser_list(
     pv_name: str,
     output_topic: str,
     schema: str,
+    protocol: EpicsProtocol,
     periodic_update_ms: Optional[int] = None,
 ) -> List[SerialiserTracker]:
     return_list = []
     try:
         return_list.append(
             SerialiserTracker(
-                schema_serialisers[schema](pv_name),
+                SerialiserFactory.create_serialiser(protocol, schema, pv_name),
                 producer,
                 pv_name,
                 output_topic,
@@ -162,12 +164,12 @@ def create_serialiser_list(
         )
     except KeyError:
         raise ValueError(
-            f"{schema} is not a recognised supported schema, use one of {list(schema_serialisers.keys())}"
+            f"Serialiser not found for protocol={protocol} schema={schema}"
         )
     # Connection status serialiser
     return_list.append(
         SerialiserTracker(
-            schema_serialisers["ep00"](pv_name),
+            SerialiserFactory.create_serialiser(protocol, "ep00", pv_name),
             producer,
             pv_name,
             output_topic,

@@ -32,8 +32,17 @@ def create_update_handler(
         raise RuntimeError(
             f"Schema not specified when adding handler for channel {channel.name}"
         )
+    if channel.protocol == EpicsProtocol.NONE:
+        raise RuntimeError(
+            f"Protocol not specified when adding handler for channel {channel.name}"
+        )
     serialiser_list = create_serialiser_list(
-        producer, channel.name, channel.output_topic, channel.schema, periodic_update_ms
+        producer,
+        channel.name,
+        channel.output_topic,
+        channel.schema,
+        channel.protocol,
+        periodic_update_ms,
     )
     if channel.protocol == EpicsProtocol.PVA:
         return PVAUpdateHandler(pva_context, channel.name, serialiser_list)
