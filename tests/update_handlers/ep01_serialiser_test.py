@@ -1,9 +1,10 @@
 import time
 
 import numpy as np
-from p4p.client.thread import Disconnected
+import pytest
+from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from p4p.nt import NTScalar
-from streaming_data_types.epics_connection_ep01 import EventType, deserialise_ep01
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
 
 from forwarder.update_handlers.ep01_serialiser import (
     ep01_CASerialiser,
@@ -18,7 +19,7 @@ def _test_serialise_start(pv_name, serialiser):
 
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
-    assert fb_update.type == EventType.EventType.NEVER_CONNECTED
+    assert fb_update.status == ConnectionInfo.NEVER_CONNECTED
 
 
 def test_serialise_pva_start():
@@ -43,7 +44,7 @@ def test_serialise_pva_value():
 
     assert fb_update.source_name == pv_name
     assert fb_update.timestamp == reference_timestamp
-    assert fb_update.type == EventType.EventType.CONNECTED
+    assert fb_update.status == ConnectionInfo.CONNECTED
 
     message, timestamp = serialiser.serialise(update)
 
@@ -51,16 +52,25 @@ def test_serialise_pva_value():
     assert timestamp is None
 
 
-def test_serialise_pva_disconnected():
+@pytest.mark.parametrize(
+    "exception,state_enum",
+    [
+        (Disconnected(), ConnectionInfo.DISCONNECTED),
+        (Cancelled(), ConnectionInfo.CANCELLED),
+        (Finished(), ConnectionInfo.FINISHED),
+        (RemoteError(), ConnectionInfo.REMOTE_ERROR),
+    ],
+)
+def test_serialise_pva_exception(exception, state_enum):
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
-    message, timestamp = serialiser.serialise(Disconnected())
+    message, timestamp = serialiser.serialise(exception)
 
     fb_update = deserialise_ep01(message)
 
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
-    assert fb_update.type == EventType.EventType.DISCONNECTED
+    assert fb_update.status == state_enum
 
 
 def test_serialise_pva_unknown():
@@ -72,7 +82,7 @@ def test_serialise_pva_unknown():
 
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
-    assert fb_update.type == EventType.EventType.UNKNOWN
+    assert fb_update.status == ConnectionInfo.UNKNOWN
 
 
 def test_serialise_ca_start():
@@ -101,7 +111,7 @@ def test_serialise_ca_connected():
 
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
-    assert fb_update.type == EventType.EventType.CONNECTED
+    assert fb_update.status == ConnectionInfo.CONNECTED
 
 
 def test_serialise_ca_unknown():
@@ -113,4 +123,4 @@ def test_serialise_ca_unknown():
 
     assert fb_update.source_name == pv_name
     assert abs(fb_update.timestamp - (time.time() * 1e9)) / 1e9 < 0.5
-    assert fb_update.type == EventType.EventType.UNKNOWN
+    assert fb_update.status == ConnectionInfo.UNKNOWN

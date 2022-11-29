@@ -7,8 +7,8 @@ from typing import Dict
 
 from streaming_data_types.status_x5f2 import serialise_x5f2
 
+from forwarder.common import Channel
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.parse_config_update import Channel
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 

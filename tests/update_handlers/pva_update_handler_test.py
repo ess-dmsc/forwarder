@@ -15,7 +15,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
-from forwarder.parse_config_update import EpicsProtocol
+from forwarder.common import EpicsProtocol
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
@@ -346,7 +346,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert producer.published_payload is not None
-    assert result.type == state_enum  # type: ignore
+    assert result.status == state_enum  # type: ignore
     assert result.source_name == pv_source_name  # type: ignore
 
     pva_update_handler.stop()

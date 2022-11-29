@@ -8,6 +8,7 @@ from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 
 from forwarder.application_logger import get_logger, setup_logger
+from forwarder.common import Channel
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
 from forwarder.kafka.kafka_helpers import (
@@ -16,7 +17,7 @@ from forwarder.kafka.kafka_helpers import (
     parse_kafka_uri,
 )
 from forwarder.parse_commandline_args import get_version, parse_args
-from forwarder.parse_config_update import Channel, parse_config_update
+from forwarder.parse_config_update import parse_config_update
 from forwarder.statistics_reporter import StatisticsReporter
 from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import UpdateHandler

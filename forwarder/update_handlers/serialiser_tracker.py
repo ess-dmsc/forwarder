@@ -13,14 +13,14 @@ from confluent_kafka.error import (
 from p4p.client.thread import Value
 
 from forwarder.application_logger import get_logger
+from forwarder.common import EpicsProtocol
 from forwarder.kafka.kafka_helpers import (
     _nanoseconds_to_milliseconds,
     seconds_to_nanoseconds,
 )
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.parse_config_update import EpicsProtocol
 from forwarder.repeat_timer import RepeatTimer, milliseconds_to_seconds
-from forwarder.update_handlers.schema_serialisers import SerialiserFactory
+from forwarder.update_handlers.schema_serialiser_factory import SerialiserFactory
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)

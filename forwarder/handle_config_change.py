@@ -5,9 +5,9 @@ from typing import Dict, Optional
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
 
+from forwarder.common import Channel, CommandType, ConfigUpdate
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.parse_config_update import Channel, CommandType, ConfigUpdate
 from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import (
     UpdateHandler,

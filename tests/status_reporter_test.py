@@ -4,7 +4,7 @@ from typing import Dict
 
 from streaming_data_types.status_x5f2 import deserialise_x5f2
 
-from forwarder.parse_config_update import Channel, EpicsProtocol
+from forwarder.common import Channel, EpicsProtocol
 from forwarder.status_reporter import StatusReporter
 from tests.kafka.fake_producer import FakeProducer
 
