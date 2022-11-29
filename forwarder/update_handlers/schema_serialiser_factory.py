@@ -1,28 +1,27 @@
 from typing import Callable, Dict, Iterable, Union
 
+from forwarder.common import EpicsProtocol
+from forwarder.update_handlers.ep01_serialiser import (
+    ep01_CASerialiser,
+    ep01_PVASerialiser,
+)
+from forwarder.update_handlers.f142_serialiser import (
+    f142_CASerialiser,
+    f142_PVASerialiser,
+)
+from forwarder.update_handlers.no_op_serialiser import (
+    no_op_CASerialiser,
+    no_op_PVASerialiser,
+)
+from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_PVASerialiser
+from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
+from forwarder.update_handlers.tdct_serialiser import (
+    tdct_CASerialiser,
+    tdct_PVASerialiser,
+)
+
 
 class SerialiserFactory:
-    from forwarder.common import EpicsProtocol
-    from forwarder.update_handlers.ep01_serialiser import (
-        ep01_CASerialiser,
-        ep01_PVASerialiser,
-    )
-    from forwarder.update_handlers.f142_serialiser import (
-        f142_CASerialiser,
-        f142_PVASerialiser,
-    )
-    from forwarder.update_handlers.no_op_serialiser import (
-        no_op_CASerialiser,
-        no_op_PVASerialiser,
-    )
-    from forwarder.update_handlers.nttable_senv_serialiser import (
-        nttable_senv_PVASerialiser,
-    )
-    from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
-    from forwarder.update_handlers.tdct_serialiser import (
-        tdct_CASerialiser,
-        tdct_PVASerialiser,
-    )
 
     _schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
         EpicsProtocol.CA: {
