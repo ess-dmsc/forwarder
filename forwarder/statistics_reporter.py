@@ -4,7 +4,7 @@ from typing import Dict
 
 import graphyte  # type: ignore
 
-from forwarder.parse_config_update import Channel
+from forwarder.common import Channel
 from forwarder.repeat_timer import RepeatTimer
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from forwarder.utils import Counter

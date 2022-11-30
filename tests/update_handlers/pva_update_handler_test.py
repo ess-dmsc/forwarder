@@ -4,18 +4,15 @@ from typing import List
 
 import numpy as np
 import pytest
-from p4p.client.thread import Cancelled, Disconnected, RemoteError
+from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from p4p.nt import NTEnum, NTScalar
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
-    EventType as ConnectionEventType,
-)
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
-from forwarder.parse_config_update import EpicsProtocol
+from forwarder.common import EpicsProtocol
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
@@ -288,7 +285,7 @@ def test_empty_update_is_not_forwarded():
 
     assert (
         producer.messages_published == 2
-    ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep00)"
+    ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep01)"
     assert (
         result.timestamps.size > 0  # type: ignore
     ), "Expected the published PV update not to be empty"
@@ -320,9 +317,11 @@ def test_empty_update_is_not_cached():
 @pytest.mark.parametrize(
     "exception,state_enum",
     [
-        (RemoteError(), ConnectionEventType.DISCONNECTED),
-        (Disconnected(), ConnectionEventType.DISCONNECTED),
-        (RuntimeError("some unrecognised exception"), ConnectionEventType.UNKNOWN),
+        (Disconnected(), ConnectionInfo.DISCONNECTED),
+        (Cancelled(), ConnectionInfo.CANCELLED),
+        (Finished(), ConnectionInfo.FINISHED),
+        (RemoteError(), ConnectionInfo.REMOTE_ERROR),
+        (RuntimeError("some unrecognised exception"), ConnectionInfo.UNKNOWN),
     ],
 )
 def test_handler_publishes_connection_state_change(exception, state_enum):
@@ -331,7 +330,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_ep01(payload)
         except Exception:
             pass
 
@@ -344,7 +343,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert producer.published_payload is not None
-    assert result.type == state_enum  # type: ignore
+    assert result.status == state_enum  # type: ignore
     assert result.source_name == pv_source_name  # type: ignore
 
     pva_update_handler.stop()
@@ -356,7 +355,7 @@ def test_connection_state_change_on_cancel():
     def check_payload(payload):
         nonlocal result
         try:
-            result = deserialise_ep00(payload)
+            result = deserialise_ep01(payload)
         except Exception:
             pass
 

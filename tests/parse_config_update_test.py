@@ -14,11 +14,8 @@ from streaming_data_types.forwarder_config_update_rf5k import (
     serialise_rf5k,
 )
 
-from forwarder.parse_config_update import (
-    CommandType,
-    _parse_streams,
-    parse_config_update,
-)
+from forwarder.common import CommandType
+from forwarder.parse_config_update import _parse_streams, parse_config_update
 
 
 def test_parsing_returns_as_invalid_for_message_which_is_not_valid_rf5k_flatbuffer():

@@ -6,16 +6,13 @@ from typing import List
 import numpy as np
 import pytest
 from caproto import ChannelType, ReadNotifyResponse, TimeStamp, timestamp_to_epics
-from streaming_data_types.epics_connection_info_ep00 import deserialise_ep00
-from streaming_data_types.fbschemas.epics_connection_info_ep00.EventType import (
-    EventType as ConnectionEventType,
-)
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
-from forwarder.parse_config_update import EpicsProtocol
+from forwarder.common import EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
@@ -375,10 +372,13 @@ def test_empty_update_is_not_cached():
 @pytest.mark.parametrize(
     "state_string,state_enum",
     [
-        ("connected", ConnectionEventType.CONNECTED),
-        ("disconnected", ConnectionEventType.DISCONNECTED),
-        ("destroyed", ConnectionEventType.DESTROYED),
-        ("some_unrecognised", ConnectionEventType.UNKNOWN),
+        ("connected", ConnectionInfo.CONNECTED),
+        ("disconnected", ConnectionInfo.DISCONNECTED),
+        ("destroyed", ConnectionInfo.DESTROYED),
+        ("cancelled", ConnectionInfo.CANCELLED),
+        ("finished", ConnectionInfo.FINISHED),
+        ("remote_error", ConnectionInfo.REMOTE_ERROR),
+        ("some_unrecognised", ConnectionInfo.UNKNOWN),
     ],
 )
 def test_handler_publishes_connection_state_change(state_string, state_enum):
@@ -391,8 +391,8 @@ def test_handler_publishes_connection_state_change(state_string, state_enum):
     context.call_connection_state_callback_with_fake_state_change(state_string)
 
     assert producer.published_payload is not None
-    connect_state_output = deserialise_ep00(producer.published_payload)
-    assert connect_state_output.type == state_enum
+    connect_state_output = deserialise_ep01(producer.published_payload)
+    assert connect_state_output.status == state_enum
     assert connect_state_output.source_name == pv_source_name
 
     update_handler.stop()

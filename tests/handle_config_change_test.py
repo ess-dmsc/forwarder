@@ -4,14 +4,9 @@ from unittest import mock
 
 import pytest
 
+from forwarder.common import Channel, CommandType, ConfigUpdate, EpicsProtocol
 from forwarder.configuration_store import ConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
-from forwarder.parse_config_update import (
-    Channel,
-    CommandType,
-    ConfigUpdate,
-    EpicsProtocol,
-)
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from tests.kafka.fake_producer import FakeProducer
 

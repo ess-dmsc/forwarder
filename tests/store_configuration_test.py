@@ -11,13 +11,9 @@ from streaming_data_types.forwarder_config_update_rf5k import (
     serialise_rf5k,
 )
 
+from forwarder.common import Channel, EpicsProtocol, config_change_to_command_type
 from forwarder.configuration_store import ConfigurationStore
-from forwarder.parse_config_update import (
-    Channel,
-    EpicsProtocol,
-    config_change_to_command_type,
-    parse_config_update,
-)
+from forwarder.parse_config_update import parse_config_update
 from tests.kafka.fake_producer import FakeProducer
 
 DUMMY_UPDATE_HANDLER = None

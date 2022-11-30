@@ -3,9 +3,9 @@ from typing import Optional, Union
 from caproto.threading.client import Context as CAContext
 from p4p.client.thread import Context as PVAContext
 
+from forwarder.common import Channel as ConfigChannel
+from forwarder.common import EpicsProtocol
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.parse_config_update import Channel as ConfigChannel
-from forwarder.parse_config_update import EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler

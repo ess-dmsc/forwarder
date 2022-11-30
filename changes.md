@@ -7,8 +7,8 @@
 * Known bad PV updates will no longer be cached for (attempted) re-transmission.
 * Some exceptions in the PVA/CA update handling code will now produce log messages.
 * Re-factored the code to allow automatic instantiation of forwarding modules
-* Added separate ep00 module for handling only connection status serialisation
-* New ep00 module is now automatically instantiated for every PV that the forwarder is configured to forward
+* Added separate ep01 module for handling only connection status serialisation
+* New ep01 module is now automatically instantiated for every PV that the forwarder is configured to forward
 * System test running has been simplified and fixed
 * Set the "facility" and "process_name" fields in the Graylog messages to "ESS" and "forwarder"
 * System tests renamed to integration tests

@@ -13,7 +13,7 @@ from streaming_data_types.forwarder_config_update_rf5k import (
     serialise_rf5k,
 )
 
-from forwarder.parse_config_update import EpicsProtocol
+from forwarder.common import EpicsProtocol
 
 
 class ConfigurationStore:

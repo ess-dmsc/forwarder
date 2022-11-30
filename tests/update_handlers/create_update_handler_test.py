@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from forwarder.parse_config_update import Channel, EpicsProtocol
+from forwarder.common import Channel, EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.create_update_handler import create_update_handler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
