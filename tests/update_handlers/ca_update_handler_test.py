@@ -6,10 +6,7 @@ from typing import List
 import numpy as np
 import pytest
 from caproto import ChannelType, ReadNotifyResponse, TimeStamp, timestamp_to_epics
-from streaming_data_types.epics_connection_ep01 import deserialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
-    ConnectionInfo as ConnectionInfo,
-)
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
 from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
 from streaming_data_types.logdata_f142 import deserialise_f142

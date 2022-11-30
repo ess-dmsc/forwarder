@@ -4,10 +4,7 @@ from typing import Dict, Optional, Tuple, Union
 import p4p
 from caproto import Message as CA_Message
 from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
-from streaming_data_types.epics_connection_ep01 import serialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
-    ConnectionInfo,
-)
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, serialise_ep01
 
 from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 

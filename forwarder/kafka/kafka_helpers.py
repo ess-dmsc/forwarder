@@ -2,10 +2,7 @@ import uuid
 from typing import Dict, Optional, Tuple, Union
 
 from confluent_kafka import Consumer, Producer
-from streaming_data_types.epics_connection_ep01 import serialise_ep01
-from streaming_data_types.fbschemas.epics_connection_ep01.ConnectionInfo import (
-    ConnectionInfo,
-)
+from streaming_data_types.epics_connection_ep01 import ConnectionInfo, serialise_ep01
 
 from forwarder.utils import Counter
 
