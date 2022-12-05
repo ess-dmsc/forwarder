@@ -220,6 +220,8 @@ def test_update_handler_publishes_alarm_update(schema, deserialiser):
         assert pv_update_output.source == pv_source_name
         assert pv_update_output.message == AlarmStatus(alarm_status).name
         assert pv_update_output.severity == al00_Severity.MINOR
+    else:
+        raise NotImplementedError
 
     update_handler.stop()
 
@@ -317,6 +319,8 @@ def test_update_handler_always_includes_alarm_status(schema, deserialiser):
     elif schema == "al00":
         assert pv_update_output.message == AlarmStatus(alarm_status).name
         assert pv_update_output.severity == al00_Severity.MINOR
+    else:
+        raise NotImplementedError
 
     update_handler.stop()
 
