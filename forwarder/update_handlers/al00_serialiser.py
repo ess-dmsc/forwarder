@@ -1,6 +1,7 @@
 from typing import Tuple, Union
 
 import p4p
+from caproto import AlarmStatus as CA_AlarmStatus
 from caproto import Message as CA_Message
 from streaming_data_types.alarm_al00 import Severity, serialise_al00
 
@@ -30,7 +31,7 @@ class al00_CASerialiser(CASerialiser):
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         timestamp = seconds_to_nanoseconds(update.metadata.timestamp)
         severity = epics_alarm_severity_to_al00[update.metadata.severity]
-        message = update.metadata.status.name
+        message = CA_AlarmStatus(update.metadata.status).name
         return _serialise(self._source_name, timestamp, severity, message)
 
     def conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
