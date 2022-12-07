@@ -152,31 +152,26 @@ def create_serialiser_list(
     periodic_update_ms: Optional[int] = None,
 ) -> List[SerialiserTracker]:
     return_list = []
-    try:
+    return_list.append(
+        SerialiserTracker(
+            SerialiserFactory.create_serialiser(protocol, schema, pv_name),
+            producer,
+            pv_name,
+            output_topic,
+            periodic_update_ms,
+        )
+    )
+    if (
+        schema == "f144"
+    ):  # f144 does not forward EPICS status information, we pair it with al00
         return_list.append(
             SerialiserTracker(
-                SerialiserFactory.create_serialiser(protocol, schema, pv_name),
+                SerialiserFactory.create_serialiser(protocol, "al00", pv_name),
                 producer,
                 pv_name,
                 output_topic,
                 periodic_update_ms,
             )
-        )
-        if (
-            schema == "f144"
-        ):  # f144 does not forward EPICS status information, we pair it with al00
-            return_list.append(
-                SerialiserTracker(
-                    SerialiserFactory.create_serialiser(protocol, "al00", pv_name),
-                    producer,
-                    pv_name,
-                    output_topic,
-                    periodic_update_ms,
-                )
-            )
-    except KeyError:
-        raise ValueError(
-            f"Serialiser not found for protocol={protocol} schema={schema}"
         )
     # Connection status serialiser
     return_list.append(

@@ -33,7 +33,7 @@ def test_update_handler_throws_if_schema_not_recognised():
     producer = FakeProducer()
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         PVAUpdateHandler(
             context,
             "source_name",

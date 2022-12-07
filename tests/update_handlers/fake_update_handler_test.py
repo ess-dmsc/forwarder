@@ -11,7 +11,7 @@ from tests.kafka.fake_producer import FakeProducer
 def test_update_handler_throws_if_schema_not_recognised():
     producer = FakeProducer()
     non_existing_schema = "DOESNTEXIST"
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         FakeUpdateHandler(create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.FAKE), non_existing_schema, 20000)  # type: ignore
 
 
