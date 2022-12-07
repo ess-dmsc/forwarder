@@ -1,6 +1,5 @@
 import numpy as np
 from caproto import ChannelType
-from streaming_data_types.alarm_al00 import Severity as al00_Severity
 from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import (
     AlarmSeverity as f142_AlarmSeverity,
 )
@@ -43,13 +42,6 @@ epics_alarm_severity_to_f142 = {
     1: f142_AlarmSeverity.MINOR,
     2: f142_AlarmSeverity.MAJOR,
     3: f142_AlarmSeverity.INVALID,
-}
-
-epics_alarm_severity_to_al00 = {
-    0: al00_Severity.OK,
-    1: al00_Severity.MINOR,
-    2: al00_Severity.MAJOR,
-    3: al00_Severity.INVALID,
 }
 
 ca_alarm_status_to_f142 = {

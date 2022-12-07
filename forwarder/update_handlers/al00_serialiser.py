@@ -5,7 +5,6 @@ from caproto import AlarmStatus as CA_AlarmStatus
 from caproto import Message as CA_Message
 from streaming_data_types.alarm_al00 import Severity, serialise_al00
 
-from forwarder.epics_to_serialisable_types import epics_alarm_severity_to_al00
 from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
 from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 
@@ -30,7 +29,7 @@ class al00_CASerialiser(CASerialiser):
         self, update: CA_Message, **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         timestamp = seconds_to_nanoseconds(update.metadata.timestamp)
-        severity = epics_alarm_severity_to_al00[update.metadata.severity]
+        severity = Severity(update.metadata.severity)
         message = CA_AlarmStatus(update.metadata.status).name
         return _serialise(self._source_name, timestamp, severity, message)
 
@@ -50,6 +49,6 @@ class al00_PVASerialiser(PVASerialiser):
         timestamp = (
             update.timeStamp.secondsPastEpoch * 1_000_000_000
         ) + update.timeStamp.nanoseconds
-        severity = epics_alarm_severity_to_al00[update.alarm.severity]
+        severity = Severity(update.alarm.severity)
         message = update.alarm.message
         return _serialise(self._source_name, timestamp, severity, message)
