@@ -1,2 +1,12 @@
 [tool.black]
 exclude = '/(venv*|.tox)'
+
+[tool.pytest.ini_options]
+markers = [
+    "schema: Signals fixtures with the streaming-data-type of the test",
+    "serialiser_update_period_ms: Signals fixtures with the update period of any created Serialiser",
+]
+testpaths = [
+    "tests",
+    "integration",
+]
