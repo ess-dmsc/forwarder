@@ -25,3 +25,4 @@
 * Set the "facility" and "process_name" fields in the Graylog messages to "ESS" and "forwarder"
 * System tests renamed to integration tests
 * Repeated messages will now have the Kafka timestamp set to the current system time. This in an effort to reduce the load on the Kafka broker.
+* Adding the schema "se00", which is in an upgrade to the schema "senv" which could not handle floats/doubles.
