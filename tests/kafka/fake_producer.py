@@ -1,4 +1,4 @@
-from typing import Optional, Callable
+from typing import Callable, List, Optional
 
 
 class FakeProducer:
@@ -8,7 +8,7 @@ class FakeProducer:
 
     def __init__(self, produce_callback: Optional[Callable[[bytes], None]] = None):
         self.messages_published = 0
-        self.published_payload: Optional[bytes] = None
+        self.published_payloads: List[bytes] = []
         self._produce_callback = produce_callback
 
     def produce(
@@ -19,7 +19,7 @@ class FakeProducer:
         key: Optional[str] = None,
     ):
         self.messages_published += 1
-        self.published_payload = payload
+        self.published_payloads.append(payload)
         if self._produce_callback is not None:
             self._produce_callback(payload)
 

@@ -342,7 +342,7 @@ def test_handler_publishes_connection_state_change(exception, state_enum):
     pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(exception)
 
-    assert producer.published_payload is not None
+    assert len(producer.published_payloads) > 0
     assert result.status == state_enum  # type: ignore
     assert result.source_name == pv_source_name  # type: ignore
 
@@ -369,6 +369,6 @@ def test_connection_state_change_on_cancel():
     # "Cancelled" occurs when we intentionally disconnect the client,
     # we don't log this to Kafka as a connection state change
 
-    assert producer.published_payload is not None
+    assert len(producer.published_payloads) > 0
 
     pva_update_handler.stop()
