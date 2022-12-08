@@ -74,8 +74,8 @@ def producer():
 
 @pytest.fixture
 def pv_source_name():
-    sample = "source_" + "".join(random.choices(string.ascii_lowercase, k=6))
-    yield sample
+    name = "source_" + "".join(random.choices(string.ascii_lowercase, k=6))
+    yield name
 
 
 @pytest.mark.schema("f142")
