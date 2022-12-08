@@ -1,5 +1,6 @@
+import random
+import string
 import time
-from cmath import isclose
 from time import sleep
 from typing import List
 
@@ -44,91 +45,47 @@ def test_update_handler_throws_if_schema_not_recognised():
         CAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.CA))  # type: ignore
 
 
+@pytest.fixture
+def context(request, producer, pv_source_name):
+    context = FakeContext()
+    schema = request.node.get_closest_marker("schema").args[0]
+    update_period_ms = None
+    if request.node.get_closest_marker("serialiser_update_period_ms"):
+        update_period_ms = request.node.get_closest_marker(
+            "serialiser_update_period_ms"
+        ).args[0]
+
+    update_handler = CAUpdateHandler(
+        context,
+        pv_source_name,
+        create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA, update_period_ms),  # type: ignore
+    )
+    yield context
+
+    update_handler.stop()
+
+
+@pytest.fixture
+def producer():
+    producer = FakeProducer()
+    yield producer
+    producer.close()
+
+
+@pytest.fixture
+def pv_source_name():
+    sample = "source_" + "".join(random.choices(string.ascii_lowercase, k=6))
+    yield sample
+
+
+@pytest.mark.schema("f142")
 @pytest.mark.parametrize(
     "pv_value,pv_caproto_type,pv_numpy_type",
     [
         (4.2222, ChannelType.TIME_DOUBLE, np.dtype("float64")),
         (4.2, ChannelType.TIME_FLOAT, np.dtype("float32")),
-    ],
-)
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("f144", deserialise_f144),
-    ],
-)
-def test_update_handler_publishes_float_update(
-    pv_value, pv_caproto_type, pv_numpy_type, schema, deserialiser
-):
-    producer = FakeProducer()
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
-    metadata = (0, 0, TimeStamp(*epics_timestamp()))
-    context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(
-            np.array([pv_value]).astype(pv_numpy_type),
-            pv_caproto_type,
-            1,
-            1,
-            1,
-            metadata=metadata,
-        )
-    )
-
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
-    assert isclose(pv_update_output.value, pv_value, abs_tol=0.0001)
-    assert pv_update_output.source_name == pv_source_name
-
-    update_handler.stop()
-
-
-@pytest.mark.parametrize(
-    "pv_value,pv_caproto_type,pv_numpy_type",
-    [(1, ChannelType.TIME_LONG, np.int64), (-3, ChannelType.TIME_INT, np.int32)],
-)
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("f144", deserialise_f144),
-    ],
-)
-def test_update_handler_publishes_int_update(
-    pv_value, pv_caproto_type, pv_numpy_type, schema, deserialiser
-):
-    producer = FakeProducer()
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
-
-    metadata = (0, 0, TimeStamp(*epics_timestamp()))
-    context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(
-            np.array([pv_value]).astype(pv_numpy_type),
-            pv_caproto_type,
-            1,
-            1,
-            1,
-            metadata=metadata,
-        )
-    )
-
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
-    assert pv_update_output.value == pv_value
-    assert pv_update_output.source_name == pv_source_name
-
-    update_handler.stop()
-
-
-@pytest.mark.parametrize(
-    "pv_value,pv_caproto_type,pv_numpy_type",
-    [
+        (1, ChannelType.TIME_LONG, np.int64),
+        (-3, ChannelType.TIME_INT, np.int32),
         (
             np.array([1.1, 2.2, 3.3]).astype(np.float64),
             ChannelType.TIME_DOUBLE,
@@ -139,63 +96,88 @@ def test_update_handler_publishes_int_update(
             ChannelType.TIME_FLOAT,
             np.float32,
         ),
+        (0, ChannelType.TIME_ENUM, np.dtype("int32")),
     ],
 )
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("f144", deserialise_f144),
-    ],
-)
-def test_update_handler_publishes_floatarray_update(
-    pv_value, pv_caproto_type, pv_numpy_type, schema, deserialiser
+def test_update_handler_publishes_f142_update(
+    pv_value, pv_caproto_type, pv_numpy_type, context, producer, pv_source_name
 ):
-    producer = FakeProducer()
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
-
+    data_count = len(pv_value) if isinstance(pv_value, np.ndarray) else 1
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
             np.array([pv_value]).astype(pv_numpy_type),
             pv_caproto_type,
-            len(pv_value),
+            data_count,
             1,
             1,
             metadata=metadata,
         )
     )
 
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
+    assert len(producer.published_payloads) == 1
+    pv_update_output = deserialise_f142(producer.published_payloads[-1])
     assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
+    # assert pv_update_output.alarm_severity == f142_AlarmStatus.WRITE
+    # assert pv_update_output.alarm_status == f142_AlarmSeverity.MINOR
 
-    update_handler.stop()
 
-
+@pytest.mark.schema("f144")
 @pytest.mark.parametrize(
-    "schema,deserialiser",
+    "pv_value,pv_caproto_type,pv_numpy_type",
     [
-        ("f142", deserialise_f142),
-        ("al00", deserialise_al00),
+        (4.2222, ChannelType.TIME_DOUBLE, np.dtype("float64")),
+        (4.2, ChannelType.TIME_FLOAT, np.dtype("float32")),
+        (1, ChannelType.TIME_LONG, np.int64),
+        (-3, ChannelType.TIME_INT, np.int32),
+        (
+            np.array([1.1, 2.2, 3.3]).astype(np.float64),
+            ChannelType.TIME_DOUBLE,
+            np.float64,
+        ),
+        (
+            np.array([1.1, 2.2, 3.3]).astype(np.float32),
+            ChannelType.TIME_FLOAT,
+            np.float32,
+        ),
+        (0, ChannelType.TIME_ENUM, np.dtype("int32")),
     ],
 )
-def test_update_handler_publishes_alarm_update(schema, deserialiser):
-    producer = FakeProducer()
-    context = FakeContext()
+def test_update_handler_publishes_f144_update(
+    pv_value, pv_caproto_type, pv_numpy_type, context, producer, pv_source_name
+):
+    data_count = len(pv_value) if isinstance(pv_value, np.ndarray) else 1
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            data_count,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
 
+    # The assertions below assume that the f144 message was sent before the al00 one.
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f144(producer.published_payloads[-2])
+    assert np.allclose(pv_update_output.value, pv_value)
+    assert pv_update_output.source_name == pv_source_name
+    pv_update_alarm_output = deserialise_al00(producer.published_payloads[-1])
+    assert pv_update_alarm_output.source == pv_source_name
+    assert pv_update_alarm_output.severity == al00_Severity.OK
+    assert pv_update_alarm_output.message == "NO_ALARM"
+
+
+@pytest.mark.schema("f142")
+def test_update_handler_publishes_f142_alarm_update(context, producer, pv_source_name):
     pv_value = 42
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
-    pv_source_name = "source_name"
     alarm_status = 6  # AlarmStatus.LOW
     alarm_severity = 1  # AlarmSeverity.MINOR
-
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
 
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -209,41 +191,51 @@ def test_update_handler_publishes_alarm_update(schema, deserialiser):
         )
     )
 
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
-    if schema == "f142":
-        assert pv_update_output.source_name == pv_source_name
-        assert pv_update_output.value == pv_value
-        assert pv_update_output.alarm_status == f142_AlarmStatus.LOW
-        assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR
-    elif schema == "al00":
-        assert pv_update_output.source == pv_source_name
-        assert pv_update_output.message == AlarmStatus(alarm_status).name
-        assert pv_update_output.severity == al00_Severity.MINOR
-    else:
-        raise NotImplementedError
-
-    update_handler.stop()
+    assert len(producer.published_payloads) == 1
+    pv_update_output = deserialise_f142(producer.published_payloads[-1])
+    assert pv_update_output.source_name == pv_source_name
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.alarm_status == f142_AlarmStatus.LOW
+    assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR
 
 
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("f144", deserialise_f144),
-    ],
-)
-def test_update_handler_publishes_periodic_update(schema, deserialiser):
-    producer = FakeProducer()
-    context = FakeContext()
-
+@pytest.mark.schema("f144")
+def test_update_handler_publishes_f144_alarm_update(context, producer, pv_source_name):
     pv_value = 42
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
-    pv_source_name = "source_name"
+    alarm_status = 6  # AlarmStatus.LOW
+    alarm_severity = 1  # AlarmSeverity.MINOR
 
-    update_period_ms = 10
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA, update_period_ms))  # type: ignore
+    metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    # The assertions below assume that the f144 message was sent before the al00 one.
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_al00(producer.published_payloads[-1])
+    assert pv_update_output.source == pv_source_name
+    assert pv_update_output.message == AlarmStatus(alarm_status).name
+    assert pv_update_output.severity == al00_Severity.MINOR
+
+
+@pytest.mark.schema("f142")
+@pytest.mark.serialiser_update_period_ms(10)
+def test_update_handler_publishes_periodic_update_f142(
+    context, producer, pv_source_name
+):
+    pv_value = 42
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -256,8 +248,8 @@ def test_update_handler_publishes_periodic_update(schema, deserialiser):
         )
     )
 
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
+    assert len(producer.published_payloads) == 1
+    pv_update_output = deserialise_f142(producer.published_payloads[-1])
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
 
@@ -266,28 +258,48 @@ def test_update_handler_publishes_periodic_update(schema, deserialiser):
         producer.messages_published > 1
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
 
-    update_handler.stop()
+
+@pytest.mark.schema("f144")
+@pytest.mark.serialiser_update_period_ms(10)
+def test_update_handler_publishes_periodic_update_f144(
+    context, producer, pv_source_name
+):
+    pv_value = 44
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    # The assertions below assume that the f144 message was sent before the al00 one.
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f144(producer.published_payloads[-2])
+    assert pv_update_output.value == pv_value
+    assert pv_update_output.source_name == pv_source_name
+
+    sleep(0.05)
+    assert (
+        producer.messages_published > 2
+    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
 
 
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("al00", deserialise_al00),
-    ],
-)
-def test_update_handler_always_includes_alarm_status(schema, deserialiser):
-    producer = FakeProducer()
-    context = FakeContext()
-
+@pytest.mark.schema("f142")
+def test_update_handler_always_includes_alarm_status_f142(context, producer):
     pv_value = 42
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
-    pv_source_name = "source_name"
-    alarm_status = 6  # AlarmStatus.LOW
-    alarm_severity = 1  # AlarmSeverity.MINOR
+    alarm_status = 6  # f142_AlarmStatus.LOW
+    alarm_severity = 1  # al00_Severity.MINOR f142_AlarmSeverity.MINOR
 
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
@@ -312,40 +324,34 @@ def test_update_handler_always_includes_alarm_status(schema, deserialiser):
     )
 
     assert producer.messages_published == 2
-    pv_update_output = deserialiser(producer.published_payload)
-    if schema == "f142":
-        assert pv_update_output.alarm_status == f142_AlarmStatus.LOW
-        assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR
-    elif schema == "al00":
-        assert pv_update_output.message == AlarmStatus(alarm_status).name
-        assert pv_update_output.severity == al00_Severity.MINOR
-    else:
-        raise NotImplementedError
-
-    update_handler.stop()
+    pv_update_output = deserialise_f142(producer.published_payloads[-1])
+    assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR
+    assert pv_update_output.alarm_status == f142_AlarmStatus.LOW
 
 
-@pytest.mark.parametrize(
-    "schema,deserialiser",
-    [
-        ("f142", deserialise_f142),
-        ("f144", deserialise_f144),
-    ],
-)
-def test_update_handler_publishes_enum_update(schema, deserialiser):
-    producer = FakeProducer()
-    context = FakeContext()
+@pytest.mark.schema("f144")
+def test_update_handler_always_includes_alarm_status_f144(context, producer):
+    pv_value = 44
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    alarm_status = 6  # f142_AlarmStatus.LOW
+    alarm_severity = 1  # al00_Severity.MINOR f142_AlarmSeverity.MINOR
 
-    pv_caproto_type = ChannelType.TIME_ENUM
-    pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA))  # type: ignore
-
-    # Nothing gets published when ENUM type update is received, the handler will resubscribe using STRING
-    # type as the string is more useful to forwarder to the filewriter than the enum int
-    metadata = (0, 0, TimeStamp(*epics_timestamp()))
+    metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
         ReadNotifyResponse(
-            np.array([0]),
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+    # Second update, with unchanged alarm
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
             pv_caproto_type,
             1,
             1,
@@ -354,25 +360,18 @@ def test_update_handler_publishes_enum_update(schema, deserialiser):
         )
     )
 
-    assert producer.messages_published == 1
-    assert producer.published_payload is not None
-    pv_update_output = deserialiser(producer.published_payload)
-    assert pv_update_output.value == 0
-    assert pv_update_output.source_name == pv_source_name
-
-    update_handler.stop()
+    assert producer.messages_published == 4
+    pv_update_output = deserialise_al00(producer.published_payloads[-1])
+    assert pv_update_output.severity == al00_Severity.MINOR
+    assert pv_update_output.message == "LOW"
 
 
-def test_empty_update_is_not_forwarded():
-    producer = FakeProducer()
-    context = FakeContext()
-
+@pytest.mark.schema("tdct")
+def test_empty_update_is_not_forwarded(context, producer, pv_source_name):
     pv_value = [1, 2, 3]
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
-    pv_source_name = "chopper"
 
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.CA))  # type: ignore
     metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
     # First update, with non-empty timestamp array
@@ -404,12 +403,10 @@ def test_empty_update_is_not_forwarded():
     assert (
         producer.messages_published == 1
     ), "Expected only the one PV update with non-empty value array to have been published"
-    pv_update_output = deserialise_tdct(producer.published_payload)
+    pv_update_output = deserialise_tdct(producer.published_payloads[-1])
     assert (
         pv_update_output.timestamps.size > 0
     ), "Expected the published PV update not to be empty"
-
-    update_handler.stop()
 
 
 def test_empty_update_is_not_cached():
@@ -424,28 +421,34 @@ def test_empty_update_is_not_cached():
 
     # Set an update period to enable PV update caching, so that we can test
     auto_update_period = 5000
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.CA, auto_update_period))  # type: ignore
-    metadata = (0, 0, TimeStamp(*epics_timestamp()))
-
-    # Update with empty timestamp array
-    context.call_monitor_callback_with_fake_pv_update(
-        ReadNotifyResponse(
-            np.array([empty_pv_value]).astype(pv_numpy_type),
-            pv_caproto_type,
-            len(empty_pv_value),
-            1,
-            1,
-            metadata=metadata,
+    try:
+        update_handler = CAUpdateHandler(
+            context,
+            pv_source_name,
+            create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.CA, auto_update_period),  # type: ignore
         )
-    )
+        metadata = (0, 0, TimeStamp(*epics_timestamp()))
 
-    assert (
-        update_handler.serialiser_tracker_list[0]._cached_update is None
-    ), "Expected the empty update not to have been cached"
+        # Update with empty timestamp array
+        context.call_monitor_callback_with_fake_pv_update(
+            ReadNotifyResponse(
+                np.array([empty_pv_value]).astype(pv_numpy_type),
+                pv_caproto_type,
+                len(empty_pv_value),
+                1,
+                1,
+                metadata=metadata,
+            )
+        )
 
-    update_handler.stop()
+        assert (
+            update_handler.serialiser_tracker_list[0]._cached_update is None
+        ), "Expected the empty update not to have been cached"
+    finally:
+        update_handler.stop()
 
 
+@pytest.mark.schema("f144")
 @pytest.mark.parametrize(
     "state_string,state_enum",
     [
@@ -458,18 +461,12 @@ def test_empty_update_is_not_cached():
         ("some_unrecognised", ConnectionInfo.UNKNOWN),
     ],
 )
-def test_handler_publishes_connection_state_change(state_string, state_enum):
-    producer = FakeProducer()
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-    update_handler = CAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.CA))  # type: ignore
-
+def test_handler_publishes_connection_state_change(
+    state_string, state_enum, context, producer, pv_source_name
+):
     context.call_connection_state_callback_with_fake_state_change(state_string)
 
-    assert producer.published_payload is not None
-    connect_state_output = deserialise_ep01(producer.published_payload)
+    assert len(producer.published_payloads) > 0
+    connect_state_output = deserialise_ep01(producer.published_payloads[-1])
     assert connect_state_output.status == state_enum
     assert connect_state_output.source_name == pv_source_name
-
-    update_handler.stop()
