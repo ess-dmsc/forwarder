@@ -11,7 +11,7 @@ from tests.kafka.fake_producer import FakeProducer
 def test_update_handler_throws_if_schema_not_recognised():
     producer = FakeProducer()
     non_existing_schema = "DOESNTEXIST"
-    with pytest.raises(ValueError):
+    with pytest.raises(KeyError):
         FakeUpdateHandler(create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.FAKE), non_existing_schema, 20000)  # type: ignore
 
 
@@ -31,13 +31,14 @@ def test_update_handler_publishes_update():
     producer = FakeProducer(check_payload)
 
     pv_source_name = "source_name"
-    fake_update_handler = FakeUpdateHandler(create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.FAKE), "f142", 100)  # type: ignore
-    fake_update_handler._timer_callback()
+    try:
+        fake_update_handler = FakeUpdateHandler(create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.FAKE), "f142", 100)  # type: ignore
+        fake_update_handler._timer_callback()
 
-    assert got_f142
-    assert pv_name == pv_source_name
-
-    fake_update_handler.stop()
+        assert got_f142
+        assert pv_name == pv_source_name
+    finally:
+        fake_update_handler.stop()
 
 
 def test_update_handler_publishes_tdct_update():
@@ -55,10 +56,11 @@ def test_update_handler_publishes_tdct_update():
 
     producer = FakeProducer(check_payload)
     pv_source_name = "source_name"
-    fake_update_handler = FakeUpdateHandler(create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.FAKE), "tdct", 100)  # type: ignore
-    fake_update_handler._timer_callback()
+    try:
+        fake_update_handler = FakeUpdateHandler(create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.FAKE), "tdct", 100)  # type: ignore
+        fake_update_handler._timer_callback()
 
-    assert got_tdct
-    assert pv_name == pv_source_name
-
-    fake_update_handler.stop()
+        assert got_tdct
+        assert pv_name == pv_source_name
+    finally:
+        fake_update_handler.stop()

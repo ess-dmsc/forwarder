@@ -56,7 +56,7 @@ def test_when_multiple_pvs_dumped_config_contains_all_pv_details():
 
     store.save_configuration(CHANNELS_TO_STORE)
 
-    stored_message = parse_config_update(producer.published_payload)  # type: ignore
+    stored_message = parse_config_update(producer.published_payloads[-1])  # type: ignore
     stored_channels = stored_message.channels
 
     assert_stored_channel_correct(stored_channels[0])  # type: ignore
@@ -69,7 +69,7 @@ def test_when_no_pvs_stored_message_type_is_remove_all():
 
     store.save_configuration({})
 
-    stored_message = parse_config_update(producer.published_payload)  # type: ignore
+    stored_message = parse_config_update(producer.published_payloads[-1])  # type: ignore
 
     assert stored_message.channels is None
     assert (

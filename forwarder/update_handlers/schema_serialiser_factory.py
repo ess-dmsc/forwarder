@@ -1,6 +1,10 @@
 from typing import Callable, Dict, Iterable, Union
 
 from forwarder.common import EpicsProtocol
+from forwarder.update_handlers.al00_serialiser import (
+    al00_CASerialiser,
+    al00_PVASerialiser,
+)
 from forwarder.update_handlers.ep01_serialiser import (
     ep01_CASerialiser,
     ep01_PVASerialiser,
@@ -8,6 +12,10 @@ from forwarder.update_handlers.ep01_serialiser import (
 from forwarder.update_handlers.f142_serialiser import (
     f142_CASerialiser,
     f142_PVASerialiser,
+)
+from forwarder.update_handlers.f144_serialiser import (
+    f144_CASerialiser,
+    f144_PVASerialiser,
 )
 from forwarder.update_handlers.no_op_serialiser import (
     no_op_CASerialiser,
@@ -26,26 +34,32 @@ class SerialiserFactory:
 
     _schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
         EpicsProtocol.CA: {
-            "f142": f142_CASerialiser,
-            "tdct": tdct_CASerialiser,
-            "no_op": no_op_CASerialiser,
+            "al00": al00_CASerialiser,
             "ep01": ep01_CASerialiser,
+            "f142": f142_CASerialiser,
+            "f144": f144_CASerialiser,
+            "no_op": no_op_CASerialiser,
+            "tdct": tdct_CASerialiser,
         },
         EpicsProtocol.FAKE: {
-            "f142": f142_PVASerialiser,
-            "tdct": tdct_PVASerialiser,
-            "nttable_senv": nttable_senv_PVASerialiser,
-            "nttable_se00": nttable_se00_PVASerialiser,
-            "no_op": no_op_PVASerialiser,
+            "al00": al00_PVASerialiser,
             "ep01": ep01_PVASerialiser,
+            "f142": f142_PVASerialiser,
+            "f144": f144_PVASerialiser,
+            "no_op": no_op_PVASerialiser,
+            "nttable_se00": nttable_se00_PVASerialiser,
+            "nttable_senv": nttable_senv_PVASerialiser,
+            "tdct": tdct_PVASerialiser,
         },
         EpicsProtocol.PVA: {
-            "f142": f142_PVASerialiser,
-            "tdct": tdct_PVASerialiser,
-            "nttable_senv": nttable_senv_PVASerialiser,
-            "nttable_se00": nttable_se00_PVASerialiser,
-            "no_op": no_op_PVASerialiser,
+            "al00": al00_PVASerialiser,
             "ep01": ep01_PVASerialiser,
+            "f142": f142_PVASerialiser,
+            "f144": f144_PVASerialiser,
+            "no_op": no_op_PVASerialiser,
+            "nttable_se00": nttable_se00_PVASerialiser,
+            "nttable_senv": nttable_senv_PVASerialiser,
+            "tdct": tdct_PVASerialiser,
         },
     }
 

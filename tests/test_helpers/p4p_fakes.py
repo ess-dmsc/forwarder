@@ -19,7 +19,7 @@ class FakeContext:
 
     def call_monitor_callback_with_fake_pv_update(
         self, pv_update: Union[Value, Exception]
-    ):
+    ) -> None:
         self.callback(pv_update)
 
     def makeRequest(self, request_string: str) -> None:
