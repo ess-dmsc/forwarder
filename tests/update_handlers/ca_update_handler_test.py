@@ -99,7 +99,7 @@ def test_update_handler_publishes_f142_update(
     )
 
     assert len(producer.published_payloads) == 1
-    pv_update_output = deserialise_f142(producer.published_payloads[-1])
+    pv_update_output = deserialise_f142(producer.published_payloads[0])
     assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
     # assert pv_update_output.alarm_severity == f142_AlarmStatus.WRITE
