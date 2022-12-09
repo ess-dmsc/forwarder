@@ -1,5 +1,6 @@
 import random
 import string
+from typing import Union
 
 import pytest
 
@@ -14,6 +15,7 @@ from tests.test_helpers.p4p_fakes import FakeContext as PVAFakeContext
 
 @pytest.fixture
 def context(request, producer, pv_source_name):
+    context: Union[CAFakeContext, PVAFakeContext]
     schema = request.node.get_closest_marker("schema").args[0]
     epics_protocol = request.node.get_closest_marker("epics_protocol").args[0]
     update_period_ms = None
