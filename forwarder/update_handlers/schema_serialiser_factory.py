@@ -21,6 +21,7 @@ from forwarder.update_handlers.no_op_serialiser import (
     no_op_CASerialiser,
     no_op_PVASerialiser,
 )
+from forwarder.update_handlers.nttable_se00_serialiser import nttable_se00_PVASerialiser
 from forwarder.update_handlers.nttable_senv_serialiser import nttable_senv_PVASerialiser
 from forwarder.update_handlers.schema_serialisers import CASerialiser, PVASerialiser
 from forwarder.update_handlers.tdct_serialiser import (
@@ -46,6 +47,7 @@ class SerialiserFactory:
             "f142": f142_PVASerialiser,
             "f144": f144_PVASerialiser,
             "no_op": no_op_PVASerialiser,
+            "nttable_se00": nttable_se00_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "tdct": tdct_PVASerialiser,
         },
@@ -55,6 +57,7 @@ class SerialiserFactory:
             "f142": f142_PVASerialiser,
             "f144": f144_PVASerialiser,
             "no_op": no_op_PVASerialiser,
+            "nttable_se00": nttable_se00_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "tdct": tdct_PVASerialiser,
         },
