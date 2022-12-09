@@ -149,7 +149,7 @@ def test_update_handler_publishes_f144_update(
 
     # The assertions below assume that the f144 message was sent before the al00 one.
     assert len(producer.published_payloads) == 2
-    pv_update_output = deserialise_f144(producer.published_payloads[-2])
+    pv_update_output = deserialise_f144(producer.published_payloads[0])
     assert np.allclose(pv_update_output.value, pv_value)
     assert pv_update_output.source_name == pv_source_name
     pv_update_alarm_output = deserialise_al00(producer.published_payloads[-1])
