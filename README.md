@@ -73,13 +73,20 @@ Support for serialising and deserialising these messages in Python in available 
 
 The schema takes two parameters: the type of configuration change (UpdateType) and the corresponding streams.
 
-A stream contains the name of the PV to be forwarded, the EPICS protocol for reading the PV, the Kafka topic to write to and
-the FlatBuffers schema to encode the PV value with.
-
 There are three choices for the UpdateType of the configuration message:
  * ADD - add the specified streams to the existing set of streams
  * REMOVE - remove the specified streams from the set of streams
  * REMOVEALL - remove all streams
+
+A stream contains:
+ * The name of the PV to be forwarded.
+ * The EPICS protocol for reading the PV.
+ * The Kafka topic to write to.
+ * The FlatBuffers schema to encode the PV value with. See the supported schemas [here](forwarder/update_handlers/schema_serialiser_factory.py#L24).
+   * Note that additional messages with different schemas may be configured by the forwarder 
+     automatically. In particular, every PV will also generate `ep01` messages, and PVs 
+     configured for `f144` will forward alarm information as `al00` messages.
+
 
 Note that when removing (using REMOVE) configured streams, not all fields in the `Stream` table of the schema need to be populated.
 Missing or empty strings in the channel name, output topic and schema fields match all stream configurations.
@@ -123,10 +130,11 @@ producer = Producer({"bootstrap.servers": CONFIG_BROKER})
 # Add new streams
 producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, STREAMS))
 
-# Remove one stream
-# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, STREAMS[:-1]))
+# Remove one stream (note that you need to pass the argument as a list)
+# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, [STREAMS[0]]))
 
 # Remove all the streams at once
+#   USE WITH CAUTION!!
 # producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
 
 producer.flush()
