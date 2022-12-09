@@ -1,5 +1,3 @@
-import random
-import string
 import time
 from time import sleep
 from typing import List
@@ -32,6 +30,10 @@ from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.ca_fakes import FakeContext
 
+# Set the epics protocol for all tests in this module.
+# The epics_protocol mark is used by the context creation fixture.
+pytestmark = pytest.mark.epics_protocol(EpicsProtocol.CA)
+
 
 def epics_timestamp():
     return timestamp_to_epics(time.time())
@@ -42,50 +44,30 @@ def test_update_handler_throws_if_schema_not_recognised():
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
     with pytest.raises(ValueError):
-        CAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.CA))  # type: ignore
-
-
-@pytest.fixture
-def context(request, producer, pv_source_name):
-    context = FakeContext()
-    schema = request.node.get_closest_marker("schema").args[0]
-    update_period_ms = None
-    if request.node.get_closest_marker("serialiser_update_period_ms"):
-        update_period_ms = request.node.get_closest_marker(
-            "serialiser_update_period_ms"
-        ).args[0]
-
-    update_handler = CAUpdateHandler(
-        context,
-        pv_source_name,
-        create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA, update_period_ms),  # type: ignore
-    )
-    yield context
-
-    update_handler.stop()
-
-
-@pytest.fixture
-def producer():
-    producer = FakeProducer()
-    yield producer
-    producer.close()
-
-
-@pytest.fixture
-def pv_source_name():
-    name = "source_" + "".join(random.choices(string.ascii_lowercase, k=6))
-    yield name
+        CAUpdateHandler(
+            context,
+            "source_name",
+            create_serialiser_list(
+                producer,  # type: ignore
+                "source_name",
+                "output_topic",
+                non_existing_schema,
+                EpicsProtocol.CA,
+            ),
+        )
 
 
 @pytest.mark.schema("f142")
 @pytest.mark.parametrize(
     "pv_value,pv_caproto_type,pv_numpy_type",
     [
+        # float
         (4.2222, ChannelType.TIME_DOUBLE, np.dtype("float64")),
         (4.2, ChannelType.TIME_FLOAT, np.dtype("float32")),
+        # int
         (1, ChannelType.TIME_LONG, np.int64),
         (-3, ChannelType.TIME_INT, np.int32),
+        # floatarray
         (
             np.array([1.1, 2.2, 3.3]).astype(np.float64),
             ChannelType.TIME_DOUBLE,
@@ -96,6 +78,7 @@ def pv_source_name():
             ChannelType.TIME_FLOAT,
             np.float32,
         ),
+        # enum
         (0, ChannelType.TIME_ENUM, np.dtype("int32")),
     ],
 )
@@ -127,10 +110,13 @@ def test_update_handler_publishes_f142_update(
 @pytest.mark.parametrize(
     "pv_value,pv_caproto_type,pv_numpy_type",
     [
+        # float
         (4.2222, ChannelType.TIME_DOUBLE, np.dtype("float64")),
         (4.2, ChannelType.TIME_FLOAT, np.dtype("float32")),
+        # int
         (1, ChannelType.TIME_LONG, np.int64),
         (-3, ChannelType.TIME_INT, np.int32),
+        # floatarray
         (
             np.array([1.1, 2.2, 3.3]).astype(np.float64),
             ChannelType.TIME_DOUBLE,
@@ -141,6 +127,7 @@ def test_update_handler_publishes_f142_update(
             ChannelType.TIME_FLOAT,
             np.float32,
         ),
+        # enum
         (0, ChannelType.TIME_ENUM, np.dtype("int32")),
     ],
 )

@@ -1,12 +1,15 @@
 [tool.black]
 exclude = '/(venv*|.tox)'
 
+
 [tool.pytest.ini_options]
 markers = [
-    "schema: Signals fixtures with the streaming-data-type of the test",
-    "serialiser_update_period_ms: Signals fixtures with the update period of any created Serialiser",
+    "epics_protocol: (EpicsProtocol) The protocol used for the test",
+    "schema: (str) The streaming-data-type of the test",
+    "serialiser_update_period_ms: (int) Update period (ms) for any created Serialiser",
 ]
 testpaths = [
     "tests",
-    "integration",
 ]
+addopts = "-s"
+junit_family = "xunit2"

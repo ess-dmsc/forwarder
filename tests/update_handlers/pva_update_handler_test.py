@@ -1,4 +1,3 @@
-from cmath import isclose
 from time import sleep, time
 from typing import List
 
@@ -6,10 +5,17 @@ import numpy as np
 import pytest
 from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from p4p.nt import NTEnum, NTScalar
+from streaming_data_types.alarm_al00 import Severity as al00_Severity
+from streaming_data_types.alarm_al00 import deserialise_al00
 from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
-from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import AlarmSeverity
-from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import AlarmStatus
+from streaming_data_types.fbschemas.logdata_f142.AlarmSeverity import (
+    AlarmSeverity as f142_AlarmSeverity,
+)
+from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import (
+    AlarmStatus as f142_AlarmStatus,
+)
 from streaming_data_types.logdata_f142 import deserialise_f142
+from streaming_data_types.logdata_f144 import deserialise_f144
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
 from forwarder.common import EpicsProtocol
@@ -18,38 +24,35 @@ from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
 from tests.kafka.fake_producer import FakeProducer
 from tests.test_helpers.p4p_fakes import FakeContext
 
+# Set the epics protocol for all tests in this module.
+# The epics_protocol mark is used by the context creation fixture.
+pytestmark = pytest.mark.epics_protocol(EpicsProtocol.PVA)
+
 
 def test_update_handler_throws_if_schema_not_recognised():
     producer = FakeProducer()
     context = FakeContext()
     non_existing_schema = "DOESNTEXIST"
     with pytest.raises(ValueError):
-        PVAUpdateHandler(context, "source_name", create_serialiser_list(producer, "source_name", "output_topic", non_existing_schema, EpicsProtocol.PVA))  # type: ignore
+        PVAUpdateHandler(
+            context,
+            "source_name",
+            create_serialiser_list(
+                producer,  # type: ignore
+                "source_name",
+                "output_topic",
+                non_existing_schema,
+                EpicsProtocol.PVA,
+            ),
+        )
 
 
-def test_update_handler_publishes_enum_update():
-    context = FakeContext()
-
-    source_name = ""
-    got_value = None
-
-    def check_payload(payload):
-        nonlocal source_name, got_value
-        try:
-            result = deserialise_f142(payload)
-            source_name = result.source_name
-            got_value = result.value
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-
+@pytest.mark.schema("f142")
+def test_update_handler_publishes_enum_update_f142(context, producer, pv_source_name):
     pv_index = 0
-    pv_value_str = "choice0"
+    pv_value_str = f"choice{pv_index}"
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTEnum(valueAlarm=True).wrap(
             {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
@@ -57,140 +60,116 @@ def test_update_handler_publishes_enum_update():
         )
     )
 
-    assert got_value == 0
-    assert source_name == pv_source_name
+    # The assertions below assume that an ep01 message is sent after the f142
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f142(producer.published_payloads[-2])
+    assert np.allclose(pv_update_output.value, pv_index)
+    assert pv_update_output.source_name == pv_source_name
 
-    pva_update_handler.stop()
 
-
-@pytest.mark.parametrize("pv_value,pv_type", [(4.2222, "d"), (4.2, "f")])
-def test_update_handler_publishes_float_update(pv_value, pv_type):
-    context = FakeContext()
-
-    source_name = ""
-    got_value = 0.0
-
-    def check_payload(payload):
-        nonlocal source_name, got_value
-        try:
-            result = deserialise_f142(payload)
-            source_name = result.source_name
-            got_value = result.value
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-
+@pytest.mark.schema("f144")
+def test_update_handler_publishes_enum_update_f144(context, producer, pv_source_name):
+    pv_index = 0
+    pv_value_str = f"choice{pv_index}"
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTEnum(valueAlarm=True).wrap(
+            {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
+            timestamp=pv_timestamp_s,
+        )
     )
 
-    assert isclose(got_value, pv_value, abs_tol=0.0001)
-    assert source_name == pv_source_name
-
-    pva_update_handler.stop()
-
-
-@pytest.mark.parametrize(
-    "pv_value,pv_type",
-    [(1, "l"), (2, "L"), (-3, "i"), (4, "I"), (-5, "h"), (6, "H"), (-7, "b"), (8, "B")],
-)
-def test_update_handler_publishes_int_update(pv_value, pv_type):
-    context = FakeContext()
-
-    source_name = ""
-    got_value = None
-
-    def check_payload(payload):
-        nonlocal source_name, got_value
-        try:
-            result = deserialise_f142(payload)
-            source_name = result.source_name
-            got_value = result.value
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-
-    pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
-
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
-    context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
-    )
-
-    assert got_value == pv_value
-    assert source_name == pv_source_name
-
-    pva_update_handler.stop()
+    # The assertions below assume that an ep01 message is sent after the f142 and al00
+    assert len(producer.published_payloads) == 3
+    pv_update_output = deserialise_f144(producer.published_payloads[-3])
+    assert np.allclose(pv_update_output.value, pv_index)
+    assert pv_update_output.source_name == pv_source_name
 
 
+@pytest.mark.schema("f142")
 @pytest.mark.parametrize(
     "pv_value,pv_type",
     [
+        # float
+        (4.2222, "d"),
+        (4.2, "f"),
+        # int
+        (1, "l"),
+        (2, "L"),
+        (-3, "i"),
+        (4, "I"),
+        (-5, "h"),
+        (6, "H"),
+        (-7, "b"),
+        (8, "B"),
+        # floatarray
         (np.array([1.1, 2.2, 3.3], dtype=np.float64), "ad"),
         (np.array([1.1, 2.2, 3.3], dtype=np.float32), "af"),
     ],
 )
-def test_update_handler_publishes_floatarray_update(pv_value, pv_type):
-    context = FakeContext()
-
-    source_name = ""
-    got_value = None
-
-    def check_payload(payload):
-        nonlocal source_name, got_value
-        try:
-            result = deserialise_f142(payload)
-            source_name = result.source_name
-            got_value = result.value
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-
+def test_update_handler_publishes_scalar_update_f142(
+    pv_value, pv_type, context, producer, pv_source_name
+):
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
 
-    assert np.allclose(got_value, pv_value)
-    assert source_name == pv_source_name
+    # The assertions below assume that an ep01 message is sent after the f142
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f142(producer.published_payloads[-2])
+    assert np.allclose(pv_update_output.value, pv_value)
+    assert pv_update_output.source_name == pv_source_name
 
-    pva_update_handler.stop()
+
+@pytest.mark.schema("f144")
+@pytest.mark.parametrize(
+    "pv_value,pv_type",
+    [
+        # float
+        (4.2222, "d"),
+        (4.2, "f"),
+        # int
+        (1, "l"),
+        (2, "L"),
+        (-3, "i"),
+        (4, "I"),
+        (-5, "h"),
+        (6, "H"),
+        (-7, "b"),
+        (8, "B"),
+        # floatarray
+        (np.array([1.1, 2.2, 3.3], dtype=np.float64), "ad"),
+        (np.array([1.1, 2.2, 3.3], dtype=np.float32), "af"),
+    ],
+)
+def test_update_handler_publishes_scalar_update_f144(
+    pv_value, pv_type, context, producer, pv_source_name
+):
+    pv_timestamp_s = time()  # seconds from unix epoch
+
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
+
+    # The assertions below assume that an ep01 message is sent after the f142
+    assert len(producer.published_payloads) == 3
+    pv_update_output = deserialise_f144(producer.published_payloads[-3])
+    assert np.allclose(pv_update_output.value, pv_value)
+    assert pv_update_output.source_name == pv_source_name
 
 
-def test_update_handler_publishes_alarm_update():
-    context = FakeContext()
-
-    result = None
-
-    def check_payload(payload):
-        nonlocal result
-        try:
-            result = deserialise_f142(payload)
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-
+@pytest.mark.schema("f142")
+def test_update_handler_publishes_alarm_update_f142(context, producer, pv_source_name):
     pv_value = 42
     pv_type = "i"
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
     alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
-    alarm_severity = 1  # AlarmSeverity.MINOR
+    alarm_severity = 1  # f142_AlarmSeverity.MINOR
     alarm_message = "HIGH_ALARM"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(
             {
@@ -207,74 +186,107 @@ def test_update_handler_publishes_alarm_update():
         )
     )
 
-    assert result.value == pv_value  # type: ignore
-    assert result.source_name == pv_source_name  # type: ignore
-    assert result.alarm_status == AlarmStatus.HIGH  # type: ignore
-    assert result.alarm_severity == AlarmSeverity.MINOR  # type: ignore
+    # The assertions below assume that an ep01 message is sent after the f142
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f142(producer.published_payloads[-2])
+    assert pv_update_output.source_name == pv_source_name
+    assert pv_update_output.alarm_status == f142_AlarmStatus.HIGH  # type: ignore
+    assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR  # type: ignore
 
-    pva_update_handler.stop()
 
-
-def test_update_handler_publishes_periodic_update():
-    result = None
-
-    def check_payload(payload):
-        nonlocal result
-        try:
-            result = deserialise_f142(payload)
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-    context = FakeContext()
-
+@pytest.mark.schema("f144")
+def test_update_handler_publishes_alarm_update_f144(context, producer, pv_source_name):
+    pv_value = 44
+    pv_type = "i"
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
+    alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
+    alarm_severity = 1  # f142_AlarmSeverity.MINOR al00_Severity.MINOR
+    alarm_message = "HIGH_ALARM"
+
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            {
+                "value": pv_value,
+                "alarm": {
+                    "status": alarm_status,
+                    "severity": alarm_severity,
+                    "message": alarm_message,
+                },
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
+        )
+    )
+
+    # The assertions below assume that an ep01 message is sent after the f144+al00
+    assert len(producer.published_payloads) == 3
+    pv_update_output = deserialise_al00(producer.published_payloads[-2])
+    assert pv_update_output.source == pv_source_name
+    assert pv_update_output.severity == al00_Severity.MINOR
+    assert pv_update_output.message == alarm_message
+
+
+@pytest.mark.schema("f142")
+@pytest.mark.serialiser_update_period_ms(10)
+def test_update_handler_publishes_periodic_update_f142(
+    context, producer, pv_source_name
+):
     pv_value = -3
     pv_type = "i"
+    pv_timestamp_s = time()  # seconds from unix epoch
 
-    update_period_ms = 10
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA, update_period_ms))  # type: ignore
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
 
-    assert result.value == pv_value  # type: ignore
-    assert result.source_name == pv_source_name  # type: ignore
+    # The assertions below assume that an ep01 message is sent after the f142
+    assert len(producer.published_payloads) == 2
+    pv_update_output = deserialise_f142(producer.published_payloads[-2])
+    assert np.allclose(pv_update_output.value, pv_value)
+    assert pv_update_output.source_name == pv_source_name
 
     sleep(0.05)
     assert (
-        producer.messages_published > 1
+        len(producer.published_payloads) >= 3
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
 
-    pva_update_handler.stop()
 
-
-def test_empty_update_is_not_forwarded():
-    result = None
-
-    def check_payload(payload):
-        nonlocal result
-        try:
-            result = deserialise_tdct(payload)
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-    context = FakeContext()
-
+@pytest.mark.schema("f144")
+@pytest.mark.serialiser_update_period_ms(10)
+def test_update_handler_publishes_periodic_update_f144(
+    context, producer, pv_source_name
+):
+    pv_value = -3
+    pv_type = "i"
     pv_timestamp_s = time()  # seconds from unix epoch
-    pv_source_name = "source_name"
+
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+    )
+
+    # The assertions below assume that an ep01 message is sent after the f144+al00
+    assert len(producer.published_payloads) == 3
+    pv_update_output = deserialise_f144(producer.published_payloads[-3])
+    assert pv_update_output.source_name == pv_source_name
+    assert np.allclose(pv_update_output.value, pv_value)
+
+    sleep(0.05)
+    assert (
+        len(producer.published_payloads) >= 4
+    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
+
+
+@pytest.mark.schema("tdct")
+def test_empty_update_is_not_forwarded(context, producer, pv_source_name):
+    pv_timestamp_s = time()  # seconds from unix epoch
     pv_value = [1, 2, 3]
     pv_type = "ai"
-
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
 
     # First update with non-empty value
     context.call_monitor_callback_with_fake_pv_update(
         NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
     )
-
     # Second update, with empty value
     empty_pv_value: List = []
     context.call_monitor_callback_with_fake_pv_update(
@@ -286,11 +298,10 @@ def test_empty_update_is_not_forwarded():
     assert (
         producer.messages_published == 2
     ), "Expected only two PV updates with non-empty value array to have been published (tdct + ep01)"
+    pv_update_output = deserialise_tdct(producer.published_payloads[-2])
     assert (
-        result.timestamps.size > 0  # type: ignore
+        pv_update_output.timestamps.size > 0  # type: ignore
     ), "Expected the published PV update not to be empty"
-
-    pva_update_handler.stop()
 
 
 def test_empty_update_is_not_cached():
@@ -302,18 +313,20 @@ def test_empty_update_is_not_cached():
     pv_value: List = []
     pv_type = "ai"
 
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
-    context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
-    )
+    try:
+        pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
+        context.call_monitor_callback_with_fake_pv_update(
+            NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        )
 
-    assert (
-        pva_update_handler.serialiser_tracker_list[0]._cached_update is None
-    ), "Expected the empty update not to have been cached"
+        assert (
+            pva_update_handler.serialiser_tracker_list[0]._cached_update is None
+        ), "Expected the empty update not to have been cached"
+    finally:
+        pva_update_handler.stop()
 
-    pva_update_handler.stop()
 
-
+@pytest.mark.schema("f144")
 @pytest.mark.parametrize(
     "exception,state_enum",
     [
@@ -324,51 +337,21 @@ def test_empty_update_is_not_cached():
         (RuntimeError("some unrecognised exception"), ConnectionInfo.UNKNOWN),
     ],
 )
-def test_handler_publishes_connection_state_change(exception, state_enum):
-    result = None
-
-    def check_payload(payload):
-        nonlocal result
-        try:
-            result = deserialise_ep01(payload)
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
+def test_handler_publishes_connection_state_change(
+    exception, state_enum, context, producer, pv_source_name
+):
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert len(producer.published_payloads) > 0
-    assert result.status == state_enum  # type: ignore
-    assert result.source_name == pv_source_name  # type: ignore
+    pv_update_output = deserialise_ep01(producer.published_payloads[-1])
+    assert pv_update_output.status == state_enum  # type: ignore
+    assert pv_update_output.source_name == pv_source_name  # type: ignore
 
-    pva_update_handler.stop()
 
-
-def test_connection_state_change_on_cancel():
-    result = None
-
-    def check_payload(payload):
-        nonlocal result
-        try:
-            result = deserialise_ep01(payload)
-        except Exception:
-            pass
-
-    producer = FakeProducer(check_payload)
-    context = FakeContext()
-
-    pv_source_name = "source_name"
-
-    pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "f142", EpicsProtocol.PVA))  # type: ignore
+@pytest.mark.schema("f144")
+def test_connection_state_change_on_cancel(context, producer, pv_source_name):
     context.call_monitor_callback_with_fake_pv_update(Cancelled())
     # "Cancelled" occurs when we intentionally disconnect the client,
     # we don't log this to Kafka as a connection state change
 
     assert len(producer.published_payloads) > 0
-
-    pva_update_handler.stop()
