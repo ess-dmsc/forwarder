@@ -200,7 +200,7 @@ def test_update_handler_publishes_alarm_update_f144(context, producer, pv_source
     pv_type = "i"
     pv_timestamp_s = time()  # seconds from unix epoch
     alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
-    alarm_severity = 1  # f142_AlarmSeverity.MINOR al00_Severity.MINOR
+    alarm_severity = 1  # al00_Severity.MINOR
     alarm_message = "HIGH_ALARM"
 
     context.call_monitor_callback_with_fake_pv_update(

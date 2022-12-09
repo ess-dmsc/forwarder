@@ -192,7 +192,7 @@ def test_update_handler_publishes_f144_alarm_update(context, producer, pv_source
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
     alarm_status = 6  # AlarmStatus.LOW
-    alarm_severity = 1  # AlarmSeverity.MINOR
+    alarm_severity = 1  # al00_Severity.MINOR
 
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -285,7 +285,7 @@ def test_update_handler_always_includes_alarm_status_f142(context, producer):
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
     alarm_status = 6  # f142_AlarmStatus.LOW
-    alarm_severity = 1  # al00_Severity.MINOR f142_AlarmSeverity.MINOR
+    alarm_severity = 1  # f142_AlarmSeverity.MINOR
 
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -321,8 +321,8 @@ def test_update_handler_always_includes_alarm_status_f144(context, producer):
     pv_value = 44
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
-    alarm_status = 6  # f142_AlarmStatus.LOW
-    alarm_severity = 1  # al00_Severity.MINOR f142_AlarmSeverity.MINOR
+    alarm_status = 6  # AlarmStatus.LOW
+    alarm_severity = 1  # al00_Severity.MINOR
 
     metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
     context.call_monitor_callback_with_fake_pv_update(
@@ -350,7 +350,7 @@ def test_update_handler_always_includes_alarm_status_f144(context, producer):
     assert producer.messages_published == 4
     pv_update_output = deserialise_al00(producer.published_payloads[-1])
     assert pv_update_output.severity == al00_Severity.MINOR
-    assert pv_update_output.message == "LOW"
+    assert pv_update_output.message == AlarmStatus(alarm_status).name
 
 
 @pytest.mark.schema("tdct")
