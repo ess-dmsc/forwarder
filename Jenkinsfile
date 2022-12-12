@@ -3,7 +3,7 @@ import ecdcpipeline.ContainerBuildNode
 import ecdcpipeline.PipelineBuilder
 
 container_build_nodes = [
-  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc8')
+  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.2-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
 ]
 
 // Define number of old builds to keep.
@@ -35,8 +35,7 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Dependencies") {
     container.sh """
-      /opt/miniconda/bin/conda init bash
-      export PATH=/opt/miniconda/bin:$PATH
+      which python
       python --version
       python -m pip install --user -r ${pipeline_builder.project}/requirements-dev.txt
     """
@@ -44,7 +43,6 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Formatting (black) ") {
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m black --check .
     """
@@ -52,7 +50,6 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Static Analysis (flake8) ") {
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m flake8
     """
@@ -60,7 +57,6 @@ builders = pipeline_builder.createBuilders { container ->
 
   pipeline_builder.stage("${container.key}: Type Checking (mypy) ") {
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
       cd ${pipeline_builder.project}
       python -m mypy .
     """
@@ -69,9 +65,9 @@ builders = pipeline_builder.createBuilders { container ->
   pipeline_builder.stage("${container.key}: Test") {
     def test_output = "TestResults.xml"
     container.sh """
-      export PATH=/opt/miniconda/bin:$PATH
-      python --version
       cd ${pipeline_builder.project}
+      pyenv local 3.7 3.8 3.9
+      pyenv versions
       python -m tox -- --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
     container.copyFrom("${pipeline_builder.project}/${test_output}", ".")
