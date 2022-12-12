@@ -4,7 +4,7 @@
 pre-commit
 pytest
 pytest-cov
-tox==3.27.1
+tox==4.0.8
 tox-pyenv
 wheel
 # Pin to match versions in precommit hooks
