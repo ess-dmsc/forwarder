@@ -1,6 +1,5 @@
 from typing import Tuple, Union
 
-import numpy as np
 import p4p
 from streaming_data_types.array_1d_se00 import serialise_se00
 
@@ -28,8 +27,6 @@ class nttable_se00_PVASerialiser(PVASerialiser):
             )
         tables = update.value.items()
         values = tables[column_headers.index("value")][1]
-        if np.issubdtype(values.dtype, np.floating):
-            values = values.round().astype(np.int64)
         timestamps = tables[column_headers.index("timestamp")][1]
         if len(timestamps) == 0:
             return None, None
