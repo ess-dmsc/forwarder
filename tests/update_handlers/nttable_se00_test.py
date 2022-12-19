@@ -7,16 +7,14 @@ from forwarder.update_handlers.nttable_se00_serialiser import nttable_se00_PVASe
 
 
 def test_serialise_nttable_se00():
-    values = np.arange(-50, 50, dtype=np.int16)
+    values = np.arange(-50, 50, 11, dtype=np.float32)
     timestamps = np.arange(50, 150, dtype=np.uint64)
-
     table = NTTable.buildType(
         columns=[
-            ("column0", "ah"),
+            ("column0", "af"),
             ("column1", "aL"),
-        ]
+        ],
     )
-
     update = Value(
         table,
         {
