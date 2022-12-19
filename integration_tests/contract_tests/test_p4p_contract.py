@@ -356,6 +356,7 @@ def test_on_update_only_get_changeset():
             result = response
 
     ctx = Context("pva", nt=False)
+    ctx.put("SIMPLE:DOUBLE3", 20, wait=True)
     ctx.put("SIMPLE:DOUBLE3.EGU", "M", wait=True)
 
     request = ctx.makeRequest("field(value,timeStamp,alarm,control,display)")
@@ -391,11 +392,11 @@ def test_on_update_only_get_changeset():
 
     assert result["display"]["units"] == "K"
 
-    # Values not in the change set will have "default" values
-    assert result["value"] == 0
-    assert result["alarm"]["severity"] == 0
-    assert result["alarm"]["status"] == 0
-    assert result["alarm"]["message"] == ""
+    # Values not in the change set will retain the last read values
+    assert result["value"] == 20
+    assert result["alarm"]["severity"] == 2
+    assert result["alarm"]["status"] == 1
+    assert result["alarm"]["message"] == "HIHI"
 
     subscription.close()
     ctx.close()
