@@ -174,7 +174,9 @@ if __name__ == "__main__":
     )
 
     version = get_version()
-    get_logger().info(f"Forwarder v{version} started, service Id: {args.service_id}")
+    get_logger().info(
+        f"Forwarder version '{version}' started, service Id: {args.service_id}"
+    )
     # EPICS
     ca_ctx = CaContext()
     pva_ctx = PvaContext("pva", nt=False)

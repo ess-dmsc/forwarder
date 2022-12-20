@@ -116,3 +116,7 @@ ignore_errors = true
 module = "integration_tests.smoke_tests.*"
 ignore_errors = true
 
+[[tool.mypy.overrides]]
+module = "attr.*"
+ignore_errors = true
+
