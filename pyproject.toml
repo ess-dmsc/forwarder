@@ -1,3 +1,12 @@
+[project]
+name = "forwarder"
+version = "development"
+homepage = "https://github.com/ess-dmsc/forwarder"
+repository = "https://github.com/ess-dmsc/forwarder"
+license = { file="LICENSE" }
+readme = {file = ["README.md"]}
+requires-python = ">=3.8"
+
 [tool.black]
 exclude = '/(venv*|.tox)'
 
@@ -24,6 +33,13 @@ testpaths = [
 ]
 addopts = "-s"
 junit_family = "xunit2"
+
+[tool.coverage.run]
+branch = true
+source = ["forwarder"]
+
+[tool.coverage.report]
+show_missing = true
 
 [tool.tox]
 legacy_tox_ini = """
