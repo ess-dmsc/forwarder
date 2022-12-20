@@ -30,3 +30,64 @@ deps =
 commands =
     python -m pytest {posargs}
 """
+
+[tool.mypy]
+python_version = 3.7
+check_untyped_defs = true
+
+[[tool.mypy.overrides]]
+module = "confluent_kafka.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "streaming_data_types.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "numpy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "graypy.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "caproto.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "pytest.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "p4p.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "configargparse.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "setuptools.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "flatbuffers.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "integration_tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "forwarder.repeat_timer.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "contract_tests.*"
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = "integration_tests.smoke_tests.*"
+ignore_errors = true
+
