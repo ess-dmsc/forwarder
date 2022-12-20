@@ -1,7 +1,6 @@
 [tool.black]
 exclude = '/(venv*|.tox)'
 
-
 [tool.pytest.ini_options]
 markers = [
     "epics_protocol: (EpicsProtocol) The protocol used for the test",
@@ -13,3 +12,18 @@ testpaths = [
 ]
 addopts = "-s"
 junit_family = "xunit2"
+
+[tool.tox]
+legacy_tox_ini = """
+    [tox]
+    envlist = py38, py39, py310
+    isolated_build = true
+    skipsdist=true
+
+    [testenv]
+    deps =
+        -r{toxinidir}/requirements.txt
+        -r{toxinidir}/requirements-dev.txt
+    commands =
+        python -m pytest {posargs}
+"""
