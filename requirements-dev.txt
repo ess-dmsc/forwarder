@@ -4,7 +4,7 @@
 pre-commit
 pytest
 pytest-cov
-tox==3.27.1
+tox==3.28.0
 tox-pyenv
 wheel
 Flake8-pyproject
