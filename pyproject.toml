@@ -4,6 +4,15 @@ exclude = '/(venv*|.tox)'
 [tool.isort]
 profile = "black"
 
+[tool.flake8]
+ignore = ["E501", "E203", "E402", "W503", "Q000", "W293"]
+# E501 & E203: Formatting handled by Black
+# E402 complains about imports not being at the top
+# W503 complains about splitting if across lines which conflicts with Black
+# Q000 complains about using "" and not '' which conflicts with Black
+# W293 blank lines with whitespace, conflicts with Black in doc comments
+exclude = ["f142_logdata", "README.md"]
+
 [tool.pytest.ini_options]
 markers = [
     "epics_protocol: (EpicsProtocol) The protocol used for the test",

@@ -9,7 +9,7 @@ repos:
     hooks:
     - id: flake8
 -   repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v0.790
+    rev: v0.991
     hooks:
     - id: mypy
 -   repo: https://github.com/pycqa/isort

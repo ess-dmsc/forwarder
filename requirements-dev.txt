@@ -7,6 +7,7 @@ pytest-cov
 tox==3.27.1
 tox-pyenv
 wheel
+Flake8-pyproject
 # Pin to match versions in precommit hooks
 black==22.10.0
 flake8==5.0.4
