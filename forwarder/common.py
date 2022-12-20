@@ -1,7 +1,7 @@
+from dataclasses import dataclass
 from enum import Enum
 from typing import Optional, Tuple
 
-import attr
 from streaming_data_types.fbschemas.forwarder_config_update_rf5k.Protocol import (
     Protocol,
 )
@@ -25,19 +25,19 @@ class EpicsProtocol(Enum):
 
 
 # Using frozen=True makes instances of Channel immutable
-# and means attrs generates a __hash__ method so that we can use it as a dictionary key
-@attr.s(frozen=True)
+# and means it generates a __hash__ method so that we can use it as a dictionary key
+@dataclass(frozen=True)
 class Channel:
-    name = attr.ib(type=Optional[str])
-    protocol = attr.ib(type=EpicsProtocol)
-    output_topic = attr.ib(type=Optional[str])
-    schema = attr.ib(type=Optional[str])
+    name: Optional[str]
+    protocol: EpicsProtocol
+    output_topic: Optional[str]
+    schema: Optional[str]
 
 
-@attr.s(frozen=True)
+@dataclass(frozen=True)
 class ConfigUpdate:
-    command_type = attr.ib(type=CommandType)
-    channels = attr.ib(type=Optional[Tuple[Channel, ...]])
+    command_type: CommandType
+    channels: Optional[Tuple[Channel, ...]]
 
 
 config_change_to_command_type = {
