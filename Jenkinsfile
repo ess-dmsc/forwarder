@@ -3,7 +3,7 @@ import ecdcpipeline.ContainerBuildNode
 import ecdcpipeline.PipelineBuilder
 
 container_build_nodes = [
-  'centos7': new ContainerBuildNode('dockerregistry.esss.dk/ecdc_group/build-node-images/centos7-build-node:10.0.4-dev', '/usr/bin/scl enable devtoolset-11 rh-python38 -- /bin/bash -e -x')
+  'centos7': ContainerBuildNode.getDefaultContainerBuildNode('centos7-gcc11')
 ]
 
 // Define number of old builds to keep.
