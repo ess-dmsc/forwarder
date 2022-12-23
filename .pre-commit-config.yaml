@@ -5,11 +5,12 @@ repos:
     - id: black
       language_version: python3
 -   repo: https://github.com/pycqa/flake8
-    rev: 5.0.4
+    rev: 6.0.0
     hooks:
     - id: flake8
+      additional_dependencies: [Flake8-pyproject]
 -   repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v0.790
+    rev: v0.991
     hooks:
     - id: mypy
 -   repo: https://github.com/pycqa/isort

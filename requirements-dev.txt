@@ -4,13 +4,14 @@
 pre-commit
 pytest
 pytest-cov
-tox==3.27.1
+tox==3.28.0
 tox-pyenv
 wheel
+Flake8-pyproject
 # Pin to match versions in precommit hooks
 black==22.10.0
 flake8==6.0.0
-mypy==v0.790
+mypy==v0.991
 isort==5.10.1
 
 # For integration tests

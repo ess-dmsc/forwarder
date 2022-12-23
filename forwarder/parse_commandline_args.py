@@ -1,9 +1,9 @@
-import configparser
 import logging
 from os import getpid
 from pathlib import Path
 
 import configargparse
+import tomli
 
 
 class VersionArgParser(configargparse.ArgumentParser):
@@ -22,12 +22,12 @@ class VersionArgParser(configargparse.ArgumentParser):
 
 def get_version() -> str:
     """
-    Gets the current version from the setup.cfg file
+    Gets the current version from the pyproject file
     """
-    config = configparser.ConfigParser()
-    path = Path(__file__).parent.parent / "setup.cfg"
-    config.read(path)
-    return str(config["metadata"]["version"])
+    path = Path(__file__).parent.parent / "pyproject.toml"
+    with open(path, "rb") as file:
+        config = tomli.load(file)
+    return str(config["project"]["version"])
 
 
 def _print_version_if_requested():
