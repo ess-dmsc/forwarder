@@ -9,7 +9,7 @@ tox-pyenv
 wheel
 Flake8-pyproject
 # Pin to match versions in precommit hooks
-black==22.10.0
+black==22.12.0
 flake8==6.0.0
 mypy==v0.991
 isort==5.11.4
