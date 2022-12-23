@@ -12,7 +12,7 @@ Flake8-pyproject
 black==22.10.0
 flake8==6.0.0
 mypy==v0.991
-isort==5.10.1
+isort==5.11.4
 
 # For integration tests
 docker-compose
