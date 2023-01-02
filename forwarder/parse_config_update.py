@@ -1,6 +1,5 @@
 from typing import Generator, List
 
-from flatbuffers.packer import struct as flatbuffer_struct
 from streaming_data_types.exceptions import WrongSchemaException
 from streaming_data_types.forwarder_config_update_rf5k import (
     StreamInfo,
@@ -24,17 +23,17 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
         config_update = deserialise_rf5k(config_update_payload)
         command_type = config_change_to_command_type[config_update.config_change]
-    except (RuntimeError, flatbuffer_struct.error):
-        logger.warning(
-            "Unable to deserialise payload of received configuration update message"
-        )
-        return ConfigUpdate(CommandType.INVALID, None)
     except WrongSchemaException:
         logger.warning("Ignoring received message as it had the wrong schema")
         return ConfigUpdate(CommandType.INVALID, None)
     except KeyError:
         logger.warning(
             "Unrecognised configuration change type in configuration update message"
+        )
+        return ConfigUpdate(CommandType.INVALID, None)
+    except Exception:
+        logger.warning(
+            "Unable to deserialise payload of received configuration update message"
         )
         return ConfigUpdate(CommandType.INVALID, None)
 
