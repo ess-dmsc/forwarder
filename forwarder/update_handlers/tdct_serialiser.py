@@ -79,6 +79,8 @@ class tdct_PVASerialiser(PVASerialiser):
             raise RuntimeError(
                 f'Unable to extract TDC data from EPICS type: "{update.getID()}"'
             )
+        if update.value is None:
+            return None, None
         try:
             if update.value.size == 0:
                 return None, None

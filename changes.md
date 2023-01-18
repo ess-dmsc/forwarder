@@ -2,7 +2,7 @@
 
 ## Next
 
-* ...
+* Updating tdct to handle empty arrays coming from EPICS
 
 ## v2.0.0
 
