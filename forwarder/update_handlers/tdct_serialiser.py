@@ -79,14 +79,13 @@ class tdct_PVASerialiser(PVASerialiser):
             raise RuntimeError(
                 f'Unable to extract TDC data from EPICS type: "{update.getID()}"'
             )
-        if isinstance(update.value, type(None)):
+        if update.value is None:
             return None, None
-        else:
-            try:
-                if update.value.size == 0:
-                    return None, None
-            except AttributeError:
-                pass
+        try:
+            if update.value.size == 0:
+                return None, None
+        except AttributeError:
+            pass
         data_type = numpy_type_from_p4p_type[update.type()["value"][-1]]
         value_arr = np.squeeze(np.array(update.value)).astype(data_type)
         return self._serialise(value_arr, origin_time)
