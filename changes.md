@@ -6,6 +6,7 @@
 
 ## v2.0.0
 
+* Updating tdct to handle empty arrays coming from EPICS
 * Using ep01 instead of ep00 for EPICS connection events.
 * Adding the schema "se00", which is in an upgrade to the schema "senv" which could not handle floats/doubles.
 * Added support for f144 and al00 schemas.
