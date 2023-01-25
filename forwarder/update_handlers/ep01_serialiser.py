@@ -88,9 +88,9 @@ class ep01_PVASerialiser(PVASerialiser):
 
         if (
             self._conn_status == ConnectionInfo.NEVER_CONNECTED
-            and conn_status == ConnectionInfo.DISCONNECTED
+            and conn_status != ConnectionInfo.CONNECTED
         ):
-            return _serialise(self._source_name, self._conn_status, timestamp)
+            return None, None
 
         self._conn_status = conn_status
         return _serialise(self._source_name, self._conn_status, timestamp)

@@ -23,7 +23,7 @@ def _test_serialise_start(pv_name, serialiser):
     assert fb_update.status == ConnectionInfo.NEVER_CONNECTED
 
 
-def create_value_update(reference_timestamp):
+def _create_value_update(reference_timestamp):
     test_data = np.array([-3, -2, -1]).astype(np.int32)
     update = NTScalar("ai").wrap(test_data)
     update.timeStamp.secondsPastEpoch = 0
@@ -38,18 +38,18 @@ def test_serialise_pva_start():
     return _test_serialise_start(pv_name, serialiser)
 
 
-def test_if_disconnected_and_never_connected_send_never_connected():
+def test_if_disconnected_and_never_connected_returns_none():
     serialiser = ep01_PVASerialiser("some_pv")
 
-    message, _ = serialiser.serialise(p4p.client.thread.Disconnected())
+    message, timestamp = serialiser.serialise(p4p.client.thread.Disconnected())
 
-    fb_update = deserialise_ep01(message)
-    assert fb_update.status == ConnectionInfo.NEVER_CONNECTED
+    assert message is None
+    assert timestamp is None
 
 
 def test_serialise_pva_value():
     reference_timestamp = 10
-    update = create_value_update(reference_timestamp)
+    update = _create_value_update(reference_timestamp)
 
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
@@ -64,7 +64,7 @@ def test_serialise_pva_value():
 
 def test_if_state_unchanged_then_message_is_none():
     reference_timestamp = 10
-    update = create_value_update(reference_timestamp)
+    update = _create_value_update(reference_timestamp)
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
     # First update
@@ -86,12 +86,12 @@ def test_if_state_unchanged_then_message_is_none():
         (RemoteError(), ConnectionInfo.REMOTE_ERROR),
     ],
 )
-def test_serialise_pva_exception(exception, state_enum):
+def test_connected_to_exception_transition(exception, state_enum):
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
 
     # First prime with a value update
-    serialiser.serialise(create_value_update(123))
+    serialiser.serialise(_create_value_update(123))
 
     # Now try the exception
     message, timestamp = serialiser.serialise(exception)
@@ -103,10 +103,13 @@ def test_serialise_pva_exception(exception, state_enum):
     assert fb_update.status == state_enum
 
 
-def test_serialise_pva_unknown():
+def test_serialise_nonsense_returns_unknown():
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
-    message, timestamp = serialiser.serialise(3.14)
+    # First prime with a value update
+    serialiser.serialise(_create_value_update(123))
+
+    message, timestamp = serialiser.serialise("nonsense")
 
     fb_update = deserialise_ep01(message)
 
