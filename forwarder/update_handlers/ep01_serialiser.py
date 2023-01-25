@@ -62,6 +62,7 @@ class ep01_PVASerialiser(PVASerialiser):
         self._source_name = source_name
         self._conn_status: ConnectionInfo = ConnectionInfo.NEVER_CONNECTED
         self._conn_state_map = {
+            p4p.Value: ConnectionInfo.CONNECTED,
             Cancelled: ConnectionInfo.CANCELLED,
             Disconnected: ConnectionInfo.DISCONNECTED,
             RemoteError: ConnectionInfo.REMOTE_ERROR,
