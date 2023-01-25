@@ -23,11 +23,7 @@ def _test_serialise_start(pv_name, serialiser):
     assert fb_update.status == ConnectionInfo.NEVER_CONNECTED
 
 
-<<<<<<< HEAD
 def _create_value_update(reference_timestamp):
-=======
-def create_value_update(reference_timestamp):
->>>>>>> 6749501 (added test that would have flagged bug and improved existing tests)
     test_data = np.array([-3, -2, -1]).astype(np.int32)
     update = NTScalar("ai").wrap(test_data)
     update.timeStamp.secondsPastEpoch = 0
@@ -42,7 +38,6 @@ def test_serialise_pva_start():
     return _test_serialise_start(pv_name, serialiser)
 
 
-<<<<<<< HEAD
 def test_if_disconnected_and_never_connected_returns_none():
     serialiser = ep01_PVASerialiser("some_pv")
 
@@ -50,24 +45,11 @@ def test_if_disconnected_and_never_connected_returns_none():
 
     assert message is None
     assert timestamp is None
-=======
-def test_if_disconnected_and_never_connected_send_never_connected():
-    serialiser = ep01_PVASerialiser("some_pv")
-
-    message, _ = serialiser.serialise(p4p.client.thread.Disconnected())
-
-    fb_update = deserialise_ep01(message)
-    assert fb_update.status == ConnectionInfo.NEVER_CONNECTED
->>>>>>> 6749501 (added test that would have flagged bug and improved existing tests)
 
 
 def test_serialise_pva_value():
     reference_timestamp = 10
-<<<<<<< HEAD
     update = _create_value_update(reference_timestamp)
-=======
-    update = create_value_update(reference_timestamp)
->>>>>>> 6749501 (added test that would have flagged bug and improved existing tests)
 
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
@@ -82,11 +64,7 @@ def test_serialise_pva_value():
 
 def test_if_state_unchanged_then_message_is_none():
     reference_timestamp = 10
-<<<<<<< HEAD
     update = _create_value_update(reference_timestamp)
-=======
-    update = create_value_update(reference_timestamp)
->>>>>>> 6749501 (added test that would have flagged bug and improved existing tests)
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
     # First update
@@ -113,11 +91,7 @@ def test_connected_to_exception_transition(exception, state_enum):
     serialiser = ep01_PVASerialiser(pv_name)
 
     # First prime with a value update
-<<<<<<< HEAD
     serialiser.serialise(_create_value_update(123))
-=======
-    serialiser.serialise(create_value_update(123))
->>>>>>> 6749501 (added test that would have flagged bug and improved existing tests)
 
     # Now try the exception
     message, timestamp = serialiser.serialise(exception)
