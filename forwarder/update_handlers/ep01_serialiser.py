@@ -72,13 +72,13 @@ class ep01_PVASerialiser(PVASerialiser):
     def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        timestamp = seconds_to_nanoseconds(time.time())
+
         if isinstance(update, p4p.Value):
             timestamp = (
                 update.timeStamp.secondsPastEpoch * 1_000_000_000
                 + update.timeStamp.nanoseconds
             )
-        else:
-            timestamp = seconds_to_nanoseconds(time.time())
 
         conn_status = self.conn_state_map.get(type(update), ConnectionInfo.UNKNOWN)
 
@@ -86,12 +86,13 @@ class ep01_PVASerialiser(PVASerialiser):
             # Nothing has changed
             return None, None
 
-        if not (
+        if (
             self._conn_status == ConnectionInfo.NEVER_CONNECTED
             and conn_status == ConnectionInfo.DISCONNECTED
         ):
-            self._conn_status = conn_status
+            return _serialise(self._source_name, self._conn_status, timestamp)
 
+        self._conn_status = conn_status
         return _serialise(self._source_name, self._conn_status, timestamp)
 
     def start_state_serialise(self):
