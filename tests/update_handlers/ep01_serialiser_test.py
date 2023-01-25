@@ -103,6 +103,25 @@ def test_connected_to_exception_transition(exception, state_enum):
     assert fb_update.status == state_enum
 
 
+@pytest.mark.parametrize(
+    "exception,state_enum",
+    [
+        (Disconnected(), ConnectionInfo.DISCONNECTED),
+        (Cancelled(), ConnectionInfo.CANCELLED),
+        (Finished(), ConnectionInfo.FINISHED),
+        (RemoteError(), ConnectionInfo.REMOTE_ERROR),
+    ],
+)
+def test_if_never_connected_then_exceptions_returns_none(exception, state_enum):
+    pv_name = "some_pv"
+    serialiser = ep01_PVASerialiser(pv_name)
+
+    message, timestamp = serialiser.serialise(exception)
+
+    assert message is None
+    assert timestamp is None
+
+
 def test_serialise_nonsense_returns_unknown():
     pv_name = "some_pv"
     serialiser = ep01_PVASerialiser(pv_name)
