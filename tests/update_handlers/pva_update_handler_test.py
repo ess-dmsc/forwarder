@@ -337,9 +337,17 @@ def test_empty_update_is_not_cached():
         (RuntimeError("some unrecognised exception"), ConnectionInfo.UNKNOWN),
     ],
 )
-def test_handler_publishes_connection_state_change(
+def test_handler_publishes_non_connection_state_when_moving_from_connected(
     exception, state_enum, context, producer, pv_source_name
 ):
+    # Connect first
+    context.call_monitor_callback_with_fake_pv_update(
+        NTEnum(valueAlarm=True).wrap(
+            {"index": 0, "choices": ["choice", "choice1", "choice2"]},
+            timestamp=time(),
+        )
+    )
+
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert len(producer.published_payloads) > 0
@@ -349,9 +357,19 @@ def test_handler_publishes_connection_state_change(
 
 
 @pytest.mark.schema("f144")
-def test_connection_state_change_on_cancel(context, producer, pv_source_name):
-    context.call_monitor_callback_with_fake_pv_update(Cancelled())
-    # "Cancelled" occurs when we intentionally disconnect the client,
-    # we don't log this to Kafka as a connection state change
+@pytest.mark.parametrize(
+    "exception,state_enum",
+    [
+        (Disconnected(), ConnectionInfo.DISCONNECTED),
+        (Cancelled(), ConnectionInfo.CANCELLED),
+        (Finished(), ConnectionInfo.FINISHED),
+        (RemoteError(), ConnectionInfo.REMOTE_ERROR),
+        (RuntimeError("some unrecognised exception"), ConnectionInfo.UNKNOWN),
+    ],
+)
+def test_handler_does_not_publish_if_never_connected(
+    exception, state_enum, context, producer, pv_source_name
+):
+    context.call_monitor_callback_with_fake_pv_update(exception)
 
-    assert len(producer.published_payloads) > 0
+    assert len(producer.published_payloads) == 0

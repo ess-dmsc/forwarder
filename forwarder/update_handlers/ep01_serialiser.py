@@ -80,7 +80,7 @@ class ep01_PVASerialiser(PVASerialiser):
                 + update.timeStamp.nanoseconds
             )
 
-        conn_status = self.conn_state_map.get(type(update), ConnectionInfo.UNKNOWN)
+        conn_status = self._conn_state_map.get(type(update), ConnectionInfo.UNKNOWN)
 
         if conn_status == self._conn_status:
             # Nothing has changed
