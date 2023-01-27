@@ -62,6 +62,7 @@ class ep01_PVASerialiser(PVASerialiser):
         self._source_name = source_name
         self._conn_status: ConnectionInfo = ConnectionInfo.NEVER_CONNECTED
         self._conn_state_map = {
+            p4p.Value: ConnectionInfo.CONNECTED,
             Cancelled: ConnectionInfo.CANCELLED,
             Disconnected: ConnectionInfo.DISCONNECTED,
             RemoteError: ConnectionInfo.REMOTE_ERROR,
@@ -71,22 +72,28 @@ class ep01_PVASerialiser(PVASerialiser):
     def serialise(
         self, update: Union[p4p.Value, RuntimeError], **unused
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
+        timestamp = seconds_to_nanoseconds(time.time())
+
         if isinstance(update, p4p.Value):
             timestamp = (
                 update.timeStamp.secondsPastEpoch * 1_000_000_000
                 + update.timeStamp.nanoseconds
             )
-            if self._conn_status == ConnectionInfo.CONNECTED:
-                return None, None
-            elif self._conn_status == ConnectionInfo.NEVER_CONNECTED:
-                self._conn_status = ConnectionInfo.CONNECTED
-                return _serialise(self._source_name, self._conn_status, timestamp)
-        self._conn_status = self._conn_state_map.get(
-            type(update), ConnectionInfo.UNKNOWN
-        )
-        return _serialise(
-            self._source_name, self._conn_status, seconds_to_nanoseconds(time.time())
-        )
+
+        conn_status = self._conn_state_map.get(type(update), ConnectionInfo.UNKNOWN)
+
+        if conn_status == self._conn_status:
+            # Nothing has changed
+            return None, None
+
+        if (
+            self._conn_status == ConnectionInfo.NEVER_CONNECTED
+            and conn_status != ConnectionInfo.CONNECTED
+        ):
+            return None, None
+
+        self._conn_status = conn_status
+        return _serialise(self._source_name, self._conn_status, timestamp)
 
     def start_state_serialise(self):
         from forwarder.kafka.kafka_helpers import seconds_to_nanoseconds
