@@ -1,6 +1,6 @@
 caproto == 1.0.0
 p4p == 4.1.5
-confluent_kafka == 1.9.2
+confluent_kafka == 2.0.2
 graypy == 2.1.0
 graphyte == 1.7.1
 numpy >= 1.19
