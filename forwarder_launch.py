@@ -25,7 +25,11 @@ from forwarder.utils import Counter
 
 
 def create_epics_producer(
-    broker_uri, broker_sasl_password, update_message_counter, update_buffer_err_counter
+    broker_uri,
+    broker_sasl_password,
+    update_message_counter,
+    update_buffer_err_counter,
+    update_delivery_err_counter,
 ):
     (
         broker,
@@ -40,6 +44,7 @@ def create_epics_producer(
         broker_sasl_password,
         counter=update_message_counter,
         buffer_err_counter=update_buffer_err_counter,
+        delivery_err_counter=update_delivery_err_counter,
     )
     return producer
 
@@ -129,6 +134,7 @@ def create_statistics_reporter(
     update_handlers,
     update_message_counter,
     update_buffer_err_counter,
+    update_delivery_err_counter,
     logger,
     statistics_update_interval,
 ):
@@ -141,6 +147,7 @@ def create_statistics_reporter(
         update_handlers,
         update_message_counter,  # type: ignore
         update_buffer_err_counter,  # type: ignore
+        update_delivery_err_counter,  # type: ignore
         logger,
         prefix=prefix,
         update_interval_s=statistics_update_interval,
@@ -188,6 +195,7 @@ if __name__ == "__main__":
     grafana_carbon_address = args.grafana_carbon_address
     update_message_counter = Counter() if grafana_carbon_address else None
     update_buffer_err_counter = Counter() if grafana_carbon_address else None
+    update_delivery_err_counter = Counter() if grafana_carbon_address else None
 
     with ExitStack() as exit_stack:
 
@@ -197,6 +205,7 @@ if __name__ == "__main__":
             args.output_broker_sasl_password,
             update_message_counter,
             update_buffer_err_counter,
+            update_delivery_err_counter,
         )
         exit_stack.callback(producer.close)
 
@@ -223,6 +232,7 @@ if __name__ == "__main__":
                 update_handlers,
                 update_message_counter,
                 update_buffer_err_counter,
+                update_delivery_err_counter,
                 get_logger(),
                 args.statistics_update_interval,
             )
