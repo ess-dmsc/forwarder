@@ -48,7 +48,9 @@ class StatisticsReporter:
                 "data_loss_errors", self._update_buffer_err_counter.value, timestamp
             )
             self._sender.send(
-                "kafka_delivery_errors", self._update_delivery_err_counter.value, timestamp
+                "kafka_delivery_errors",
+                self._update_delivery_err_counter.value,
+                timestamp,
             )
         except Exception as ex:
             self._logger.error(f"Could not send statistic: {ex}")
