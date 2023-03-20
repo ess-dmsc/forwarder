@@ -13,10 +13,12 @@ class KafkaProducer:
         producer: confluent_kafka.Producer,
         update_msg_counter: Optional[Counter] = None,
         update_buffer_err_counter: Optional[Counter] = None,
+        update_delivery_err_counter: Optional[Counter] = None,
     ):
         self._producer = producer
         self._update_msg_counter = update_msg_counter
         self._update_buffer_err_counter = update_buffer_err_counter
+        self._update_delivery_err_counter = update_delivery_err_counter
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
@@ -41,6 +43,8 @@ class KafkaProducer:
         def ack(err, _):
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
+                if self._update_delivery_err_counter:
+                    self._update_delivery_err_counter.increment()
             else:
                 # increment only for PVs related updates
                 # key is None when we send commands.

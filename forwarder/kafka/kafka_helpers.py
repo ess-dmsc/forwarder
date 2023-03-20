@@ -43,6 +43,7 @@ def create_producer(
     password: Optional[str] = None,
     counter: Optional[Counter] = None,
     buffer_err_counter: Optional[Counter] = None,
+    delivery_err_counter: Optional[Counter] = None,
 ) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
@@ -55,6 +56,7 @@ def create_producer(
         producer,
         update_msg_counter=counter,
         update_buffer_err_counter=buffer_err_counter,
+        update_delivery_err_counter=delivery_err_counter,
     )
 
 
