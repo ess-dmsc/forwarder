@@ -190,7 +190,6 @@ if __name__ == "__main__":
     update_buffer_err_counter = Counter() if grafana_carbon_address else None
 
     with ExitStack() as exit_stack:
-
         # Kafka
         producer = create_epics_producer(
             args.output_broker,

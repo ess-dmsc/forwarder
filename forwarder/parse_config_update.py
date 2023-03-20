@@ -56,7 +56,6 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 def _parse_streams(
     command_type: CommandType, streams: List[StreamInfo]
 ) -> Generator[Channel, None, None]:
-
     for stream in streams:
         fields_present = (bool(stream.channel), bool(stream.schema), bool(stream.topic))
         if command_type == CommandType.ADD and not all(fields_present):
