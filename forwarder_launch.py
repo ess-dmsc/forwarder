@@ -25,7 +25,11 @@ from forwarder.utils import Counter
 
 
 def create_epics_producer(
-    broker_uri, broker_sasl_password, update_message_counter, update_buffer_err_counter, update_delivery_err_counter
+    broker_uri,
+    broker_sasl_password,
+    update_message_counter,
+    update_buffer_err_counter,
+    update_delivery_err_counter,
 ):
     (
         broker,
