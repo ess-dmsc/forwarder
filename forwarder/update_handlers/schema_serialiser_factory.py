@@ -31,7 +31,6 @@ from forwarder.update_handlers.tdct_serialiser import (
 
 
 class SerialiserFactory:
-
     _schema_serialisers: Dict[EpicsProtocol, Dict[str, Callable]] = {
         EpicsProtocol.CA: {
             "al00": al00_CASerialiser,
