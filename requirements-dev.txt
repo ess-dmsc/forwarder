@@ -4,8 +4,7 @@
 pre-commit
 pytest
 pytest-cov
-tox==3.28.0
-tox-pyenv
+tox==4.4.8
 wheel
 Flake8-pyproject
 # Pin to match versions in precommit hooks
