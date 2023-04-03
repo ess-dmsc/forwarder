@@ -66,8 +66,9 @@ builders = pipeline_builder.createBuilders { container ->
     def test_output = "TestResults.xml"
     container.sh """
       cd ${pipeline_builder.project}
-      pyenv local 3.8 3.9 3.10
+      pyenv global 3.8 3.9 3.10
       pyenv versions
+      export PATH="/home/jenkins/.pyenv/shims:$PATH"
       python -m tox -- --cov=forwarder --cov-report=xml --junitxml=${test_output}
     """
     container.copyFrom("${pipeline_builder.project}/${test_output}", ".")
