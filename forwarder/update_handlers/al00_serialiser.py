@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Optional, Tuple, Union
 
 import p4p
 from caproto import AlarmStatus as CA_AlarmStatus
@@ -24,6 +24,8 @@ def _serialise(
 class al00_CASerialiser(CASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
+        self._severity: Optional[Severity] = None
+        self._message: Optional[str] = None
 
     def serialise(
         self, update: CA_Message, **unused
@@ -31,6 +33,11 @@ class al00_CASerialiser(CASerialiser):
         timestamp = seconds_to_nanoseconds(update.metadata.timestamp)
         severity = Severity(update.metadata.severity)
         message = CA_AlarmStatus(update.metadata.status).name
+        if severity == self._severity and message == self._message:
+            # Nothing has changed
+            return None, None
+        self._severity = severity
+        self._message = message
         return _serialise(self._source_name, timestamp, severity, message)
 
     def conn_serialise(self, pv: str, state: str) -> Tuple[None, None]:
@@ -40,6 +47,8 @@ class al00_CASerialiser(CASerialiser):
 class al00_PVASerialiser(PVASerialiser):
     def __init__(self, source_name: str):
         self._source_name = source_name
+        self._severity: Optional[Severity] = None
+        self._message: Optional[str] = None
 
     def serialise(
         self, update: Union[p4p.Value, RuntimeError]
@@ -51,4 +60,9 @@ class al00_PVASerialiser(PVASerialiser):
         ) + update.timeStamp.nanoseconds
         severity = Severity(update.alarm.severity)
         message = update.alarm.message
+        if severity == self._severity and message == self._message:
+            # Nothing has changed
+            return None, None
+        self._severity = severity
+        self._message = message
         return _serialise(self._source_name, timestamp, severity, message)
