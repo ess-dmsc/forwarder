@@ -28,5 +28,5 @@ def setup_logger(
 
 def get_logger():
     return logging.LoggerAdapter(
-        logging.getLogger(logger_name), {"process_name": "forwarder"}
+        logging.getLogger(logger_name), {"process": "forwarder"}
     )
