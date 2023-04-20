@@ -227,6 +227,57 @@ def test_update_handler_publishes_alarm_update_f144(context, producer, pv_source
     assert pv_update_output.message == alarm_message
 
 
+@pytest.mark.schema("f144")
+def test_update_handler_does_not_republish_identical_alarm_f144(
+    context, producer, pv_source_name
+):
+    pv_value = 44
+    pv_type = "i"
+    pv_timestamp_s = time()  # seconds from unix epoch
+    alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
+    alarm_severity = 1  # al00_Severity.MINOR
+    alarm_message = "HIGH_ALARM"
+
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            {
+                "value": pv_value,
+                "alarm": {
+                    "status": alarm_status,
+                    "severity": alarm_severity,
+                    "message": alarm_message,
+                },
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
+        )
+    )
+    # Second update, with unchanged alarm
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            {
+                "value": pv_value,
+                "alarm": {
+                    "status": alarm_status,
+                    "severity": alarm_severity,
+                    "message": alarm_message,
+                },
+                "timeStamp": {
+                    "secondsPastEpoch": pv_timestamp_s,
+                },
+            }
+        )
+    )
+
+    # The assertions below assume that an ep01 message is sent after the f144+al00
+    assert len(producer.published_payloads) == 4
+    pv_update_output = deserialise_al00(producer.published_payloads[-3])
+    assert pv_update_output.source == pv_source_name
+    assert pv_update_output.severity == al00_Severity.MINOR
+    assert pv_update_output.message == alarm_message
+
+
 @pytest.mark.schema("f142")
 @pytest.mark.serialiser_update_period_ms(10)
 def test_update_handler_publishes_periodic_update_f142(
