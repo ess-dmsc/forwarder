@@ -23,6 +23,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import (
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.logdata_f144 import deserialise_f144
 from streaming_data_types.timestamps_tdct import deserialise_tdct
+from streaming_data_types.utils import get_schema
 
 from forwarder.common import EpicsProtocol
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
@@ -186,8 +187,11 @@ def test_update_handler_publishes_f142_alarm_update(context, producer, pv_source
     assert pv_update_output.alarm_severity == f142_AlarmSeverity.MINOR
 
 
-@pytest.mark.schema("f144")
-def test_update_handler_publishes_f144_alarm_update(context, producer, pv_source_name):
+def update_handler_publishes_alarm_update(context, producer, pv_source_name):
+    """To be called from schemas that should publish al0x updates. Calling
+    tests must be marked with the appropriate schema via 'pytestmark' or
+    '@pytest.mark'.
+    """
     pv_value = 42
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
@@ -206,12 +210,19 @@ def test_update_handler_publishes_f144_alarm_update(context, producer, pv_source
         )
     )
 
-    # The assertions below assume that the f144 message was sent before the al00 one.
-    assert len(producer.published_payloads) == 2
-    pv_update_output = deserialise_al00(producer.published_payloads[-1])
+    al00_messages = [
+        msg for msg in producer.published_payloads if "al00" == get_schema(msg)
+    ]
+    assert len(al00_messages) == 1
+    pv_update_output = deserialise_al00(al00_messages[0])
     assert pv_update_output.source == pv_source_name
     assert pv_update_output.message == AlarmStatus(alarm_status).name
     assert pv_update_output.severity == al00_Severity.MINOR
+
+
+@pytest.mark.schema("f144")
+def test_update_handler_publishes_f144_alarm_update(context, producer, pv_source_name):
+    return update_handler_publishes_alarm_update(context, producer, pv_source_name)
 
 
 @pytest.mark.schema("f142")
@@ -267,15 +278,20 @@ def test_update_handler_publishes_periodic_update_f144(
         )
     )
 
-    # The assertions below assume that the f144 message was sent before the al00 one.
-    assert len(producer.published_payloads) == 2
-    pv_update_output = deserialise_f144(producer.published_payloads[-2])
+    data_messages = [
+        msg for msg in producer.published_payloads if "f144" == get_schema(msg)
+    ]
+    assert len(data_messages) == 1
+    pv_update_output = deserialise_f144(data_messages[0])
     assert pv_update_output.value == pv_value
     assert pv_update_output.source_name == pv_source_name
 
     sleep(0.05)
+    data_messages = [
+        msg for msg in producer.published_payloads if "f144" == get_schema(msg)
+    ]
     assert (
-        producer.messages_published > 2
+        len(data_messages) >= 2
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
 
 
@@ -317,7 +333,36 @@ def test_update_handler_always_includes_alarm_status_f142(context, producer):
 
 
 @pytest.mark.schema("f144")
-def test_update_handler_always_includes_alarm_status_f144(context, producer):
+def test_update_handler_includes_alarm_status_f144(context, producer):
+    pv_value = 44
+    pv_caproto_type = ChannelType.TIME_INT
+    pv_numpy_type = np.int32
+    alarm_status = 6  # AlarmStatus.LOW
+    alarm_severity = 1  # al00_Severity.MINOR
+
+    metadata = (alarm_status, alarm_severity, TimeStamp(*epics_timestamp()))
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([pv_value]).astype(pv_numpy_type),
+            pv_caproto_type,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+
+    al00_messages = [
+        msg for msg in producer.published_payloads if "al00" == get_schema(msg)
+    ]
+    assert len(al00_messages) == 1
+    pv_update_output = deserialise_al00(al00_messages[0])
+    assert pv_update_output.severity == al00_Severity.MINOR
+    assert pv_update_output.message == AlarmStatus(alarm_status).name
+
+
+@pytest.mark.schema("f144")
+def test_update_handler_does_not_republish_identical_alarm_f144(context, producer):
     pv_value = 44
     pv_caproto_type = ChannelType.TIME_INT
     pv_numpy_type = np.int32
@@ -347,8 +392,11 @@ def test_update_handler_always_includes_alarm_status_f144(context, producer):
         )
     )
 
-    assert producer.messages_published == 4
-    pv_update_output = deserialise_al00(producer.published_payloads[-1])
+    al00_messages = [
+        msg for msg in producer.published_payloads if "al00" == get_schema(msg)
+    ]
+    assert len(al00_messages) == 1
+    pv_update_output = deserialise_al00(al00_messages[0])
     assert pv_update_output.severity == al00_Severity.MINOR
     assert pv_update_output.message == AlarmStatus(alarm_status).name
 
@@ -387,10 +435,13 @@ def test_empty_update_is_not_forwarded(context, producer, pv_source_name):
         )
     )
 
+    tdct_messages = [
+        msg for msg in producer.published_payloads if "tdct" == get_schema(msg)
+    ]
     assert (
-        producer.messages_published == 1
-    ), "Expected only the one PV update with non-empty value array to have been published"
-    pv_update_output = deserialise_tdct(producer.published_payloads[-1])
+        len(tdct_messages) == 1
+    ), "Expected only the non-empty PV update to have been published"
+    pv_update_output = deserialise_tdct(tdct_messages[0])
     assert (
         pv_update_output.timestamps.size > 0
     ), "Expected the published PV update not to be empty"

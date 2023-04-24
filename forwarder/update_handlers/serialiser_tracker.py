@@ -24,6 +24,7 @@ from forwarder.update_handlers.schema_serialiser_factory import SerialiserFactor
 
 LOWER_AGE_LIMIT = timedelta(days=365.25)
 UPPER_AGE_LIMIT = timedelta(minutes=10)
+SCHEMAS_THAT_DO_NOT_REQUIRE_ATTACHED_ALARM = ["f142"]
 
 
 class SerialiserTracker:
@@ -161,9 +162,7 @@ def create_serialiser_list(
             periodic_update_ms,
         )
     )
-    if (
-        schema == "f144"
-    ):  # f144 does not forward EPICS status information, we pair it with al00
+    if schema not in SCHEMAS_THAT_DO_NOT_REQUIRE_ATTACHED_ALARM:
         return_list.append(
             SerialiserTracker(
                 SerialiserFactory.create_serialiser(protocol, "al00", pv_name),
