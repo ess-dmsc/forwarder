@@ -1,11 +1,19 @@
+[build-system]
+requires = ["setuptools", "setuptools-scm"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "forwarder"
-version = "development"
-homepage = "https://github.com/ess-dmsc/forwarder"
-repository = "https://github.com/ess-dmsc/forwarder"
+urls = {homepage="https://github.com/ess-dmsc/forwarder", repository="https://github.com/ess-dmsc/forwarder"}
 license = { file="LICENSE" }
-readme = {file = ["README.md"]}
+readme = "README.md"
 requires-python = ">=3.8"
+dynamic = ["version"]
+
+[tool.setuptools]
+packages = ["forwarder"]
+
+[tool.setuptools_scm]
 
 [tool.black]
 exclude = '/(venv*|.tox)'
