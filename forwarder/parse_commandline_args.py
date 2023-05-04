@@ -22,12 +22,28 @@ class VersionArgParser(configargparse.ArgumentParser):
 
 def get_version() -> str:
     """
-    Gets the current version from the pyproject file
+    Gets the current version from the setuptools-scm generated _version.py file
     """
-    path = Path(__file__).parent.parent / "pyproject.toml"
-    with open(path, "rb") as file:
-        config = tomli.load(file)
-    return str(config["project"]["version"])
+    v = None
+    try:
+        from ._version import version
+        v = version
+    except ImportError:
+        pass
+    if v is None:
+        try:
+            from setuptools_scm import get_version
+            v = get_version()
+        except ImportError:
+            # no setuptools_scm or package layout has changed?
+            pass
+        except LookupError:
+            # Running from outside of a git repository or PyPI tarball
+            pass
+    if v is None:
+        v = 'development'
+
+    return v
 
 
 def _print_version_if_requested():

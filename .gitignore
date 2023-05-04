@@ -132,3 +132,6 @@ dmypy.json
 .idea
 integration_tests/logs/*.log
 .vscode
+
+# setuptools-scm generated version file:
+_version.py
