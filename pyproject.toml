@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forwarder"
-version = "0.1.dev0"
+version = "2.1.dev0"
 urls = {homepage="https://github.com/ess-dmsc/forwarder", repository="https://github.com/ess-dmsc/forwarder"}
 license = { file="LICENSE" }
 readme = "README.md"
