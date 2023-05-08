@@ -34,11 +34,13 @@ def create_epics_producer(
     (
         broker,
         _,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
     producer = create_producer(
         broker,
+        security_protocol,
         sasl_mechanism,
         username,
         broker_sasl_password,
@@ -53,6 +55,7 @@ def create_config_consumer(broker_uri, broker_sasl_password):
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
@@ -62,6 +65,7 @@ def create_config_consumer(broker_uri, broker_sasl_password):
 
     consumer = create_consumer(
         broker,
+        security_protocol,
         sasl_mechanism,
         username,
         broker_sasl_password,
@@ -76,6 +80,7 @@ def create_status_reporter(
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
@@ -87,6 +92,7 @@ def create_status_reporter(
         update_handlers,
         create_producer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             broker_sasl_password,
@@ -103,6 +109,7 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(storage_topic)
@@ -113,12 +120,14 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
     configuration_store = ConfigurationStore(
         create_producer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
         ),
         create_consumer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
