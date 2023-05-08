@@ -11,7 +11,7 @@ from .kafka_producer import KafkaProducer
 
 def get_sasl_config(
     protocol: str,
-    mechanism: str,
+    mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
 ) -> dict:
