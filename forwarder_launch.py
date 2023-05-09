@@ -78,7 +78,13 @@ def create_config_consumer(broker_uri, broker_sasl_password, broker_ssl_ca_file)
 
 
 def create_status_reporter(
-    update_handlers, broker_uri, broker_sasl_password, broker_ssl_ca_file, service_id, version, logger
+    update_handlers,
+    broker_uri,
+    broker_sasl_password,
+    broker_ssl_ca_file,
+    service_id,
+    version,
+    logger,
 ):
     (
         broker,
@@ -109,7 +115,9 @@ def create_status_reporter(
     return status_reporter
 
 
-def create_configuration_store(storage_topic, storage_topic_sasl_password, broker_ssl_ca_file):
+def create_configuration_store(
+    storage_topic, storage_topic_sasl_password, broker_ssl_ca_file
+):
     (
         broker,
         topic,
@@ -257,7 +265,9 @@ if __name__ == "__main__":
 
         if args.storage_topic:
             configuration_store = create_configuration_store(
-                args.storage_topic, args.storage_topic_sasl_password, args.ssl_ca_cert_file
+                args.storage_topic,
+                args.storage_topic_sasl_password,
+                args.ssl_ca_cert_file,
             )
             exit_stack.callback(configuration_store.stop)
             if not args.skip_retrieval:
