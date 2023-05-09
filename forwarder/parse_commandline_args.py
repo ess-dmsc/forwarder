@@ -62,7 +62,7 @@ def parse_args():
     parser.add_argument(
         "--config-topic",
         required=True,
-        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to listen for commands",
+        help="<[PROTOCOL+SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to listen for commands",
         type=str,
         env_var="CONFIG_TOPIC",
     )
@@ -76,7 +76,7 @@ def parse_args():
     parser.add_argument(
         "--status-topic",
         required=True,
-        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to publish status updates on",
+        help="<[PROTOCOL+SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic to publish status updates on",
         type=str,
         env_var="STATUS_TOPIC",
     )
@@ -90,7 +90,7 @@ def parse_args():
     parser.add_argument(
         "--output-broker",
         required=True,
-        help="<[SASL_MECHANISM\\username@]host[:port]> Kafka broker to forward data into",
+        help="<[PROTOCOL+SASL_MECHANISM\\username@]host[:port]> Kafka broker to forward data into",
         type=str,
         env_var="OUTPUT_BROKER",
     )
@@ -104,7 +104,7 @@ def parse_args():
     parser.add_argument(
         "--storage-topic",
         required=False,
-        help="<[SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic for storage of the "
+        help="<[PROTOCOL+SASL_MECHANISM\\username@]host[:port][/topic]> Kafka broker/topic for storage of the "
         "last known forwarding details",
         type=str,
         env_var="STORAGE_TOPIC",
@@ -115,6 +115,13 @@ def parse_args():
         help="Password for Kafka SASL authentication",
         type=str,
         env_var="STORAGE_TOPIC_SASL_PASSWORD",
+    )
+    parser.add_argument(
+        "--ssl-ca-cert-file",
+        required=False,
+        help="Path to Kafka CA certificate file",
+        type=str,
+        env_var="SSL_CA_CERT_FILE",
     )
     parser.add_argument(
         "-s",

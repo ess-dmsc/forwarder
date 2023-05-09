@@ -58,6 +58,7 @@ def create_producer(
     sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
+    ssl_ca_file: Optional[str] = None,
     counter: Optional[Counter] = None,
     buffer_err_counter: Optional[Counter] = None,
     delivery_err_counter: Optional[Counter] = None,
@@ -70,6 +71,8 @@ def create_producer(
         producer_config.update(
             get_sasl_config(security_protocol, sasl_mechanism, username, password)
         )
+        if ssl_cafile:
+            producer_config["ssl_cafile"] = ssl_cafile
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -85,6 +88,7 @@ def create_consumer(
     sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
+    ssl_ca_file: Optional[str] = None,
 ) -> Consumer:
     consumer_config = {
         "bootstrap.servers": broker_address,
@@ -95,6 +99,8 @@ def create_consumer(
         consumer_config.update(
             get_sasl_config(security_protocol, sasl_mechanism, username, password)
         )
+        if ssl_cafile:
+            producer_config["ssl_cafile"] = ssl_cafile
     return Consumer(consumer_config)
 
 

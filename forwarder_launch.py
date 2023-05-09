@@ -27,6 +27,7 @@ from forwarder.utils import Counter
 def create_epics_producer(
     broker_uri,
     broker_sasl_password,
+    broker_ssl_ca_file,
     update_message_counter,
     update_buffer_err_counter,
     update_delivery_err_counter,
@@ -44,6 +45,7 @@ def create_epics_producer(
         sasl_mechanism,
         username,
         broker_sasl_password,
+        broker_ssl_ca_file,
         counter=update_message_counter,
         buffer_err_counter=update_buffer_err_counter,
         delivery_err_counter=update_delivery_err_counter,
@@ -51,7 +53,7 @@ def create_epics_producer(
     return producer
 
 
-def create_config_consumer(broker_uri, broker_sasl_password):
+def create_config_consumer(broker_uri, broker_sasl_password, broker_ssl_ca_file):
     (
         broker,
         topic,
@@ -69,13 +71,14 @@ def create_config_consumer(broker_uri, broker_sasl_password):
         sasl_mechanism,
         username,
         broker_sasl_password,
+        broker_ssl_ca_file,
     )
     consumer.subscribe([topic])
     return consumer
 
 
 def create_status_reporter(
-    update_handlers, broker_uri, broker_sasl_password, service_id, version, logger
+    update_handlers, broker_uri, broker_sasl_password, broker_ssl_ca_file, service_id, version, logger
 ):
     (
         broker,
@@ -96,6 +99,7 @@ def create_status_reporter(
             sasl_mechanism,
             username,
             broker_sasl_password,
+            broker_ssl_ca_file,
         ),
         topic,
         service_id,
@@ -105,7 +109,7 @@ def create_status_reporter(
     return status_reporter
 
 
-def create_configuration_store(storage_topic, storage_topic_sasl_password):
+def create_configuration_store(storage_topic, storage_topic_sasl_password, broker_ssl_ca_file):
     (
         broker,
         topic,
@@ -124,6 +128,7 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
+            broker_ssl_ca_file,
         ),
         create_consumer(
             broker,
@@ -131,6 +136,7 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
+            broker_ssl_ca_file,
         ),
         topic,
     )
@@ -211,6 +217,7 @@ if __name__ == "__main__":
         producer = create_epics_producer(
             args.output_broker,
             args.output_broker_sasl_password,
+            args.ssl_ca_cert_file,
             update_message_counter,
             update_buffer_err_counter,
             update_delivery_err_counter,
@@ -218,7 +225,7 @@ if __name__ == "__main__":
         exit_stack.callback(producer.close)
 
         consumer = create_config_consumer(
-            args.config_topic, args.config_topic_sasl_password
+            args.config_topic, args.config_topic_sasl_password, args.ssl_ca_cert_file
         )
         exit_stack.callback(consumer.close)
 
@@ -226,6 +233,7 @@ if __name__ == "__main__":
             update_handlers,
             args.status_topic,
             args.status_topic_sasl_password,
+            args.ssl_ca_cert_file,
             args.service_id,
             version,
             get_logger(),
@@ -249,7 +257,7 @@ if __name__ == "__main__":
 
         if args.storage_topic:
             configuration_store = create_configuration_store(
-                args.storage_topic, args.storage_topic_sasl_password
+                args.storage_topic, args.storage_topic_sasl_password, args.ssl_ca_cert_file
             )
             exit_stack.callback(configuration_store.stop)
             if not args.skip_retrieval:
