@@ -5,5 +5,5 @@ graypy == 2.1.0
 graphyte == 1.7.1
 numpy >= 1.19
 ConfigArgParse == 1.5.3
-ess-streaming-data-types == 0.21.1
+ess-streaming-data-types == 0.22.1
 tomli==2.0.1
