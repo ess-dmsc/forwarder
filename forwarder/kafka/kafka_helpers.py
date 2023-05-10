@@ -10,26 +10,42 @@ from .kafka_producer import KafkaProducer
 
 
 def get_sasl_config(
-    mechanism: str, username: Optional[str] = None, password: Optional[str] = None
+    protocol: str,
+    mechanism: Optional[str] = None,
+    username: Optional[str] = None,
+    password: Optional[str] = None,
 ) -> dict:
     """Return a dict with SASL configuration parameters.
-    Supported protocols: SASL_PLAINTEXT (i.e. without TLS)
+    Supported protocols: SASL_PLAINTEXT (i.e. without TLS) and SASL_SSL
     Supported mechanisms: PLAIN, SCRAM-SHA-512, SCRAM-SHA-256.
     Note that whereas some SASL mechanisms do not require user/password, the three
     we currently support do.
     """
+    supported_security_protocols = ["SASL_PLAINTEXT", "SASL_SSL"]
     supported_sasl_mechanisms = ["PLAIN", "SCRAM-SHA-512", "SCRAM-SHA-256"]
-    if mechanism not in supported_sasl_mechanisms:
+
+    if protocol not in supported_security_protocols:
+        raise RuntimeError(
+            f"Security protocol {protocol} not supported, use one of {supported_security_protocols}"
+        )
+
+    if not mechanism:
+        raise RuntimeError(
+            f"SASL mechanism must be specified for security protocol {protocol}"
+        )
+    elif mechanism not in supported_sasl_mechanisms:
         raise RuntimeError(
             f"SASL mechanism {mechanism} not supported, use one of {supported_sasl_mechanisms}"
         )
+
     if not username or not password:
         raise RuntimeError(
             f"Username and password must be provided to use SASL {mechanism}"
         )
+
     sasl_config = {
+        "security.protocol": protocol,  # SASL_PLAINTEXT for plaintext, SASL_SSL for encrypted
         "sasl.mechanism": mechanism,
-        "security.protocol": "SASL_PLAINTEXT",  # SASL_PLAINTEXT for plaintext, SASL_SSL for encrypted
         "sasl.username": username,
         "sasl.password": password,
     }
@@ -38,9 +54,11 @@ def get_sasl_config(
 
 def create_producer(
     broker_address: str,
+    security_protocol: Optional[str] = None,
     sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
+    ssl_ca_file: Optional[str] = None,
     counter: Optional[Counter] = None,
     buffer_err_counter: Optional[Counter] = None,
     delivery_err_counter: Optional[Counter] = None,
@@ -49,8 +67,12 @@ def create_producer(
         "bootstrap.servers": broker_address,
         "message.max.bytes": "20000000",
     }
-    if sasl_mechanism:
-        producer_config.update(get_sasl_config(sasl_mechanism, username, password))
+    if security_protocol:
+        producer_config.update(
+            get_sasl_config(security_protocol, sasl_mechanism, username, password)
+        )
+        if ssl_ca_file:
+            producer_config["ssl_cafile"] = ssl_ca_file
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -62,39 +84,46 @@ def create_producer(
 
 def create_consumer(
     broker_address: str,
+    security_protocol: Optional[str] = None,
     sasl_mechanism: Optional[str] = None,
     username: Optional[str] = None,
     password: Optional[str] = None,
+    ssl_ca_file: Optional[str] = None,
 ) -> Consumer:
     consumer_config = {
         "bootstrap.servers": broker_address,
         "group.id": uuid.uuid4(),
         "default.topic.config": {"auto.offset.reset": "latest"},
     }
-    if sasl_mechanism:
-        consumer_config.update(get_sasl_config(sasl_mechanism, username, password))
+    if security_protocol:
+        consumer_config.update(
+            get_sasl_config(security_protocol, sasl_mechanism, username, password)
+        )
+        if ssl_ca_file:
+            consumer_config["ssl_cafile"] = ssl_ca_file
     return Consumer(consumer_config)
 
 
-def parse_kafka_uri(uri: str) -> Tuple[str, str, str, str]:
+def parse_kafka_uri(uri: str) -> Tuple[str, str, str, str, str]:
     """Parse Kafka connection URI.
 
     A broker hostname/ip must be present.
     If username is provided, a SASL mechanism must also be provided.
     Any other validation must be performed in the calling code.
     """
-    sasl_mechanism, tail = uri.split("\\") if "\\" in uri else ("", uri)
+    security_protocol, tail = uri.split("+") if "+" in uri else ("", uri)
+    sasl_mechanism, tail = tail.split("\\") if "\\" in tail else ("", tail)
     username, tail = tail.split("@") if "@" in tail else ("", tail)
     broker, topic = tail.split("/") if "/" in tail else (tail, "")
     if not broker:
         raise RuntimeError(
-            f"Unable to parse URI {uri}, broker not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
+            f"Unable to parse URI {uri}, broker not defined. URI should be of form [PROTOCOL+SASL_MECHANISM\\username@]broker:9092"
         )
-    if username and not sasl_mechanism:
+    if username and not (security_protocol and sasl_mechanism):
         raise RuntimeError(
-            f"Unable to parse URI {uri}, SASL_MECHANISM not defined. URI should be of form [SASL_MECHANISM\\username@]broker:9092"
+            f"Unable to parse URI {uri}, PROTOCOL or SASL_MECHANISM not defined. URI should be of form [PROTOCOL+SASL_MECHANISM\\username@]broker:9092"
         )
-    return broker, topic, sasl_mechanism, username
+    return broker, topic, security_protocol, sasl_mechanism, username
 
 
 def _nanoseconds_to_milliseconds(time_ns: int) -> int:

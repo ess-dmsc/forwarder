@@ -27,6 +27,7 @@ from forwarder.utils import Counter
 def create_epics_producer(
     broker_uri,
     broker_sasl_password,
+    broker_ssl_ca_file,
     update_message_counter,
     update_buffer_err_counter,
     update_delivery_err_counter,
@@ -34,14 +35,17 @@ def create_epics_producer(
     (
         broker,
         _,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
     producer = create_producer(
         broker,
+        security_protocol,
         sasl_mechanism,
         username,
         broker_sasl_password,
+        broker_ssl_ca_file,
         counter=update_message_counter,
         buffer_err_counter=update_buffer_err_counter,
         delivery_err_counter=update_delivery_err_counter,
@@ -49,10 +53,11 @@ def create_epics_producer(
     return producer
 
 
-def create_config_consumer(broker_uri, broker_sasl_password):
+def create_config_consumer(broker_uri, broker_sasl_password, broker_ssl_ca_file):
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
@@ -62,20 +67,29 @@ def create_config_consumer(broker_uri, broker_sasl_password):
 
     consumer = create_consumer(
         broker,
+        security_protocol,
         sasl_mechanism,
         username,
         broker_sasl_password,
+        broker_ssl_ca_file,
     )
     consumer.subscribe([topic])
     return consumer
 
 
 def create_status_reporter(
-    update_handlers, broker_uri, broker_sasl_password, service_id, version, logger
+    update_handlers,
+    broker_uri,
+    broker_sasl_password,
+    broker_ssl_ca_file,
+    service_id,
+    version,
+    logger,
 ):
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(broker_uri)
@@ -87,9 +101,11 @@ def create_status_reporter(
         update_handlers,
         create_producer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             broker_sasl_password,
+            broker_ssl_ca_file,
         ),
         topic,
         service_id,
@@ -99,10 +115,13 @@ def create_status_reporter(
     return status_reporter
 
 
-def create_configuration_store(storage_topic, storage_topic_sasl_password):
+def create_configuration_store(
+    storage_topic, storage_topic_sasl_password, broker_ssl_ca_file
+):
     (
         broker,
         topic,
+        security_protocol,
         sasl_mechanism,
         username,
     ) = parse_kafka_uri(storage_topic)
@@ -113,15 +132,19 @@ def create_configuration_store(storage_topic, storage_topic_sasl_password):
     configuration_store = ConfigurationStore(
         create_producer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
+            broker_ssl_ca_file,
         ),
         create_consumer(
             broker,
+            security_protocol,
             sasl_mechanism,
             username,
             storage_topic_sasl_password,
+            broker_ssl_ca_file,
         ),
         topic,
     )
@@ -202,6 +225,7 @@ def main():
         producer = create_epics_producer(
             args.output_broker,
             args.output_broker_sasl_password,
+            args.ssl_ca_cert_file,
             update_message_counter,
             update_buffer_err_counter,
             update_delivery_err_counter,
@@ -209,7 +233,7 @@ def main():
         exit_stack.callback(producer.close)
 
         consumer = create_config_consumer(
-            args.config_topic, args.config_topic_sasl_password
+            args.config_topic, args.config_topic_sasl_password, args.ssl_ca_cert_file
         )
         exit_stack.callback(consumer.close)
 
@@ -217,6 +241,7 @@ def main():
             update_handlers,
             args.status_topic,
             args.status_topic_sasl_password,
+            args.ssl_ca_cert_file,
             args.service_id,
             version,
             get_logger(),
@@ -240,7 +265,9 @@ def main():
 
         if args.storage_topic:
             configuration_store = create_configuration_store(
-                args.storage_topic, args.storage_topic_sasl_password
+                args.storage_topic,
+                args.storage_topic_sasl_password,
+                args.ssl_ca_cert_file,
             )
             exit_stack.callback(configuration_store.stop)
             if not args.skip_retrieval:
