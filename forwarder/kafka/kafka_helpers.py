@@ -72,7 +72,7 @@ def create_producer(
             get_sasl_config(security_protocol, sasl_mechanism, username, password)
         )
         if ssl_ca_file:
-            producer_config["ssl_cafile"] = ssl_ca_file
+            producer_config["ssl.ca.location"] = ssl_ca_file
     producer = Producer(producer_config)
     return KafkaProducer(
         producer,
@@ -100,7 +100,7 @@ def create_consumer(
             get_sasl_config(security_protocol, sasl_mechanism, username, password)
         )
         if ssl_ca_file:
-            consumer_config["ssl_cafile"] = ssl_ca_file
+            consumer_config["ssl.ca.location"] = ssl_ca_file
     return Consumer(consumer_config)
 
 
