@@ -8,7 +8,7 @@ tox==4.6.3
 wheel
 Flake8-pyproject
 # Pin to match versions in precommit hooks
-black==23.1.0
+black==23.3.0
 flake8==6.0.0
 mypy==v0.991
 isort==5.12.0
