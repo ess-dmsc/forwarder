@@ -7,6 +7,8 @@
 * Fix: Updating tdct to handle empty arrays coming from EPICS
 * Feat: Forward al00 messages for tdct, se00 and senv schemas
 * Feat: Export `kafka_delivery_errors` metric when Kafka producer permanently fails delivery
+* Feat: Add support for SASL_SSL in Kafka
+* Feat: Make the package installable.
 
 ## v2.0.0
 
