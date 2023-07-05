@@ -116,7 +116,7 @@ def get_contract_tests_pipeline() {
             which python
             pwd
             pip install --upgrade pip
-            pip install docker-compose
+            pip install docker-compose 'requests<2.30.0'
             """
           }  // stage
           stage("Integration tests: Prepare") {

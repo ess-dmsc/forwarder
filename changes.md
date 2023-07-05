@@ -2,7 +2,13 @@
 
 ## Next
 
-* Updating tdct to handle empty arrays coming from EPICS
+* Fix: Do not re-publish al00 alarms if state has not changed
+* Fix: In ep01 even if the PV was connected it appeared as unknown
+* Fix: Updating tdct to handle empty arrays coming from EPICS
+* Feat: Forward al00 messages for tdct, se00 and senv schemas
+* Feat: Export `kafka_delivery_errors` metric when Kafka producer permanently fails delivery
+* Feat: Add support for SASL_SSL in Kafka
+* Feat: Make the package installable.
 
 ## v2.0.0
 

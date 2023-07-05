@@ -1,8 +1,15 @@
 import numpy as np
+import pytest
 from p4p.nt import NTScalar
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
+from forwarder.common import EpicsProtocol
 from forwarder.update_handlers.tdct_serialiser import tdct_PVASerialiser
+
+from .pva_update_handler_test import update_handler_publishes_alarm_update
+
+# Set marks required by the 'context' fixture.
+pytestmark = [pytest.mark.epics_protocol(EpicsProtocol.PVA), pytest.mark.schema("tdct")]
 
 
 def test_tdct_serialiser_handles_positive_relative_timestamps():
@@ -76,3 +83,7 @@ def test_tdct_serialiser_handles_empty_array():
         None,
         None,
     ), "Expected serialiser to skip empty timestamp array from the EPICS update"
+
+
+def test_update_handler_publishes_tdct_alarm_update(context, producer, pv_source_name):
+    return update_handler_publishes_alarm_update(context, producer, pv_source_name)
