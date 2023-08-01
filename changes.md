@@ -2,6 +2,10 @@
 
 ## Next
 
+* 
+
+## v2.1.0
+
 * Fix: Do not re-publish al00 alarms if state has not changed
 * Fix: In ep01 even if the PV was connected it appeared as unknown
 * Fix: Updating tdct to handle empty arrays coming from EPICS
@@ -9,6 +13,7 @@
 * Feat: Export `kafka_delivery_errors` metric when Kafka producer permanently fails delivery
 * Feat: Add support for SASL_SSL in Kafka
 * Feat: Make the package installable.
+* Libs: Update confluent_kafka to v2.1
 
 ## v2.0.0
 
