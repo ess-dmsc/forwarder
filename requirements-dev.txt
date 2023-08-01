@@ -15,5 +15,3 @@ isort==5.12.0
 
 # For integration tests
 docker-compose
-docker
-pytictoc
