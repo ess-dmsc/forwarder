@@ -1,29 +1,33 @@
 image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.0.0
 
-before_script:
-  - python --version
-  - pip install -r requirements-dev.txt
-
 stages:
-  - Static Analysis
-  - Test
+  - check
+  - test
 
 flake8:
-  stage: Static Analysis
+  tags:
+    - docker
+  stage: check
   script:
     - python -m flake8
 
 black:
-  stage: Static Analysis
+  tags:
+    - docker
+  stage: check
   script:
     - python -m black --check .
 
 mypy:
-  stage: Static Analysis
+  tags:
+    - docker
+  stage: check
   script:
     - python -m mypy .
 
 test:
-  stage: Test
+  tags:
+    - docker
+  stage: test
   script:
-  - python -m pytest
+    - python -m pytest
