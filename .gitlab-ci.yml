@@ -1,8 +1,5 @@
 image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:12.0.0
 
-before_script:
-  - docker login -u $DOCKER_REGISTRY_USER -p $DOCKER_REGISTRY_TOKEN registry.esss.lu.se
-
 stages:
   - check
   - test
