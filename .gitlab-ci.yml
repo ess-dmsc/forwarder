@@ -9,25 +9,25 @@ flake8:
     - docker
   stage: check
   script:
-    - python -m flake8
+    - scl enable rh-python38 -- python -m flake8
 
 black:
   tags:
     - docker
   stage: check
   script:
-    - python -m black --check .
+    - scl enable rh-python38 -- python -m black --check .
 
 mypy:
   tags:
     - docker
   stage: check
   script:
-    - python -m mypy .
+    - scl enable rh-python38 -- python -m mypy .
 
 test:
   tags:
     - docker
   stage: test
   script:
-    - python -m pytest
+    - scl enable rh-python38 -- python -m pytest
