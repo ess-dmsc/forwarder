@@ -9,7 +9,7 @@ static:
     - docker
   stage: check
   script:
-    - scl enable rh-python38 -- python -m pip install --user -r requirements.txt
+    - scl enable rh-python38 -- python -m pip install --user -r requirements-dev.txt
     - scl enable rh-python38 -- python -m flake8
     - scl enable rh-python38 -- python -m black --check .
     - scl enable rh-python38 -- python -m mypy .
@@ -19,5 +19,5 @@ test:
     - docker
   stage: test
   script:
-    - scl enable rh-python38 -- python -m pip install --user -r requirements.txt
+    - scl enable rh-python38 -- python -m pip install --user -r requirements-dev.txt
     - scl enable rh-python38 -- python -m pytest
