@@ -1,36 +1,17 @@
 image: registry.esss.lu.se/afonsomukai/docker-registry:1.0.0
 
 stages:
-  - deps
   - check
   - test
 
-requirements:
+static:
   tags:
     - docker
-  stage: deps
+  stage: check
   script:
     - scl enable rh-python38 -- python -m pip install --user -r requirements.txt
-
-flake8:
-  tags:
-    - docker
-  stage: check
-  script:
     - scl enable rh-python38 -- python -m flake8
-
-black:
-  tags:
-    - docker
-  stage: check
-  script:
     - scl enable rh-python38 -- python -m black --check .
-
-mypy:
-  tags:
-    - docker
-  stage: check
-  script:
     - scl enable rh-python38 -- python -m mypy .
 
 test:
@@ -38,4 +19,5 @@ test:
     - docker
   stage: test
   script:
+    - scl enable rh-python38 -- python -m pip install --user -r requirements.txt
     - scl enable rh-python38 -- python -m pytest
