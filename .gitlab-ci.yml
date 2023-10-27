@@ -9,9 +9,10 @@ static:
     - docker
   stage: check
   script:
+    - scl enable rh-python38 -- python --version
     - scl enable rh-python38 -- python -m pip install --user -r requirements-dev.txt
-    - scl enable rh-python38 -- python -m flake8
     - scl enable rh-python38 -- python -m black --check .
+    - scl enable rh-python38 -- python -m flake8
     - scl enable rh-python38 -- python -m mypy .
 
 test:
@@ -19,5 +20,8 @@ test:
     - docker
   stage: test
   script:
-    - scl enable rh-python38 -- python -m pip install --user -r requirements-dev.txt
-    - scl enable rh-python38 -- python -m pytest
+    - pyenv global 3.8 3.9 3.10
+    - pyenv versions
+    - export PATH="/home/jenkins/.pyenv/shims:$PATH"
+    - echo $PATH
+    - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=TestResults.xml
