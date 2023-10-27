@@ -20,6 +20,7 @@ test:
     - docker
   stage: test
   script:
+    - scl enable rh-python38 -- python -m pip install --user -r requirements-dev.txt
     - pyenv global 3.8 3.9 3.10
     - pyenv versions
     - export PATH="/home/jenkins/.pyenv/shims:$PATH"
