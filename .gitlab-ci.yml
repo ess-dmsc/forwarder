@@ -23,5 +23,4 @@ test:
     - pyenv global 3.8 3.9 3.10
     - pyenv versions
     - export PATH="/home/jenkins/.pyenv/shims:$PATH"
-    - echo $PATH
-    - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=TestResults.xml
+    - scl enable rh-python38 -- python -m tox -- --cov=forwarder --cov-report=xml --junitxml=TestResults.xml
