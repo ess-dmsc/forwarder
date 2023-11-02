@@ -1,16 +1,16 @@
 repos:
 -   repo: https://github.com/ambv/black
-    rev: 23.3.0
+    rev: 23.10.1
     hooks:
     - id: black
       language_version: python3
 -   repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
+    rev: 6.1.0
     hooks:
     - id: flake8
       additional_dependencies: [Flake8-pyproject]
 -   repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v0.991
+    rev: v1.6.1
     hooks:
     - id: mypy
 -   repo: https://github.com/pycqa/isort
