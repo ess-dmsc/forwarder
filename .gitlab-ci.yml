@@ -1,0 +1,26 @@
+defaut:
+  tags:
+    - docker
+  image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
+  before_script:
+    - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
+
+stages:
+  - checks
+  - test
+
+checks:
+  stage: checks
+  script:
+    - scl enable rh-python38 -- python --version
+    - scl enable rh-python38 -- python -m black --check .
+    - scl enable rh-python38 -- python -m flake8
+    - scl enable rh-python38 -- python -m mypy .
+
+test:
+  stage: test
+  script:
+    - scl enable rh-python38 -- pyenv global 3.8 3.9 3.10
+    - pyenv versions
+    - export PATH="/home/jenkins/.pyenv/shims:$PATH"
+    - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=test-output.xml
