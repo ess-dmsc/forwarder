@@ -24,3 +24,8 @@ test:
     - pyenv versions
     - export PATH="/home/jenkins/.pyenv/shims:$PATH"
     - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=test-output.xml
+  artifacts:
+    paths:
+      - test-output.xml
+    reports:
+      junit: test-output.xml
