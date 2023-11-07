@@ -27,5 +27,9 @@ test:
   artifacts:
     paths:
       - test-output.xml
+      - coverage.xml
     reports:
       junit: test-output.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
