@@ -1,4 +1,4 @@
-defaut:
+default:
   tags:
     - docker
   image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
