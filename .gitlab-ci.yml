@@ -42,6 +42,7 @@ test:
     - cd integration_tests
     - ./prepare.sh
   after_script:
+    - cd integration_tests
     - ./clean-up.sh
   only:
     - merge_requests
