@@ -42,7 +42,6 @@ test:
     - cd integration_tests
     - ./prepare.sh
   after_script:
-    - cd integration_tests
     - ./clean-up.sh
   only:
     - merge_requests
@@ -50,11 +49,9 @@ test:
 contract-tests:
   extends: .integration-tests
   script:
-    - cd integration_tests
     - ./run-contract-tests.sh
 
 smoke-tests:
   extends: .integration-tests
   script:
-    - cd integration_tests
     - ./run-smoke-tests.sh
