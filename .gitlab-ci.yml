@@ -8,6 +8,7 @@ default:
 stages:
   - checks
   - test
+  - integration
 
 checks:
   stage: checks
@@ -33,3 +34,27 @@ test:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+
+.integration-tests:
+  stage: integration
+  image: docker:latest
+  before_script:
+    - cd integration_tests
+    - ./prepare.sh
+  after_script:
+    - cd integration_tests
+    - ./clean-up.sh
+  only:
+    - merge_requests
+
+contract-tests:
+  extends: .integration-tests
+  script:
+    - cd integration_tests
+    - ./run-contract-tests.sh
+
+smoke-tests:
+  extends: .integration-tests
+  script:
+    - cd integration_tests
+    - ./run-smoke-tests.sh
