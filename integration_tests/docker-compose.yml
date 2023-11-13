@@ -39,7 +39,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKERS
 
   simpleioc:
-    image: registry.esss.lu.se/ecdc/ess-dmsc/docker-softioc:update_ubuntu_version  # TODO update
+    image: registry.esss.lu.se/ecdc/ess-dmsc/docker-softioc:latest
     tty: true
     networks:
       - frontend
