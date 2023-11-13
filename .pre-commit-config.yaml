@@ -5,20 +5,25 @@ repos:
         name: black
         entry: black
         language: system
-        types: [python]
+        types_or: [python, pyi]
+        require_serial: true
     -   id: flake8
         name: flake8
         entry: flake8
         language: system
         types: [python]
+        require_serial: true
     -   id: mypy
         name: mypy
         entry: mypy
+        args: ["--ignore-missing-imports", "--scripts-are-modules"]
         language: system
-        types: [python]
+        types_or: [python, pyi]
+        require_serial: true
     -   id: isort
         name: isort
         entry: isort
         args: ["--profile", "black"]
         language: system
-        types: [python]
+        types_or: [cython, pyi, python]
+        require_serial: true
