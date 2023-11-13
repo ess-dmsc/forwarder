@@ -11,7 +11,7 @@ echo "Continuing!"
 
 docker cp .. integration_tests-forwarder-1:/home/jenkins/
 
-docker exec integration_tests-forwarder-1 bash -c 'scl enable rh-python38 -- python -m pip install --user --proxy "$HTTPS_PROXY" -r forwarder/requirements.txt'
-docker exec integration_tests-forwarder-1 bash -c 'scl enable rh-python38 -- python -m pip install --user --proxy "$HTTPS_PROXY" pytest'
+docker exec integration_tests-forwarder-1 bash -c 'scl enable rh-python38 -- python -m pip install --user -r forwarder/requirements.txt'
+docker exec integration_tests-forwarder-1 bash -c 'scl enable rh-python38 -- python -m pip install --user pytest'
 
 echo "Preparation completed!"
