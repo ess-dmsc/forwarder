@@ -40,10 +40,10 @@ test:
   image: docker:latest
   before_script:
     - cd integration_tests
-    - ./prepare.sh
+    - ./setup.sh
   after_script:
     - cd integration_tests
-    - ./clean-up.sh
+    - ./teardown.sh
   only:
     - merge_requests
 
