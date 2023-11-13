@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from p4p.nt import NTScalar
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 
@@ -13,7 +14,7 @@ pytestmark = [pytest.mark.epics_protocol(EpicsProtocol.PVA), pytest.mark.schema(
 
 
 def test_tdct_serialiser_handles_positive_relative_timestamps():
-    input_relative_timestamps = np.array([10, 11, 12]).astype(np.int32)
+    input_relative_timestamps: NDArray = np.array([10, 11, 12]).astype(np.int32)
     # This is the timestamp of the PV update
     reference_timestamp = 10
     serialiser = tdct_PVASerialiser("tst_source")
@@ -31,7 +32,7 @@ def test_tdct_serialiser_handles_positive_relative_timestamps():
 
 
 def test_tdct_serialiser_handles_negative_relative_timestamps():
-    input_relative_timestamps = np.array([-3, -2, -1]).astype(np.int32)
+    input_relative_timestamps: NDArray = np.array([-3, -2, -1]).astype(np.int32)
     # This is the timestamp of the PV update
     reference_timestamp = 10
     serialiser = tdct_PVASerialiser("tst_source")
@@ -68,7 +69,7 @@ def test_tdct_publisher_publishes_successfully_when_there_is_only_a_single_chopp
 
 
 def test_tdct_serialiser_handles_empty_array():
-    input_relative_timestamps = np.array([]).astype(np.int32)
+    input_relative_timestamps: NDArray = np.array([]).astype(np.int32)
     # This is the timestamp of the PV update
     reference_timestamp = 10
     serialiser = tdct_PVASerialiser("tst_source")

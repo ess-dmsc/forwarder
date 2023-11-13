@@ -3,6 +3,7 @@ from random import randint
 from typing import List
 
 import numpy as np
+from numpy.typing import NDArray
 from p4p.nt import NTScalar
 
 from forwarder.application_logger import get_logger
@@ -34,7 +35,7 @@ class FakeUpdateHandler:
     def _timer_callback(self):
         if self._schema == "tdct":
             # tdct needs a 1D array as data to send
-            data = np.array([randint(0, 100)]).astype(np.int32)
+            data: NDArray[np.int32] = np.array([randint(0, 100)]).astype(np.int32)
             response = NTScalar("ai").wrap(data)
         else:
             # Otherwise 0D (scalar) is fine

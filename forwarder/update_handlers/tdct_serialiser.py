@@ -3,6 +3,7 @@ from typing import Tuple, Union
 import numpy as np
 import p4p
 from caproto import Message as CA_Message
+from numpy.typing import NDArray
 from streaming_data_types.timestamps_tdct import serialise_tdct
 
 from forwarder.epics_to_serialisable_types import (
@@ -87,5 +88,5 @@ class tdct_PVASerialiser(PVASerialiser):
         except AttributeError:
             pass
         data_type = numpy_type_from_p4p_type[update.type()["value"][-1]]
-        value_arr = np.squeeze(np.array(update.value)).astype(data_type)
+        value_arr: NDArray = np.squeeze(np.array(update.value)).astype(data_type)
         return self._serialise(value_arr, origin_time)

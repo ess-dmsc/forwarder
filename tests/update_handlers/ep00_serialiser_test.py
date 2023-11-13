@@ -1,6 +1,7 @@
 import time
 
 import numpy as np
+from numpy.typing import NDArray
 from p4p.client.thread import Disconnected
 from p4p.nt import NTScalar
 from streaming_data_types.epics_connection_info_ep00 import EventType, deserialise_ep00
@@ -29,7 +30,7 @@ def test_serialise_pva_start():
 
 
 def test_serialise_pva_value():
-    test_data = np.array([-3, -2, -1]).astype(np.int32)
+    test_data: NDArray = np.array([-3, -2, -1]).astype(np.int32)
     reference_timestamp = 10
     update = NTScalar("ai").wrap(test_data)
     update.timeStamp.secondsPastEpoch = 0

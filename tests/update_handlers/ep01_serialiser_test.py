@@ -3,6 +3,7 @@ import time
 import numpy as np
 import p4p.client.thread
 import pytest
+from numpy.typing import NDArray
 from p4p.client.thread import Cancelled, Disconnected, Finished, RemoteError
 from p4p.nt import NTScalar
 from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
@@ -24,7 +25,7 @@ def _test_serialise_start(pv_name, serialiser):
 
 
 def _create_value_update(reference_timestamp):
-    test_data = np.array([-3, -2, -1]).astype(np.int32)
+    test_data: NDArray = np.array([-3, -2, -1]).astype(np.int32)
     update = NTScalar("ai").wrap(test_data)
     update.timeStamp.secondsPastEpoch = 0
     update.timeStamp.nanoseconds = reference_timestamp
