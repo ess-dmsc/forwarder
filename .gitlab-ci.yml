@@ -1,0 +1,68 @@
+default:
+  tags:
+    - docker
+  image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
+  before_script:
+    - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
+
+stages:
+  - checks
+  - test
+  - integration
+
+checks:
+  stage: checks
+  script:
+    - scl enable rh-python38 -- python --version
+    - scl enable rh-python38 -- python -m black --check .
+    - scl enable rh-python38 -- python -m flake8
+    - scl enable rh-python38 -- python -m mypy .
+
+test:
+  stage: test
+  script:
+    - scl enable rh-python38 -- pyenv global 3.8 3.9 3.10
+    - pyenv versions
+    - export PATH="/home/jenkins/.pyenv/shims:$PATH"
+    - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=test-output.xml
+  artifacts:
+    paths:
+      - test-output.xml
+      - coverage.xml
+    reports:
+      junit: test-output.xml
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+
+.integration-tests:
+  stage: integration
+  image: docker:latest
+  before_script:
+    - cd integration_tests
+    - ./setup.sh
+  after_script:
+    - cd integration_tests
+    - ./teardown.sh
+  only:
+    - merge_requests
+
+contract-tests:
+  extends: .integration-tests
+  script:
+    - ./run-contract-tests.sh
+  artifacts:
+    paths:
+      - integration_tests/ContractTestsOutput.xml
+    reports:
+      junit: integration_tests/ContractTestsOutput.xml
+
+smoke-tests:
+  extends: .integration-tests
+  script:
+    - ./run-smoke-tests.sh
+  artifacts:
+    paths:
+      - integration_tests/SmokeTestsOutput.xml
+    reports:
+      junit: integration_tests/SmokeTestsOutput.xml
