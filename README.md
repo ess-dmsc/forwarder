@@ -1,4 +1,4 @@
-[![Build Status](https://gitlab.example.com/ecdc/ess-dmsc/forwarder/badges/main/pipeline.svg)](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/-/pipelines) [![codecov](https://gitlab.example.com/ecdc/ess-dmsc/forwarder/badges/main/coverage.svg)](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/-/graphs/main/charts)
+[![Build Status](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/badges/main/pipeline.svg)](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/-/pipelines) [![codecov](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/badges/main/coverage.svg)](https://gitlab.esss.lu.se/ecdc/ess-dmsc/forwarder/-/graphs/main/charts)
 
 
 # Forwarder
