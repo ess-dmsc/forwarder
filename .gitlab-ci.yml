@@ -24,7 +24,7 @@ test:
     - scl enable rh-python38 -- pyenv global 3.8 3.9 3.10
     - pyenv versions
     - export PATH="/home/jenkins/.pyenv/shims:$PATH"
-    - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=test-output.xml
+    - python -m tox -- --cov=forwarder --cov-report=term --cov-report=xml --junitxml=test-output.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     paths:
