@@ -3,6 +3,7 @@ default:
     - docker
   image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
   before_script:
+    - scl enable rh-python38 -- python --version
     - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
 
 stages:
@@ -10,12 +11,19 @@ stages:
   - test
   - integration
 
-checks:
+black:
   stage: checks
   script:
-    - scl enable rh-python38 -- python --version
     - scl enable rh-python38 -- python -m black --check .
+
+flake8:
+  stage: checks
+  script:
     - scl enable rh-python38 -- python -m flake8
+
+mypy:
+  stage: checks:
+  script:
     - scl enable rh-python38 -- python -m mypy .
 
 test:
