@@ -25,7 +25,7 @@ test:
     - pyenv versions
     - export PATH="/home/jenkins/.pyenv/shims:$PATH"
     - python -m tox -- --cov=forwarder --cov-report=xml --junitxml=test-output.xml
-  coverage: /(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/
+  coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     paths:
       - test-output.xml
