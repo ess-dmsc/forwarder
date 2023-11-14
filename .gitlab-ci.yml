@@ -22,7 +22,7 @@ flake8:
     - scl enable rh-python38 -- python -m flake8
 
 mypy:
-  stage: checks:
+  stage: checks
   script:
     - scl enable rh-python38 -- python -m mypy .
 
