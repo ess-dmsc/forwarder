@@ -70,8 +70,9 @@ commands =
 """
 
 [tool.mypy]
-python_version = 3.7
+python_version = 3.8
 check_untyped_defs = true
+plugins = ["numpy.typing.mypy_plugin"]
 
 [[tool.mypy.overrides]]
 module = "confluent_kafka.*"
@@ -132,4 +133,3 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "attr.*"
 ignore_errors = true
-

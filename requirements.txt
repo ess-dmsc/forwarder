@@ -3,7 +3,7 @@ p4p == 4.1.11
 confluent_kafka == 2.3.0
 graypy == 2.1.0
 graphyte == 1.7.1
-numpy >= 1.19
+numpy >= 1.21
 ConfigArgParse == 1.7
 ess-streaming-data-types == 0.23.1
 tomli==2.0.1

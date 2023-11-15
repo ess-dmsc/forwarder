@@ -3,6 +3,7 @@ from time import time
 
 import numpy as np
 import pytest
+from numpy.typing import NDArray
 from p4p import Value
 from p4p.nt import NTTable
 from streaming_data_types.alarm_al00 import Severity as al00_Severity
@@ -21,8 +22,8 @@ pytestmark = [
 
 
 def test_serialise_nttable():
-    values = np.arange(-50, 50, dtype=np.int16)
-    timestamps = np.arange(50, 150, dtype=np.uint64)
+    values: NDArray = np.arange(-50, 50, dtype=np.int16)
+    timestamps: NDArray = np.arange(50, 150, dtype=np.uint64)
     first_timestamp = timestamps[0] / 1e9
 
     table = NTTable.buildType(
@@ -58,7 +59,7 @@ def test_serialise_nttable():
 
 def test_update_handler_publishes_senv_alarm_update(context, producer, pv_source_name):
     pv_timestamp_s = time()  # seconds from unix epoch
-    values = np.arange(-50, 50, 11, dtype=np.float32)
+    values: NDArray = np.arange(-50, 50, 11, dtype=np.float32)
     timestamps = np.repeat(int(time()), 100)
     alarm_status = 4  # Indicates RECORD alarm, we map the alarm message to a specific alarm status to forward
     alarm_severity = 1  # al00_Severity.MINOR
