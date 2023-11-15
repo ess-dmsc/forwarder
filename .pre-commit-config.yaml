@@ -1,21 +1,29 @@
 repos:
--   repo: https://github.com/ambv/black
-    rev: 23.10.1
+-   repo: local
     hooks:
-    - id: black
-      language_version: python3
--   repo: https://github.com/pycqa/flake8
-    rev: 6.1.0
-    hooks:
-    - id: flake8
-      additional_dependencies: [Flake8-pyproject]
--   repo: https://github.com/pre-commit/mirrors-mypy.git
-    rev: v1.6.1
-    hooks:
-    - id: mypy
--   repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-    - id: isort
-      args: ["--profile", "black"]
-
+    -   id: black
+        name: black
+        entry: black
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+    -   id: flake8
+        name: flake8
+        entry: flake8
+        language: system
+        types: [python]
+        require_serial: true
+    -   id: mypy
+        name: mypy
+        entry: mypy
+        args: ["--ignore-missing-imports", "--scripts-are-modules"]
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+    -   id: isort
+        name: isort
+        entry: isort
+        args: ["--profile", "black"]
+        language: system
+        types_or: [cython, pyi, python]
+        require_serial: true
