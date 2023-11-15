@@ -39,13 +39,13 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: BROKERS
 
   simpleioc:
-    image: dockerregistry.esss.dk/ecdc_group/build-node-images/simpleioc:latest
+    image: registry.esss.lu.se/ecdc/ess-dmsc/docker-softioc:latest
     tty: true
     networks:
       - frontend
 
   forwarder:
-    image: dockerregistry.esss.dk/ecdc_group/build-node-images/python310_test_runner
+    image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
     depends_on:
       - kafka1
       - simpleioc
