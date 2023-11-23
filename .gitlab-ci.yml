@@ -6,6 +6,11 @@ default:
     - scl enable rh-python38 -- python --version
     - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
 
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "push"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+
 stages:
   - checks
   - test
@@ -53,8 +58,8 @@ test:
   after_script:
     - cd integration_tests
     - ./teardown.sh
-  only:
-    - merge_requests
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
 contract-tests:
   extends: .integration-tests
