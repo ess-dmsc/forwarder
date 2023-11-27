@@ -4,7 +4,8 @@ from typing import Dict, Optional, Tuple, Union
 from confluent_kafka import Consumer, Producer
 from streaming_data_types.epics_connection_ep01 import ConnectionInfo, serialise_ep01
 
-from forwarder.utils import Counter
+from forwarder.metrics import Counter
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 
 from .kafka_producer import KafkaProducer
 
@@ -59,9 +60,7 @@ def create_producer(
     username: Optional[str] = None,
     password: Optional[str] = None,
     ssl_ca_file: Optional[str] = None,
-    counter: Optional[Counter] = None,
-    buffer_err_counter: Optional[Counter] = None,
-    delivery_err_counter: Optional[Counter] = None,
+    statistics_reporter: Optional[StatisticsReporter] = None,
 ) -> KafkaProducer:
     producer_config = {
         "bootstrap.servers": broker_address,
@@ -74,12 +73,31 @@ def create_producer(
         if ssl_ca_file:
             producer_config["ssl.ca.location"] = ssl_ca_file
     producer = Producer(producer_config)
-    return KafkaProducer(
-        producer,
-        update_msg_counter=counter,
-        update_buffer_err_counter=buffer_err_counter,
-        update_delivery_err_counter=delivery_err_counter,
-    )
+    if not statistics_reporter:
+        return KafkaProducer(producer)
+    else:
+        update_message_counter = Counter(
+            "successful_sends_total", "Total number of updates sent to kafka"
+        )
+        buffer_err_counter = Counter(
+            "send_buffer_errors_total", "Kafka producer queue errors"
+        )
+        delivery_err_counter = Counter(
+            "send_delivery_errors_total", "Kafka delivery errors"
+        )
+        statistics_reporter.register_metric(
+            update_message_counter.name, update_message_counter
+        )
+        statistics_reporter.register_metric(buffer_err_counter.name, buffer_err_counter)
+        statistics_reporter.register_metric(
+            delivery_err_counter.name, delivery_err_counter
+        )
+        return KafkaProducer(
+            producer,
+            update_msg_counter=update_message_counter,
+            update_buffer_err_counter=buffer_err_counter,
+            update_delivery_err_counter=delivery_err_counter,
+        )
 
 
 def create_consumer(
