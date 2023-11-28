@@ -5,10 +5,15 @@ Since we push these metrics to Graphite instead of relying on Prometheus
 standard mechanisms, we provide adapter classes to prevent coupling other
 modules with certain Prometheus internals.
 """
+import re
 
 from prometheus_client import Counter as PrometheusCounter
 from prometheus_client import Gauge as PrometheusGauge
 from prometheus_client import Summary as PrometheusSummary
+
+
+def sanitise_metric_name(metric_name):
+    return re.sub(r"[^a-zA-Z0-9_:]", "_", metric_name)
 
 
 class Gauge(PrometheusGauge):

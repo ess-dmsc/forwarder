@@ -6,6 +6,7 @@ from p4p.client.thread import Context as PVAContext
 from forwarder.common import Channel as ConfigChannel
 from forwarder.common import EpicsProtocol
 from forwarder.kafka.kafka_producer import KafkaProducer
+from forwarder.metrics import Counter
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
@@ -21,6 +22,7 @@ def create_update_handler(
     channel: ConfigChannel,
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
+    processing_errors_metric: Optional[Counter] = None,
 ) -> UpdateHandler:
     if not channel.name:
         raise RuntimeError("PV name not specified when adding handler for channel")
@@ -45,9 +47,15 @@ def create_update_handler(
         periodic_update_ms,
     )
     if channel.protocol == EpicsProtocol.PVA:
-        return PVAUpdateHandler(pva_context, channel.name, serialiser_list)
+        return PVAUpdateHandler(
+            pva_context, channel.name, serialiser_list, processing_errors_metric
+        )
     elif channel.protocol == EpicsProtocol.CA:
-        return CAUpdateHandler(ca_context, channel.name, serialiser_list)
+        return CAUpdateHandler(
+            ca_context, channel.name, serialiser_list, processing_errors_metric
+        )
     elif channel.protocol == EpicsProtocol.FAKE:
-        return FakeUpdateHandler(serialiser_list, channel.schema, fake_pv_period_ms)
+        return FakeUpdateHandler(
+            serialiser_list, channel.schema, fake_pv_period_ms, processing_errors_metric
+        )
     raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")
