@@ -109,4 +109,11 @@ class PVAUpdateHandler:
         """
         for serialiser in self.serialiser_tracker_list:
             serialiser.stop()
+        if self._statistics_reporter:
+            self._statistics_reporter.deregister_metric(
+                f"processing_latency_seconds.{self._pv_name}"
+            )
+            self._statistics_reporter.deregister_metric(
+                f"receive_latency_seconds.{self._pv_name}"
+            )
         self._sub.close()
