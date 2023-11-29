@@ -35,20 +35,25 @@ class CAUpdateHandler:
         self._processing_latency_metric = None
         self._receive_latency_metric = None
         if self._statistics_reporter:
-            self._processing_latency_metric = Summary(
-                sanitise_metric_name(f"processing_latency_seconds.{self._pv_name}"),
-                "Time from the reception of the EPICS update until the Kafka produce call returns",
-            )
-            self._statistics_reporter.register_metric(
-                self._processing_latency_metric.name, self._processing_latency_metric
-            )
-            self._receive_latency_metric = Summary(
-                sanitise_metric_name(f"receive_latency_seconds.{self._pv_name}"),
-                "Time difference between the EPICS timestamp and the reception time at the Forwarder",
-            )
-            self._statistics_reporter.register_metric(
-                self._receive_latency_metric.name, self._receive_latency_metric
-            )
+            try:
+                self._processing_latency_metric = Summary(
+                    sanitise_metric_name(f"processing_latency_seconds.{self._pv_name}"),
+                    "Time from the reception of the EPICS update until the Kafka produce call returns",
+                )
+                self._statistics_reporter.register_metric(
+                    f"processing_latency_seconds.{self._pv_name}",
+                    self._processing_latency_metric,
+                )
+                self._receive_latency_metric = Summary(
+                    sanitise_metric_name(f"receive_latency_seconds.{self._pv_name}"),
+                    "Time difference between the EPICS timestamp and the reception time at the Forwarder",
+                )
+                self._statistics_reporter.register_metric(
+                    f"receive_latency_seconds.{self._pv_name}",
+                    self._receive_latency_metric,
+                )
+            except Exception as e:
+                self._logger.warning(f"Could not initialise metric: {e}")
 
         (self._pv,) = context.get_pvs(
             pv_name, connection_state_callback=self._connection_state_callback
