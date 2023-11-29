@@ -276,6 +276,7 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        statistics_reporter=statistics_reporter,
                         pvs_subscribed_metric=pvs_subscribed_metric,
                         processing_errors_metric=processing_errors_metric,
                     )
@@ -312,6 +313,7 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        statistics_reporter=statistics_reporter,
                         pvs_subscribed_metric=pvs_subscribed_metric,
                         processing_errors_metric=processing_errors_metric,
                     )

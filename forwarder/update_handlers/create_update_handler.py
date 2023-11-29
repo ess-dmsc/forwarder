@@ -7,6 +7,7 @@ from forwarder.common import Channel as ConfigChannel
 from forwarder.common import EpicsProtocol
 from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.metrics import Counter
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.fake_update_handler import FakeUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
@@ -22,6 +23,7 @@ def create_update_handler(
     channel: ConfigChannel,
     fake_pv_period_ms: int,
     periodic_update_ms: Optional[int] = None,
+    statistics_reporter: Optional[StatisticsReporter] = None,
     processing_errors_metric: Optional[Counter] = None,
 ) -> UpdateHandler:
     if not channel.name:
@@ -48,14 +50,26 @@ def create_update_handler(
     )
     if channel.protocol == EpicsProtocol.PVA:
         return PVAUpdateHandler(
-            pva_context, channel.name, serialiser_list, processing_errors_metric
+            pva_context,
+            channel.name,
+            serialiser_list,
+            statistics_reporter,
+            processing_errors_metric,
         )
     elif channel.protocol == EpicsProtocol.CA:
         return CAUpdateHandler(
-            ca_context, channel.name, serialiser_list, processing_errors_metric
+            ca_context,
+            channel.name,
+            serialiser_list,
+            statistics_reporter,
+            processing_errors_metric,
         )
     elif channel.protocol == EpicsProtocol.FAKE:
         return FakeUpdateHandler(
-            serialiser_list, channel.schema, fake_pv_period_ms, processing_errors_metric
+            serialiser_list,
+            channel.schema,
+            fake_pv_period_ms,
+            statistics_reporter,
+            processing_errors_metric,
         )
     raise RuntimeError("Unexpected EpicsProtocol in create_update_handler")
