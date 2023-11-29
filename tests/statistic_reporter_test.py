@@ -115,7 +115,7 @@ def test_metrics_of_type_summary_produce_sum_and_count_metrics():
     statistics_reporter.send_statistics()
 
     calls = [
-        call(f"{metric.name}_sum", 30, ANY),
-        call(f"{metric.name}_count", 2, ANY),
+        call(f"{metric.name}.sum", 30, ANY),
+        call(f"{metric.name}.count", 2, ANY),
     ]
     statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
