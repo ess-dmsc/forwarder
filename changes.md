@@ -2,7 +2,7 @@
 
 ## Next
 
-* 
+* Remove support for deprecated ep00 schema
 
 ## v2.1.0
 
