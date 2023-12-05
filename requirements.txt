@@ -1,4 +1,4 @@
-caproto == 1.1.0
+caproto == 1.1.1
 p4p == 4.1.11
 confluent_kafka == 2.3.0
 graypy == 2.1.0
