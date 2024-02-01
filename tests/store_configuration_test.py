@@ -28,9 +28,11 @@ STREAMS_TO_RETRIEVE = [
         channel.name,
         channel.schema,
         channel.output_topic,
-        Protocol.Protocol.PVA
-        if channel.protocol == EpicsProtocol.PVA
-        else Protocol.Protocol.CA,
+        (
+            Protocol.Protocol.PVA
+            if channel.protocol == EpicsProtocol.PVA
+            else Protocol.Protocol.CA
+        ),
     )
     for channel in CHANNELS_TO_STORE.keys()
 ]
