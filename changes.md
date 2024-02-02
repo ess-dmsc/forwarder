@@ -3,6 +3,7 @@
 ## Next
 
 * Remove support for deprecated ep00 schema
+* Adopt pip-tools to manage requirements.txt files
 
 ## v2.1.0
 
