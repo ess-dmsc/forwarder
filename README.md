@@ -163,3 +163,15 @@ pre-commit run --all-files
 This command can also be used to run the hooks manually.
 
 
+## Updating dependencies
+
+The `requirements.txt` and `requirements-dev.txt` files are generated using
+[pip-tools](https://pip-tools.readthedocs.io), which produces a full list of
+pinned versions generated from the dependencies declared in `pyproject.toml`.
+
+To generate or update the complete list of dependencies:
+
+1. Activate your local virtual environment and make sure you have pip and pip-tools installed: `pip install -U pip pip-tools`
+1. Generate requirements.txt: `pip-compile -v --resolver=backtracking   --generate-hashes  -o requirements.txt pyproject.toml`
+1. Generate requirements-dev.txt: `pip-compile -v --resolver=backtracking  --extra dev  --generate-hashes  -o requirements-dev.txt pyproject.toml`
+
