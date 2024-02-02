@@ -9,16 +9,38 @@ urls = {homepage="https://github.com/ess-dmsc/forwarder", repository="https://gi
 license = { file="LICENSE" }
 readme = "README.md"
 requires-python = ">=3.8"
-dynamic = ["dependencies"]
+dependencies = [
+    "caproto",
+    "p4p",
+    "confluent_kafka",
+    "graypy",
+    "graphyte",
+    "numpy >= 1.21",
+    "ConfigArgParse",
+    "ess-streaming-data-types",
+    "tomli",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pip-tools",
+    "mypy",
+    "black",
+    "flake8",
+    "pytest",
+    "isort",
+    "pre-commit",
+    "pytest-cov",
+    "tox",
+    "wheel",
+    "Flake8-pyproject",
+]
 
 [project.scripts]
 forwarder-launch = "forwarder.scripts.run:main"
 
 [tool.setuptools.packages.find]
 include=["forwarder"]
-
-[tool.setuptools.dynamic]
-dependencies = {file = ["requirements.txt"]}
 
 [tool.black]
 exclude = '/(venv*|.tox)'
