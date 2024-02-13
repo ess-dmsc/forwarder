@@ -56,7 +56,8 @@ def test_update_handler_publishes_enum_update_f142(context, producer, pv_source_
 
     context.call_monitor_callback_with_fake_pv_update(
         NTEnum(valueAlarm=True).wrap(
-            {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
+            {"index": pv_index, "choices": [
+                pv_value_str, "choice1", "choice2"]},
             timestamp=pv_timestamp_s,
         )
     )
@@ -76,7 +77,8 @@ def test_update_handler_publishes_enum_update_f144(context, producer, pv_source_
 
     context.call_monitor_callback_with_fake_pv_update(
         NTEnum(valueAlarm=True).wrap(
-            {"index": pv_index, "choices": [pv_value_str, "choice1", "choice2"]},
+            {"index": pv_index, "choices": [
+                pv_value_str, "choice1", "choice2"]},
             timestamp=pv_timestamp_s,
         )
     )
@@ -115,7 +117,8 @@ def test_update_handler_publishes_scalar_update_f142(
     pv_timestamp_s = time()  # seconds from unix epoch
 
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
 
     # The assertions below assume that an ep01 message is sent after the f142
@@ -152,7 +155,8 @@ def test_update_handler_publishes_scalar_update_f144(
     pv_timestamp_s = time()  # seconds from unix epoch
 
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
 
     # The assertions below assume that an ep01 message is sent after the f142
@@ -301,7 +305,8 @@ def test_update_handler_publishes_periodic_update_f142(
     pv_timestamp_s = time()  # seconds from unix epoch
 
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
 
     # The assertions below assume that an ep01 message is sent after the f142
@@ -326,7 +331,8 @@ def test_update_handler_publishes_periodic_update_f144(
     pv_timestamp_s = time()  # seconds from unix epoch
 
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
 
     data_messages = [
@@ -356,7 +362,8 @@ def test_update_handler_publishes_periodic_with_same_timestamp(
     pv_timestamp_s = time()  # seconds from unix epoch
 
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
 
     data_messages = [
@@ -369,7 +376,8 @@ def test_update_handler_publishes_periodic_with_same_timestamp(
     assert (
         len(data_messages) >= 2
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
-    pv_update_output = [deserialise_f144(data_messages[0]), deserialise_f144(data_messages[1])]
+    pv_update_output = [deserialise_f144(
+        data_messages[0]), deserialise_f144(data_messages[1])]
     assert pv_update_output[0].timestamp_unix_ns != pv_update_output[1].timestamp_unix_ns
 
 
@@ -381,7 +389,8 @@ def test_empty_update_is_not_forwarded(context, producer, pv_source_name):
 
     # First update with non-empty value
     context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+        NTScalar(pv_type, valueAlarm=True).wrap(
+            pv_value, timestamp=pv_timestamp_s)
     )
     # Second update, with empty value
     empty_pv_value: List = []
@@ -413,9 +422,11 @@ def test_empty_update_is_not_cached():
     pv_type = "ai"
 
     try:
-        pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
+        pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(
+            producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
         context.call_monitor_callback_with_fake_pv_update(
-            NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
+            NTScalar(pv_type, valueAlarm=True).wrap(
+                pv_value, timestamp=pv_timestamp_s)
         )
 
         assert (
