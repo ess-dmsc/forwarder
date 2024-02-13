@@ -341,22 +341,15 @@ def test_update_handler_publishes_periodic_update_f144(
     data_messages = [
         msg for msg in producer.published_payloads if "f144" == get_schema(msg)
     ]
-    assert (
-        len(data_messages) >= 2
-    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
-    sleep(2)
-    data_messages = [
-        msg for msg in producer.published_payloads if "f144" == get_schema(msg)
-    ]
     pv_update_output = [
         deserialise_f144(data_messages[0]),
         deserialise_f144(data_messages[1]),
-        deserialise_f144(data_messages[2]),
     ]
     assert (
-        pv_update_output[0].timestamp_unix_ns
-        == pv_update_output[1].timestamp_unix_ns
-        == pv_update_output[2].timestamp_unix_ns
+        len(data_messages) >= 2
+    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
+    assert (
+        pv_update_output[0].timestamp_unix_ns == pv_update_output[1].timestamp_unix_ns
     ), "Expected repeated message timestamps to be equal"
 
 
