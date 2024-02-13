@@ -344,36 +344,18 @@ def test_update_handler_publishes_periodic_update_f144(
     assert (
         len(data_messages) >= 2
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
-
-
-@pytest.mark.schema("f144")
-@pytest.mark.serialiser_update_period_ms(10)
-def test_update_handler_publishes_periodic_with_same_timestamp(context, producer):
-    pv_value = -3
-    pv_type = "i"
-    pv_timestamp_s = time()  # seconds from unix epoch
-
-    context.call_monitor_callback_with_fake_pv_update(
-        NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
-    )
-
+    sleep(2)
     data_messages = [
         msg for msg in producer.published_payloads if "f144" == get_schema(msg)
     ]
-    sleep(0.05)
-    data_messages = [
-        msg for msg in producer.published_payloads if "f144" == get_schema(msg)
-    ]
-    assert (
-        len(data_messages) >= 2
-    ), "Expected more than the 1 message from triggered update due to periodic updates being active"
     pv_update_output = [
         deserialise_f144(data_messages[0]),
         deserialise_f144(data_messages[1]),
+        deserialise_f144(data_messages[2]),
     ]
     assert (
-        pv_update_output[0].timestamp_unix_ns != pv_update_output[1].timestamp_unix_ns
-    )
+        pv_update_output[0].timestamp_unix_ns == pv_update_output[1].timestamp_unix_ns == pv_update_output[2].timestamp_unix_ns
+    ), "Expected repeated message timestamps to be equal"
 
 
 @pytest.mark.schema("tdct")
