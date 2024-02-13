@@ -4,17 +4,21 @@
 # Forwarder
 Forwards EPICS PVs to Apache Kafka. Part of the ESS data streaming pipeline.
 
+Both `Channel Access` and `PV Access` EPICS protocols are supported.
+The protocol can be configured independently for each PV.
+
 ## Installing dependencies
 
 Python 3.8 or higher is required. https://www.python.org/downloads/
 
-Runtime Python dependencies are listed in requirements.txt at the root of the
+Runtime Python dependencies are declared in `pyproject.toml`
+and pinned in requirements.txt at the root of the
 repository. They can be installed from a terminal by running
 ```
 pip install -r requirements.txt
 ```
 
-## Usage
+## Launch
 To run with minimal settings:
 ```
 forwarder_launch.py --config-topic some_server:9092/some_config_topic --status-topic some_server:9092/some_status_topic --output-broker some_other_server:9092
@@ -140,15 +144,9 @@ producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, STREAMS))
 producer.flush()
 ```
 
-# Developer information
+## Developer information
 
-## Development dependencies
-
-Development dependencies (including all runtime dependencies) can be installed by using the following command
-
-```
-pip install -r requirements-dev.txt
-```
+### pre-commit hooks
 
 `black`, `flake8` and `mypy` can be used as a pre-commit hook (installed by [pre-commit](https://pre-commit.com/)).
 You need to run
@@ -162,8 +160,15 @@ pre-commit run --all-files
 ```
 This command can also be used to run the hooks manually.
 
+### Installing development dependencies
 
-## Updating dependencies
+Development dependencies (including all runtime dependencies) can be installed by using the following command
+
+```
+pip install -r requirements-dev.txt
+```
+
+### Updating dependencies
 
 The `requirements.txt` and `requirements-dev.txt` files are generated using
 [pip-tools](https://pip-tools.readthedocs.io), which produces a full list of
@@ -175,3 +180,7 @@ To generate or update the complete list of dependencies:
 1. Generate requirements.txt: `pip-compile -v --resolver=backtracking -o requirements.txt pyproject.toml`
 1. Generate requirements-dev.txt: `pip-compile -v --resolver=backtracking --extra dev -o requirements-dev.txt pyproject.toml`
 
+### Developer notes
+
+Additional design and implementation details are available at
+[Developer notes](docs/developer-notes.md).
