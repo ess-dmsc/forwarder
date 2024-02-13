@@ -354,7 +354,9 @@ def test_update_handler_publishes_periodic_update_f144(
         deserialise_f144(data_messages[2]),
     ]
     assert (
-        pv_update_output[0].timestamp_unix_ns == pv_update_output[1].timestamp_unix_ns == pv_update_output[2].timestamp_unix_ns
+        pv_update_output[0].timestamp_unix_ns
+        == pv_update_output[1].timestamp_unix_ns
+        == pv_update_output[2].timestamp_unix_ns
     ), "Expected repeated message timestamps to be equal"
 
 
