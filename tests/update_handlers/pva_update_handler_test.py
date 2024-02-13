@@ -420,9 +420,13 @@ def test_empty_update_is_not_cached():
             context,
             pv_source_name,
             create_serialiser_list(
-                producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA
+                producer,  # type: ignore
+                pv_source_name,
+                "output_topic",
+                "tdct",
+                EpicsProtocol.PVA,
             ),
-        )  # type: ignore
+        )
         context.call_monitor_callback_with_fake_pv_update(
             NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
         )
