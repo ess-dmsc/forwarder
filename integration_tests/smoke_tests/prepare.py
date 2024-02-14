@@ -16,7 +16,7 @@ from integration_tests.contract_tests.test_kafka_contract import create_topic
 
 # Use the host in the docker compose file.
 # Change this if you want to run against another instance, e.g. localhost
-KAFKA_HOST = "kafka1"
+KAFKA_HOST = os.getenv("FRDR_KAFKA_CONTAINER_NAME", "kafka1")
 
 CONFIG_TOPIC = "forwarder_commands"
 STATUS_TOPIC = "forwarder_status"
