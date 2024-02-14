@@ -38,4 +38,4 @@ The cache and updates are managed by the `SerialiserTracker` class.
 
 ### UpdateHandlers and Serialisers
 
-![Class diagram](uml-class-diagram-UpdateHandlers-and-Serialisers.png "UpdateHandlers and Serialisers class diagram")
+![Class diagram](img/uml-class-diagram-UpdateHandlers-and-Serialisers.png "UpdateHandlers and Serialisers class diagram")
