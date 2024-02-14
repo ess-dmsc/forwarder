@@ -18,7 +18,7 @@ services:
     image: confluentinc/cp-server:7.2.1
     restart: always
     depends_on:
-      - ${FRDR_ZOOKEEPER_CONTAINER_NAME:-zookeeper}
+      - zookeeper
     ports:
       - "9092:9092"
       - "9099:9099"
@@ -49,7 +49,7 @@ services:
     container_name: ${FRDR_FORWARDER_CONTAINER_NAME:-forwarder}
     image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
     depends_on:
-      - ${FRDR_KAFKA_CONTAINER_NAME:-kafka1}
+      - kafka1
       - simpleioc
     tty: true
     networks:
