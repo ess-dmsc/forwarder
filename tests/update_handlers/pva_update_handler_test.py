@@ -341,9 +341,16 @@ def test_update_handler_publishes_periodic_update_f144(
     data_messages = [
         msg for msg in producer.published_payloads if "f144" == get_schema(msg)
     ]
+    pv_update_output = [
+        deserialise_f144(data_messages[0]),
+        deserialise_f144(data_messages[1]),
+    ]
     assert (
         len(data_messages) >= 2
     ), "Expected more than the 1 message from triggered update due to periodic updates being active"
+    assert (
+        pv_update_output[0].timestamp_unix_ns == pv_update_output[1].timestamp_unix_ns
+    ), "Expected repeated message timestamps to be equal"
 
 
 @pytest.mark.schema("tdct")
@@ -386,7 +393,17 @@ def test_empty_update_is_not_cached():
     pv_type = "ai"
 
     try:
-        pva_update_handler = PVAUpdateHandler(context, pv_source_name, create_serialiser_list(producer, pv_source_name, "output_topic", "tdct", EpicsProtocol.PVA))  # type: ignore
+        pva_update_handler = PVAUpdateHandler(
+            context,
+            pv_source_name,
+            create_serialiser_list(
+                producer,  # type: ignore
+                pv_source_name,
+                "output_topic",
+                "tdct",
+                EpicsProtocol.PVA,
+            ),
+        )
         context.call_monitor_callback_with_fake_pv_update(
             NTScalar(pv_type, valueAlarm=True).wrap(pv_value, timestamp=pv_timestamp_s)
         )
