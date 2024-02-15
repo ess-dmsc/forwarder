@@ -61,10 +61,10 @@ test:
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
   variables:
-    FRDR_ZOOKEEPER_CONTAINER_NAME: zookeeper-$CI_JOB_ID
-    FRDR_KAFKA_CONTAINER_NAME: kafka1-$CI_JOB_ID
-    FRDR_SIMPLEIOC_CONTAINER_NAME: simpleioc-$CI_JOB_ID
-    FRDR_FORWARDER_CONTAINER_NAME: forwarder-$CI_JOB_ID
+    FORWARDER_ZOOKEEPER_CONTAINER_NAME: zookeeper-$CI_JOB_ID
+    FORWARDER_KAFKA_CONTAINER_NAME: kafka1-$CI_JOB_ID
+    FORWARDER_SIMPLEIOC_CONTAINER_NAME: simpleioc-$CI_JOB_ID
+    FORWARDER_FORWARDER_CONTAINER_NAME: forwarder-$CI_JOB_ID
 
 contract-tests:
   extends: .integration-tests
