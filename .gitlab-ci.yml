@@ -65,6 +65,8 @@ test:
     FORWARDER_KAFKA_CONTAINER_NAME: kafka1-$CI_JOB_ID
     FORWARDER_SIMPLEIOC_CONTAINER_NAME: simpleioc-$CI_JOB_ID
     FORWARDER_FORWARDER_CONTAINER_NAME: forwarder-$CI_JOB_ID
+    HTTP_PROXY: http://172.20.72.11:8888
+    HTTPS_PROXY: http://172.20.72.11:8888
 
 contract-tests:
   extends: .integration-tests
