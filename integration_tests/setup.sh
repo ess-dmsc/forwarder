@@ -11,7 +11,7 @@ echo "Continuing!"
 
 docker cp .. ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder}:/home/jenkins/
 
-docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c 'scl enable rh-python38 -- python -m pip install --user -r forwarder/requirements.txt'
-docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c 'scl enable rh-python38 -- python -m pip install --user pytest'
+docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c "scl enable rh-python38 -- python -m pip install --user --proxy='$HTTPS_PROXY' -r forwarder/requirements.txt"
+docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c "scl enable rh-python38 -- python -m pip install --user --proxy='$HTTPS_PROXY' pytest"
 
 echo "Preparation completed!"
