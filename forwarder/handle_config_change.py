@@ -8,7 +8,8 @@ from p4p.client.thread import Context as PvaContext
 from forwarder.common import Channel, CommandType, ConfigUpdate
 from forwarder.configuration_store import ConfigurationStore, NullConfigurationStore
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.metrics import Gauge
+from forwarder.metrics import Counter, Gauge
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import (
     UpdateHandler,
@@ -25,7 +26,9 @@ def _subscribe_to_pv(
     logger: Logger,
     fake_pv_period: int,
     pv_update_period: Optional[int],
+    statistics_reporter: Optional[StatisticsReporter] = None,
     pvs_subscribed_metric: Optional[Gauge] = None,
+    processing_errors_metric: Optional[Counter] = None,
 ):
     if new_channel in update_handlers.keys():
         logger.warning(
@@ -42,6 +45,8 @@ def _subscribe_to_pv(
             new_channel,
             fake_pv_period,
             periodic_update_ms=pv_update_period,
+            statistics_reporter=statistics_reporter,
+            processing_errors_metric=processing_errors_metric,
         )
     except RuntimeError as error:
         logger.error(str(error))
@@ -125,7 +130,9 @@ def handle_configuration_change(
     logger: Logger,
     status_reporter: StatusReporter,
     configuration_store: ConfigurationStore = NullConfigurationStore,
+    statistics_reporter: Optional[StatisticsReporter] = None,
     pvs_subscribed_metric: Optional[Gauge] = None,
+    processing_errors_metric: Optional[Counter] = None,
 ):
     """
     Add or remove update handlers according to the requested change in configuration
@@ -149,7 +156,9 @@ def handle_configuration_change(
                         logger,
                         fake_pv_period,
                         pv_update_period,
+                        statistics_reporter=statistics_reporter,
                         pvs_subscribed_metric=pvs_subscribed_metric,
+                        processing_errors_metric=processing_errors_metric,
                     )
                 elif configuration_change.command_type == CommandType.REMOVE:
                     _unsubscribe_from_pv(

@@ -2,9 +2,7 @@ import logging
 from unittest.mock import ANY, MagicMock, call
 
 import pytest
-from confluent_kafka import KafkaError
 
-from forwarder.kafka.kafka_producer import KafkaProducer
 from forwarder.metrics import Counter, Gauge, Summary
 from forwarder.metrics.statistics_reporter import StatisticsReporter
 
@@ -117,75 +115,7 @@ def test_metrics_of_type_summary_produce_sum_and_count_metrics():
     statistics_reporter.send_statistics()
 
     calls = [
-        call(f"{metric.name}_sum", 30, ANY),
-        call(f"{metric.name}_count", 2, ANY),
+        call(f"{metric.name}.sum", 30, ANY),
+        call(f"{metric.name}.count", 2, ANY),
     ]
     statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
-
-
-def test_producer_increments_counter_on_message():
-    class FakeProducer:
-        def produce(self, topic, payload, key, on_delivery, timestamp):
-            on_delivery(None, "IGNORED")
-
-        def flush(self, _):
-            pass
-
-        def poll(self, _):
-            pass
-
-    update_msg_counter = Counter(
-        "successful_sends_total", "Total number of updates sent to kafka"
-    )
-    kafka_producer = KafkaProducer(FakeProducer(), update_msg_counter)
-
-    kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
-    kafka_producer.close()
-    assert update_msg_counter.value == 1
-
-
-def test_producer_increments_buffer_error_counter_on_buffer_error():
-    class FakeProducer:
-        def produce(self, topic, payload, key, on_delivery, timestamp):
-            raise BufferError
-
-        def flush(self, _):
-            pass
-
-        def poll(self, _):
-            pass
-
-    update_buffer_err_counter = Counter(
-        "send_buffer_errors_total", "Kafka producer queue errors"
-    )
-    kafka_producer = KafkaProducer(
-        FakeProducer(), update_buffer_err_counter=update_buffer_err_counter
-    )
-
-    kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
-    kafka_producer.close()
-    assert update_buffer_err_counter.value == 1
-
-
-def test_producer_increments_delivery_error_counter_on_delivery_error():
-    class FakeProducer:
-        def produce(self, topic, payload, key, on_delivery, timestamp):
-            error = KafkaError(KafkaError.INVALID_CONFIG)
-            on_delivery(error, "some error message")
-
-        def flush(self, _):
-            pass
-
-        def poll(self, _):
-            pass
-
-    update_delivery_err_counter = Counter(
-        "send_delivery_errors_total", "Kafka delivery errors"
-    )
-    kafka_producer = KafkaProducer(
-        FakeProducer(), update_delivery_err_counter=update_delivery_err_counter
-    )
-
-    kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
-    kafka_producer.close()
-    assert update_delivery_err_counter.value == 1

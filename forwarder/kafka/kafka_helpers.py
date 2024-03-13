@@ -4,7 +4,7 @@ from typing import Dict, Optional, Tuple, Union
 from confluent_kafka import Consumer, Producer
 from streaming_data_types.epics_connection_ep01 import ConnectionInfo, serialise_ep01
 
-from forwarder.metrics import Counter
+from forwarder.metrics import Counter, Summary
 from forwarder.metrics.statistics_reporter import StatisticsReporter
 
 from .kafka_producer import KafkaProducer
@@ -85,6 +85,10 @@ def create_producer(
         delivery_err_counter = Counter(
             "send_delivery_errors_total", "Kafka delivery errors"
         )
+        latency_metric = Summary(
+            "send_latency_seconds",
+            "Time from the produce call until ACK is received from the broker",
+        )
         statistics_reporter.register_metric(
             update_message_counter.name, update_message_counter
         )
@@ -92,11 +96,13 @@ def create_producer(
         statistics_reporter.register_metric(
             delivery_err_counter.name, delivery_err_counter
         )
+        statistics_reporter.register_metric(latency_metric.name, latency_metric)
         return KafkaProducer(
             producer,
             update_msg_counter=update_message_counter,
             update_buffer_err_counter=buffer_err_counter,
             update_delivery_err_counter=delivery_err_counter,
+            latency_metric=latency_metric,
         )
 
 

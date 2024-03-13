@@ -1,24 +1,26 @@
 from threading import Thread
 from typing import Optional
 
-import confluent_kafka
+from confluent_kafka import KafkaError, Message, Producer
 
 from forwarder.application_logger import get_logger
-from forwarder.metrics import Counter
+from forwarder.metrics import Counter, Summary
 
 
 class KafkaProducer:
     def __init__(
         self,
-        producer: confluent_kafka.Producer,
+        producer: Producer,
         update_msg_counter: Optional[Counter] = None,
         update_buffer_err_counter: Optional[Counter] = None,
         update_delivery_err_counter: Optional[Counter] = None,
+        latency_metric: Optional[Summary] = None,
     ):
         self._producer = producer
         self._update_msg_counter = update_msg_counter
         self._update_buffer_err_counter = update_buffer_err_counter
         self._update_delivery_err_counter = update_delivery_err_counter
+        self._latency_metric = latency_metric
         self._cancelled = False
         self._poll_thread = Thread(target=self._poll_loop)
         self._poll_thread.start()
@@ -40,7 +42,7 @@ class KafkaProducer:
     def produce(
         self, topic: str, payload: bytes, timestamp_ms: int, key: Optional[str] = None
     ):
-        def ack(err, _):
+        def ack(err: KafkaError, msg: Message):
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
                 if self._update_delivery_err_counter:
@@ -50,6 +52,8 @@ class KafkaProducer:
                 # key is None when we send commands.
                 if self._update_msg_counter and key is not None:
                     self._update_msg_counter.inc()
+                if self._latency_metric and key is not None:
+                    self._latency_metric.observe(msg.latency())
 
         try:
             self._producer.produce(

@@ -1,3 +1,4 @@
+import logging
 import random
 import string
 from typing import Union
@@ -5,6 +6,7 @@ from typing import Union
 import pytest
 
 from forwarder.common import EpicsProtocol
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.update_handlers.ca_update_handler import CAUpdateHandler
 from forwarder.update_handlers.pva_update_handler import PVAUpdateHandler
 from forwarder.update_handlers.serialiser_tracker import create_serialiser_list
@@ -15,6 +17,9 @@ from tests.test_helpers.p4p_fakes import FakeContext as PVAFakeContext
 
 @pytest.fixture
 def context(request, producer, pv_source_name):
+    statistics_reporter = StatisticsReporter(
+        "localhost", logging.getLogger("statistics_reporter")
+    )
     context: Union[CAFakeContext, PVAFakeContext]
     schema = request.node.get_closest_marker("schema").args[0]
     epics_protocol = request.node.get_closest_marker("epics_protocol").args[0]
@@ -30,6 +35,7 @@ def context(request, producer, pv_source_name):
             context,
             pv_source_name,
             create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.CA, update_period_ms),  # type: ignore
+            statistics_reporter=statistics_reporter,
         )
     elif epics_protocol == EpicsProtocol.PVA:
         context = PVAFakeContext()
@@ -37,6 +43,7 @@ def context(request, producer, pv_source_name):
             context,
             pv_source_name,
             create_serialiser_list(producer, pv_source_name, "output_topic", schema, EpicsProtocol.PVA, update_period_ms),  # type: ignore
+            statistics_reporter=statistics_reporter,
         )
     else:
         raise ValueError(

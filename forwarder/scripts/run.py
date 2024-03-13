@@ -16,7 +16,7 @@ from forwarder.kafka.kafka_helpers import (
     create_producer,
     parse_kafka_uri,
 )
-from forwarder.metrics import Gauge
+from forwarder.metrics import Counter, Gauge
 from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import parse_config_update
@@ -206,6 +206,7 @@ def main():
     with ExitStack() as exit_stack:
         statistics_reporter = None
         pvs_subscribed_metric = None
+        processing_errors_metric = None
         if grafana_carbon_address:
             statistics_reporter = create_statistics_reporter(
                 args.service_id,
@@ -218,6 +219,12 @@ def main():
             pvs_subscribed_metric = Gauge("pvs_subscribed", "Number of PVs subscribed")
             statistics_reporter.register_metric(
                 pvs_subscribed_metric.name, pvs_subscribed_metric
+            )
+            processing_errors_metric = Counter(
+                "processing_errors", "Errors processing EPICS updates"
+            )
+            statistics_reporter.register_metric(
+                processing_errors_metric.name, processing_errors_metric
             )
 
         # Kafka
@@ -269,7 +276,9 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        statistics_reporter=statistics_reporter,
                         pvs_subscribed_metric=pvs_subscribed_metric,
+                        processing_errors_metric=processing_errors_metric,
                     )
                 except RuntimeError as error:
                     get_logger().error(
@@ -304,7 +313,9 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        statistics_reporter=statistics_reporter,
                         pvs_subscribed_metric=pvs_subscribed_metric,
+                        processing_errors_metric=processing_errors_metric,
                     )
 
         except KeyboardInterrupt:
