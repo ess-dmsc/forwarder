@@ -108,6 +108,8 @@ ply==3.11
     # via p4p
 pre-commit==3.5.0
     # via forwarder (pyproject.toml)
+prometheus-client==0.20.0
+    # via forwarder (pyproject.toml)
 pvxslibs==1.2.4
     # via p4p
 pycodestyle==2.11.1

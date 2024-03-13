@@ -2,7 +2,7 @@ import os
 import sys
 from contextlib import ExitStack
 from socket import gethostname
-from typing import Dict
+from typing import Dict, Optional
 
 from caproto.threading.client import Context as CaContext
 from p4p.client.thread import Context as PvaContext
@@ -16,21 +16,19 @@ from forwarder.kafka.kafka_helpers import (
     create_producer,
     parse_kafka_uri,
 )
+from forwarder.metrics import Gauge
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.parse_commandline_args import get_version, parse_args
 from forwarder.parse_config_update import parse_config_update
-from forwarder.statistics_reporter import StatisticsReporter
 from forwarder.status_reporter import StatusReporter
 from forwarder.update_handlers.create_update_handler import UpdateHandler
-from forwarder.utils import Counter
 
 
 def create_epics_producer(
     broker_uri,
     broker_sasl_password,
     broker_ssl_ca_file,
-    update_message_counter,
-    update_buffer_err_counter,
-    update_delivery_err_counter,
+    statistics_reporter: Optional[StatisticsReporter],
 ):
     (
         broker,
@@ -46,9 +44,7 @@ def create_epics_producer(
         username,
         broker_sasl_password,
         broker_ssl_ca_file,
-        counter=update_message_counter,
-        buffer_err_counter=update_buffer_err_counter,
-        delivery_err_counter=update_delivery_err_counter,
+        statistics_reporter=statistics_reporter,
     )
     return producer
 
@@ -154,23 +150,13 @@ def create_configuration_store(
 def create_statistics_reporter(
     service_id,
     grafana_carbon_address,
-    update_handlers,
-    update_message_counter,
-    update_buffer_err_counter,
-    update_delivery_err_counter,
     logger,
     statistics_update_interval,
 ):
     metric_hostname = gethostname().replace(".", "_")
-    prefix = f"Forwarder.{metric_hostname}.{service_id}.throughput".replace(
-        " ", ""
-    ).lower()
+    prefix = f"forwarder.{metric_hostname}.{service_id}".replace(" ", "").lower()
     statistics_reporter = StatisticsReporter(
         grafana_carbon_address,
-        update_handlers,
-        update_message_counter,  # type: ignore
-        update_buffer_err_counter,  # type: ignore
-        update_delivery_err_counter,  # type: ignore
         logger,
         prefix=prefix,
         update_interval_s=statistics_update_interval,
@@ -216,19 +202,30 @@ def main():
     update_handlers: Dict[Channel, UpdateHandler] = {}
 
     grafana_carbon_address = args.grafana_carbon_address
-    update_message_counter = Counter() if grafana_carbon_address else None
-    update_buffer_err_counter = Counter() if grafana_carbon_address else None
-    update_delivery_err_counter = Counter() if grafana_carbon_address else None
 
     with ExitStack() as exit_stack:
+        statistics_reporter = None
+        pvs_subscribed_metric = None
+        if grafana_carbon_address:
+            statistics_reporter = create_statistics_reporter(
+                args.service_id,
+                grafana_carbon_address,
+                get_logger(),
+                args.statistics_update_interval,
+            )
+            exit_stack.callback(statistics_reporter.stop)
+            statistics_reporter.start()
+            pvs_subscribed_metric = Gauge("pvs_subscribed", "Number of PVs subscribed")
+            statistics_reporter.register_metric(
+                pvs_subscribed_metric.name, pvs_subscribed_metric
+            )
+
         # Kafka
         producer = create_epics_producer(
             args.output_broker,
             args.output_broker_sasl_password,
             args.ssl_ca_cert_file,
-            update_message_counter,
-            update_buffer_err_counter,
-            update_delivery_err_counter,
+            statistics_reporter=statistics_reporter,
         )
         exit_stack.callback(producer.close)
 
@@ -248,20 +245,6 @@ def main():
         )
         exit_stack.callback(status_reporter.stop)
         status_reporter.start()
-
-        if grafana_carbon_address:
-            statistics_reporter = create_statistics_reporter(
-                args.service_id,
-                grafana_carbon_address,
-                update_handlers,
-                update_message_counter,
-                update_buffer_err_counter,
-                update_delivery_err_counter,
-                get_logger(),
-                args.statistics_update_interval,
-            )
-            exit_stack.callback(statistics_reporter.stop)
-            statistics_reporter.start()
 
         if args.storage_topic:
             configuration_store = create_configuration_store(
@@ -286,6 +269,7 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        pvs_subscribed_metric=pvs_subscribed_metric,
                     )
                 except RuntimeError as error:
                     get_logger().error(
@@ -320,6 +304,7 @@ def main():
                         get_logger(),
                         status_reporter,
                         configuration_store,
+                        pvs_subscribed_metric=pvs_subscribed_metric,
                     )
 
         except KeyboardInterrupt:

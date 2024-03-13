@@ -34,6 +34,8 @@ p4p==4.1.11
     # via forwarder (pyproject.toml)
 ply==3.11
     # via p4p
+prometheus-client==0.20.0
+    # via forwarder (pyproject.toml)
 pvxslibs==1.2.4
     # via p4p
 setuptools-dso==2.10

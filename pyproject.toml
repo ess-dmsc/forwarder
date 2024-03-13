@@ -19,6 +19,7 @@ dependencies = [
     "ConfigArgParse",
     "ess-streaming-data-types",
     "tomli",
+    "prometheus-client",
 ]
 
 [project.optional-dependencies]

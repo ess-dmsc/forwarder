@@ -7,8 +7,11 @@ import pytest
 from forwarder.common import Channel, CommandType, ConfigUpdate, EpicsProtocol
 from forwarder.configuration_store import ConfigurationStore
 from forwarder.handle_config_change import handle_configuration_change
+from forwarder.metrics import Gauge
 from forwarder.update_handlers.create_update_handler import UpdateHandler
 from tests.kafka.fake_producer import FakeProducer
+
+PVS_SUBSCRIBED_METRIC = Gauge("pvs_subscribed", "Description")
 
 
 class StubStatusReporter:
@@ -44,19 +47,32 @@ def update_handlers():
         handler.stop()
 
 
+@pytest.fixture(scope="function")
+def pvs_subscribed_metric():
+    """
+    Fixture for creating Gauge metric and reset it after every test
+    """
+    yield PVS_SUBSCRIBED_METRIC
+
+    PVS_SUBSCRIBED_METRIC.set(0)
+
+
 def test_no_change_to_empty_update_handlers_when_invalid_config_update_handled(
     update_handlers,
+    pvs_subscribed_metric,
 ):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     config_update = ConfigUpdate(CommandType.INVALID, None)
 
-    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
     assert not update_handlers
+    assert pvs_subscribed_metric.value == 0
 
 
 def test_no_change_to_update_handlers_when_invalid_config_update_handled(
     update_handlers,
+    pvs_subscribed_metric,
 ):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
@@ -64,9 +80,10 @@ def test_no_change_to_update_handlers_when_invalid_config_update_handled(
 
     existing_channel_name = "test_channel"
     update_handlers[Channel(existing_channel_name, EpicsProtocol.NONE, None, None)] = StubUpdateHandler()  # type: ignore
-    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
     assert len(update_handlers) == 1
     assert existing_channel_name in _get_channel_names(update_handlers)
+    assert pvs_subscribed_metric.value == 0
 
 
 def test_all_update_handlers_are_removed_when_removeall_config_update_is_handled(
@@ -487,3 +504,90 @@ def test_configuration_not_stored_when_command_is_invalid(
     handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, config_store)  # type: ignore
 
     config_store.save_configuration.assert_not_called()
+
+
+def test_subscribed_pvs_metric_is_increased_when_add_config_update_is_handled(
+    update_handlers,
+    pvs_subscribed_metric,
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    config_update = ConfigUpdate(
+        CommandType.ADD,
+        (
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch2", EpicsProtocol.FAKE, "output_topic", "f142"),
+        ),
+    )
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    assert pvs_subscribed_metric.value == 2
+
+
+def test_subscribed_pvs_metric_ignores_duplicates(
+    update_handlers,
+    pvs_subscribed_metric,
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    config_update = ConfigUpdate(
+        CommandType.ADD,
+        (
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+        ),
+    )
+
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    assert pvs_subscribed_metric.value == 1
+
+
+def test_subscribed_pvs_metric_is_decreased_when_remove_config_update_is_handled(
+    update_handlers,
+    pvs_subscribed_metric,
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    add_config_update = ConfigUpdate(
+        CommandType.ADD,
+        (
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch2", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch3", EpicsProtocol.FAKE, "output_topic", "f142"),
+        ),
+    )
+    remove_config_update = ConfigUpdate(
+        CommandType.REMOVE,
+        (
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch2", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel(
+                "does_not_exist_channel", EpicsProtocol.FAKE, "output_topic", "f142"
+            ),
+        ),
+    )
+
+    handle_configuration_change(add_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    handle_configuration_change(remove_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    assert pvs_subscribed_metric.value == 1
+
+
+def test_subscribed_pvs_metric_is_decreased_when_remove_ALL_config_update_is_handled(
+    update_handlers,
+    pvs_subscribed_metric,
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    add_config_update = ConfigUpdate(
+        CommandType.ADD,
+        (
+            Channel("ch1", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch2", EpicsProtocol.FAKE, "output_topic", "f142"),
+            Channel("ch3", EpicsProtocol.FAKE, "output_topic", "f142"),
+        ),
+    )
+    remove_config_update = ConfigUpdate(CommandType.REMOVE_ALL, None)
+
+    handle_configuration_change(add_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    handle_configuration_change(remove_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
+    assert pvs_subscribed_metric.value == 0

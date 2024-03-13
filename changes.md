@@ -4,6 +4,8 @@
 
 * Remove support for deprecated ep00 schema
 * Adopt pip-tools to manage requirements.txt files
+* Refactor statistics reporter to support dynamically added metrics
+* Add latency and per-PV graphite metrics
 
 ## v2.1.0
 

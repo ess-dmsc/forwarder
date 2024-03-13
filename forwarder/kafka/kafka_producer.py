@@ -4,7 +4,7 @@ from typing import Optional
 import confluent_kafka
 
 from forwarder.application_logger import get_logger
-from forwarder.utils import Counter
+from forwarder.metrics import Counter
 
 
 class KafkaProducer:
@@ -44,12 +44,12 @@ class KafkaProducer:
             if err:
                 self.logger.error(f"Message failed delivery: {err}")
                 if self._update_delivery_err_counter:
-                    self._update_delivery_err_counter.increment()
+                    self._update_delivery_err_counter.inc()
             else:
                 # increment only for PVs related updates
                 # key is None when we send commands.
                 if self._update_msg_counter and key is not None:
-                    self._update_msg_counter.increment()
+                    self._update_msg_counter.inc()
 
         try:
             self._producer.produce(
@@ -59,5 +59,5 @@ class KafkaProducer:
             # Producer message buffer is full.
             # Data loss occurred as messages are produced faster than are sent to the kafka broker.
             if self._update_buffer_err_counter:
-                self._update_buffer_err_counter.increment()
+                self._update_buffer_err_counter.inc()
         self._producer.poll(0)

@@ -1,23 +1,82 @@
 import logging
-from typing import Dict
 from unittest.mock import ANY, MagicMock, call
 
+import pytest
 from confluent_kafka import KafkaError
 
 from forwarder.kafka.kafka_producer import KafkaProducer
-from forwarder.statistics_reporter import StatisticsReporter
-from forwarder.utils import Counter
+from forwarder.metrics import Counter, Gauge, Summary
+from forwarder.metrics.statistics_reporter import StatisticsReporter
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
-buffer_err_counter = Counter()
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        Counter("some_counter", "Description"),
+        Gauge("some_gauge", "Description"),
+        Summary("some_summary", "Description"),
+    ],
+)
+def test_successful_metric_registration(metric):
+    statistics_reporter = StatisticsReporter("localhost", logger)
+
+    statistics_reporter.register_metric(metric.name, metric)
+
+    assert len(statistics_reporter._metrics) == 1
+    assert metric.name in statistics_reporter._metrics.keys()
+
+
+def test_register_unsupported_metric_raises():
+    statistics_reporter = StatisticsReporter("localhost", logger)
+    from prometheus_client import Histogram
+
+    metric_name = "some_histogram"
+    metric = Histogram(metric_name, "Description")
+
+    with pytest.raises(TypeError):
+        statistics_reporter.register_metric(metric_name, metric)  # type: ignore
+    assert len(statistics_reporter._metrics) == 0
+    assert metric_name not in statistics_reporter._metrics.keys()
+
+
+@pytest.mark.parametrize(
+    "metric",
+    [
+        Counter("some_counter2", "Description"),
+        Gauge("some_gauge2", "Description"),
+        Summary("some_summary2", "Description"),
+    ],
+)
+def test_successful_metric_deregistration(metric):
+    statistics_reporter = StatisticsReporter("localhost", logger)
+
+    statistics_reporter.register_metric(metric.name, metric)
+    assert metric.name in statistics_reporter._metrics.keys()
+
+    statistics_reporter.deregister_metric(metric.name)
+    assert len(statistics_reporter._metrics) == 0
+    assert metric.name not in statistics_reporter._metrics.keys()
+
+
+def test_deregistration_of_unregistered_metric_is_ignored():
+    statistics_reporter = StatisticsReporter("localhost", logger)
+    registered_metric = Counter("registered_metric", "Description")
+    statistics_reporter.register_metric(registered_metric.name, registered_metric)
+
+    unregistered_metric = Counter("unregistered_metric", "Description")
+    statistics_reporter.deregister_metric(unregistered_metric.name)
+    assert len(statistics_reporter._metrics) == 1
+    assert registered_metric.name in statistics_reporter._metrics.keys()
+    assert unregistered_metric.name not in statistics_reporter._metrics.keys()
 
 
 def test_that_warning_logged_on_send_exception(caplog):
-    update_handler: Dict = {}
-    statistics_reporter = StatisticsReporter(
-        "localhost", update_handler, Counter(), buffer_err_counter, Counter(), logger
-    )
+    statistics_reporter = StatisticsReporter("localhost", logger)
+    buffer_err_counter = Counter("some_buffer_errors_total", "Description")
+    statistics_reporter.register_metric(buffer_err_counter.name, buffer_err_counter)
     statistics_reporter._sender = MagicMock()
     statistics_reporter._sender.send.side_effect = ValueError
 
@@ -27,36 +86,39 @@ def test_that_warning_logged_on_send_exception(caplog):
     assert caplog.text != ""
 
 
-def test_statistic_reporter_sends_number_pvs():
-    update_msg_counter: Counter = Counter()
-    # This dictionary is of type Dict[Channel, UpdateHandler]
-    # StatisticReporter only uses len of this dictionary
-    update_handler = {"key1": "value1", "key2": "value2"}
-    statistics_reporter = StatisticsReporter("localhost", update_handler, update_msg_counter, buffer_err_counter, Counter(), logger)  # type: ignore
+def test_statistic_reporter_performs_push():
+    statistics_reporter = StatisticsReporter("localhost", logger)
     statistics_reporter._sender = MagicMock()
+    counter = Counter("a_counter", "description")
+    gauge = Gauge("a_gauge", "a description")
+    statistics_reporter.register_metric(counter.name, counter)
+    statistics_reporter.register_metric(gauge.name, gauge)
 
+    counter.inc()
+    counter.inc()
+    gauge.set(123)
     statistics_reporter.send_statistics()
 
     calls = [
-        call("number_pvs", len(update_handler.keys()), ANY),
+        call(counter.name, 2, ANY),
+        call(gauge.name, 123, ANY),
     ]
     statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
 
 
-def test_statistic_reporter_sends_total_updates():
-    update_msg_counter: Counter = Counter()
-    statistics_reporter = StatisticsReporter(
-        "localhost", {}, update_msg_counter, buffer_err_counter, Counter(), logger
-    )
+def test_metrics_of_type_summary_produce_sum_and_count_metrics():
+    statistics_reporter = StatisticsReporter("localhost", logger)
     statistics_reporter._sender = MagicMock()
+    metric = Summary("a_summary", "description")
+    statistics_reporter.register_metric(metric.name, metric)
 
-    update_msg_counter.increment()
-    update_msg_counter.increment()
-    update_msg_counter.increment()
+    metric.observe(10)
+    metric.observe(20)
     statistics_reporter.send_statistics()
 
     calls = [
-        call("total_updates", 3, ANY),
+        call(f"{metric.name}_sum", 30, ANY),
+        call(f"{metric.name}_count", 2, ANY),
     ]
     statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
 
@@ -72,7 +134,9 @@ def test_producer_increments_counter_on_message():
         def poll(self, _):
             pass
 
-    update_msg_counter: Counter = Counter()
+    update_msg_counter = Counter(
+        "successful_sends_total", "Total number of updates sent to kafka"
+    )
     kafka_producer = KafkaProducer(FakeProducer(), update_msg_counter)
 
     kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
@@ -91,7 +155,9 @@ def test_producer_increments_buffer_error_counter_on_buffer_error():
         def poll(self, _):
             pass
 
-    update_buffer_err_counter: Counter = Counter()
+    update_buffer_err_counter = Counter(
+        "send_buffer_errors_total", "Kafka producer queue errors"
+    )
     kafka_producer = KafkaProducer(
         FakeProducer(), update_buffer_err_counter=update_buffer_err_counter
     )
@@ -113,7 +179,9 @@ def test_producer_increments_delivery_error_counter_on_delivery_error():
         def poll(self, _):
             pass
 
-    update_delivery_err_counter: Counter = Counter()
+    update_delivery_err_counter = Counter(
+        "send_delivery_errors_total", "Kafka delivery errors"
+    )
     kafka_producer = KafkaProducer(
         FakeProducer(), update_delivery_err_counter=update_delivery_err_counter
     )
@@ -121,39 +189,3 @@ def test_producer_increments_delivery_error_counter_on_delivery_error():
     kafka_producer.produce("IRRELEVANT_TOPIC", b"IRRELEVANT_PAYLOAD", 0, key="PV_NAME")
     kafka_producer.close()
     assert update_delivery_err_counter.value == 1
-
-
-def test_statistic_reporter_sends_data_loss_errors():
-    update_buffer_err_counter: Counter = Counter()
-    statistics_reporter = StatisticsReporter(
-        "localhost", {}, Counter(), update_buffer_err_counter, Counter(), logger
-    )
-    statistics_reporter._sender = MagicMock()
-
-    update_buffer_err_counter.increment()
-    update_buffer_err_counter.increment()
-    update_buffer_err_counter.increment()
-    statistics_reporter.send_statistics()
-
-    calls = [
-        call("data_loss_errors", 3, ANY),
-    ]
-    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
-
-
-def test_statistic_reporter_sends_delivery_errors():
-    update_delivery_err_counter: Counter = Counter()
-    statistics_reporter = StatisticsReporter(
-        "localhost", {}, Counter(), Counter(), update_delivery_err_counter, logger
-    )
-    statistics_reporter._sender = MagicMock()
-
-    update_delivery_err_counter.increment()
-    update_delivery_err_counter.increment()
-    update_delivery_err_counter.increment()
-    statistics_reporter.send_statistics()
-
-    calls = [
-        call("kafka_delivery_errors", 3, ANY),
-    ]
-    statistics_reporter._sender.send.assert_has_calls(calls, any_order=True)
