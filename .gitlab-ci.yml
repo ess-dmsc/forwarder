@@ -60,6 +60,13 @@ test:
     - ./teardown.sh
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  variables:
+    FORWARDER_ZOOKEEPER_CONTAINER_NAME: zookeeper-$CI_JOB_ID
+    FORWARDER_KAFKA_CONTAINER_NAME: kafka1-$CI_JOB_ID
+    FORWARDER_SIMPLEIOC_CONTAINER_NAME: simpleioc-$CI_JOB_ID
+    FORWARDER_FORWARDER_CONTAINER_NAME: forwarder-$CI_JOB_ID
+    HTTP_PROXY: $ESS_HTTP_PROXY
+    HTTPS_PROXY: $ESS_HTTP_PROXY
 
 contract-tests:
   extends: .integration-tests
