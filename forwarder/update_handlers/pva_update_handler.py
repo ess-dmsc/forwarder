@@ -52,7 +52,7 @@ class PVAUpdateHandler:
                     self._receive_latency_metric,
                 )
             except Exception as e:
-                self._logger.warning(f"Could not initialise metric: {e}")
+                self._logger.warning(f"Could not initialise metric for {pv_name}: {e}")
 
         request = context.makeRequest("field()")
         self._sub = context.monitor(
