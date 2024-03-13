@@ -5,6 +5,7 @@ Since we push these metrics to Graphite instead of relying on Prometheus
 standard mechanisms, we provide adapter classes to prevent coupling other
 modules with certain Prometheus internals.
 """
+
 from prometheus_client import Counter as PrometheusCounter
 from prometheus_client import Gauge as PrometheusGauge
 from prometheus_client import Summary as PrometheusSummary
