@@ -46,7 +46,7 @@ class StatisticsReporter:
                     self._sender.send(f"{metric_name}.sum", metric.sum, timestamp)
                     self._sender.send(f"{metric_name}.count", metric.count, timestamp)
                     self._sender.send(
-                        f"{metric_name}.avg",
+                        f"{metric_name}.average",
                         metric.sum / metric.count if metric.count > 0 else 0,
                         timestamp,
                     )
