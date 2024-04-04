@@ -45,6 +45,7 @@ class StatisticsReporter:
                 elif isinstance(metric, Summary):
                     self._sender.send(f"{metric_name}.sum", metric.sum, timestamp)
                     self._sender.send(f"{metric_name}.count", metric.count, timestamp)
+                    self._sender.send(f"{metric_name}.avg", metric.sum / metric.count, timestamp)
         except Exception as ex:
             self._logger.error(f"Could not send statistics: {ex}")
 
