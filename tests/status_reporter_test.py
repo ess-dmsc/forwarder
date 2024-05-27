@@ -19,8 +19,8 @@ def test_when_update_handlers_exist_their_channel_names_are_reported_in_status()
     # Normally the values in this dictionary are the update handler objects
     # but the StatusReporter only uses the keys
     update_handlers = {
-        Channel(test_channel_name_1, EpicsProtocol.NONE, None, None): 1,
-        Channel(test_channel_name_2, EpicsProtocol.NONE, None, None): 2,
+        Channel(test_channel_name_1, EpicsProtocol.NONE, None, None, None): 1,
+        Channel(test_channel_name_2, EpicsProtocol.NONE, None, None, None): 2,
     }
 
     fake_producer = FakeProducer()

@@ -14,7 +14,7 @@ epicscorelibs==7.0.7.99.0.2
     # via
     #   p4p
     #   pvxslibs
-ess-streaming-data-types==0.23.1
+ess-streaming-data-types==0.26.0
     # via forwarder (pyproject.toml)
 flatbuffers==23.5.26
     # via ess-streaming-data-types

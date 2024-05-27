@@ -3,14 +3,14 @@ from typing import Dict
 from unittest import mock
 
 from confluent_kafka import TopicPartition
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType import (
     UpdateType,
 )
-from streaming_data_types.forwarder_config_update_rf5k import (
+from streaming_data_types.forwarder_config_update_fc00 import (
     Protocol,
     StreamInfo,
-    deserialise_rf5k,
-    serialise_rf5k,
+    deserialise_fc00,
+    serialise_fc00,
 )
 
 from forwarder.common import EpicsProtocol
@@ -35,14 +35,15 @@ class ConfigurationStore:
                 channel.schema,
                 channel.output_topic,
                 protocol_map[channel.protocol],
+                channel.periodic,
             )
 
             streams.append(stream)
         if streams:
-            message = serialise_rf5k(UpdateType.ADD, streams)
+            message = serialise_fc00(UpdateType.ADD, streams)
         else:
             # No streams so store a "blank" config
-            message = serialise_rf5k(UpdateType.REMOVEALL, streams)
+            message = serialise_fc00(UpdateType.REMOVEALL, streams)
         self._producer.produce(self._topic, bytes(message), int(time.time() * 1000))
 
     def retrieve_configuration(self):
@@ -71,7 +72,7 @@ class ConfigurationStore:
     @staticmethod
     def _is_a_valid_configuration_buffer(payload):
         try:
-            _ = deserialise_rf5k(payload)
+            _ = deserialise_fc00(payload)
             return True
         except Exception:
             return False
