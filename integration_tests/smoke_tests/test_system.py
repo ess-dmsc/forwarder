@@ -7,14 +7,14 @@ from confluent_kafka import Producer
 from p4p.client.thread import Context
 from streaming_data_types import (
     deserialise_f142,
-    deserialise_rf5k,
+    deserialise_fc00,
     deserialise_x5f2,
-    serialise_rf5k,
+    serialise_fc00,
 )
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType import (
     UpdateType,
 )
-from streaming_data_types.forwarder_config_update_rf5k import Protocol, StreamInfo
+from streaming_data_types.forwarder_config_update_fc00 import Protocol, StreamInfo
 
 from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
 from .prepare import CONFIG_TOPIC, DATA_TOPIC, KAFKA_HOST, STATUS_TOPIC, STORAGE_TOPIC
@@ -61,7 +61,7 @@ def test_check_forwarder_works_as_expected():
     } in status["streams"]
 
     # Remove configuration
-    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+    producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REMOVEALL, []))
     producer.flush(timeout=5)
 
     consumer = create_consumer(KAFKA_HOST)
@@ -79,14 +79,14 @@ def test_check_forwarder_works_as_expected():
 
     # Configure PVs to forward
     streams = [
-        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA),
-        StreamInfo("SIMPLE:DOUBLE2", "f142", DATA_TOPIC, Protocol.Protocol.CA),
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA, 1),
+        StreamInfo("SIMPLE:DOUBLE2", "f142", DATA_TOPIC, Protocol.Protocol.CA, 1),
     ]
 
     storage_consumer = create_consumer(KAFKA_HOST)
     assign_topic(storage_consumer, STORAGE_TOPIC)
 
-    producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, streams))
+    producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.ADD, streams))
     producer.flush(timeout=5)
 
     # Check forwarder status message contains configuration
@@ -121,7 +121,7 @@ def test_check_forwarder_works_as_expected():
     if not messages:
         assert False, "storage timed out"
 
-    msg = deserialise_rf5k(messages[~0])
+    msg = deserialise_fc00(messages[~0])
 
     for s in streams:
         assert s in msg.streams

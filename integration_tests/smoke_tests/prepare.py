@@ -2,11 +2,11 @@ import os
 import sys
 
 from confluent_kafka import Producer
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k import (
+from streaming_data_types.fbschemas.forwarder_config_update_fc00 import (
     Protocol,
     UpdateType,
 )
-from streaming_data_types.forwarder_config_update_rf5k import StreamInfo, serialise_rf5k
+from streaming_data_types.forwarder_config_update_fc00 import StreamInfo, serialise_fc00
 
 sys.path.insert(
     0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -33,7 +33,7 @@ def create_topics():
 
 def create_storage_item():
     streams = [
-        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA),
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA, 1),
     ]
     print(streams[0])
     producer_config = {
@@ -41,7 +41,7 @@ def create_storage_item():
         "message.max.bytes": "20000000",
     }
     producer = Producer(producer_config)
-    producer.produce(STORAGE_TOPIC, serialise_rf5k(UpdateType.UpdateType.ADD, streams))
+    producer.produce(STORAGE_TOPIC, serialise_fc00(UpdateType.UpdateType.ADD, streams))
     producer.flush(timeout=5)
 
 
