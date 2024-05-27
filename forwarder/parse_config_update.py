@@ -42,7 +42,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 
     parsed_streams = tuple(_parse_streams(command_type, config_update.streams))
     if (
-        command_type == CommandType.ADD or command_type == CommandType.REMOVE or command_type == CommandType.REPLACE
+        command_type == CommandType.ADD
+        or command_type == CommandType.REMOVE
+        or command_type == CommandType.REPLACE
     ) and not parsed_streams:
         logger.warning(
             "Configuration update message requests adding or removing streams "
@@ -97,4 +99,6 @@ def _parse_streams(
             )
             continue
 
-        yield Channel(stream.channel, epics_protocol, stream.topic, stream.schema, stream.periodic)
+        yield Channel(
+            stream.channel, epics_protocol, stream.topic, stream.schema, stream.periodic
+        )

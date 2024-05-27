@@ -78,7 +78,11 @@ def test_parse_streams_skips_stream_info_if_add_config_and_schema_not_recognised
     nonexistent_schema = "NONEXISTENT"
     message = serialise_fc00(
         UpdateType.ADD,
-        [StreamInfo("test_channel", nonexistent_schema, "output_topic", Protocol.PVA, 0)],
+        [
+            StreamInfo(
+                "test_channel", nonexistent_schema, "output_topic", Protocol.PVA, 0
+            )
+        ],
     )
     config_message = deserialise_fc00(message)
     streams = tuple(_parse_streams(CommandType.ADD, config_message.streams))
@@ -104,9 +108,15 @@ def test_parse_streams_parses_valid_stream_after_skipping_invalid_stream():
         UpdateType.ADD,
         [
             StreamInfo(
-                "test_invalid_stream", nonexistent_schema, "output_topic", Protocol.PVA, 0
+                "test_invalid_stream",
+                nonexistent_schema,
+                "output_topic",
+                Protocol.PVA,
+                0,
             ),
-            StreamInfo(valid_stream_channel_name, "f142", "output_topic", Protocol.PVA, 0),
+            StreamInfo(
+                valid_stream_channel_name, "f142", "output_topic", Protocol.PVA, 0
+            ),
         ],
     )
     config_message = deserialise_fc00(message)
@@ -165,7 +175,11 @@ def test_parse_streams_skips_stream_on_remove_config_if_schema_not_recognised():
     nonexistent_schema = "NONEXISTENT"
     message = serialise_fc00(
         UpdateType.REMOVE,
-        [StreamInfo("test_channel", nonexistent_schema, "output_topic", Protocol.PVA, 0)],
+        [
+            StreamInfo(
+                "test_channel", nonexistent_schema, "output_topic", Protocol.PVA, 0
+            )
+        ],
     )
     config_message = deserialise_fc00(message)
     streams = tuple(_parse_streams(CommandType.REMOVE, config_message.streams))

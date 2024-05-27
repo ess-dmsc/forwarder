@@ -58,7 +58,9 @@ def test_create_update_handler_throws_if_protocol_not_specified():
 
 def test_create_update_handler_throws_if_periodic_not_specified():
     producer = FakeProducer()
-    channel_with_no_periodic = Channel("name", EpicsProtocol.PVA, "output_topic", "f142", None)
+    channel_with_no_periodic = Channel(
+        "name", EpicsProtocol.PVA, "output_topic", "f142", None
+    )
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_no_periodic, 20000)  # type: ignore
 
@@ -77,7 +79,9 @@ def test_pva_handler_created_when_pva_protocol_specified():
 def test_ca_handler_created_when_ca_protocol_specified():
     producer = FakeProducer()
     context = FakeCAContext()
-    channel_with_ca_protocol = Channel("name", EpicsProtocol.CA, "output_topic", "f142", 0)
+    channel_with_ca_protocol = Channel(
+        "name", EpicsProtocol.CA, "output_topic", "f142", 0
+    )
     handler = create_update_handler(producer, context, None, channel_with_ca_protocol, 20000)  # type: ignore
     assert isinstance(handler, CAUpdateHandler)
     handler.stop()
