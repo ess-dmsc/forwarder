@@ -44,7 +44,7 @@ def _subscribe_to_pv(
             pva_ctx,
             new_channel,
             fake_pv_period,
-            periodic_update_ms=pv_update_period,
+            periodic_update_ms=pv_update_period if new_channel.periodic else None,
             statistics_reporter=statistics_reporter,
             processing_errors_metric=processing_errors_metric,
         )
