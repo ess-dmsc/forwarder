@@ -623,9 +623,7 @@ def test_subscribed_pvs_metric_is_decreased_when_remove_ALL_config_update_is_han
     assert pvs_subscribed_metric.value == 0
 
 
-def test_replace_removes_all_and_adds_new_streams(
-        update_handlers
-):
+def test_replace_removes_all_and_adds_new_streams(update_handlers):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
 
@@ -653,9 +651,7 @@ def test_replace_removes_all_and_adds_new_streams(
     assert channel_4_name in _get_channel_names(update_handlers)
 
 
-def test_periodic_parameter_updates_sets_pv_update_period(
-    update_handlers
-):
+def test_periodic_parameter_updates_sets_pv_update_period(update_handlers):
     status_reporter = StubStatusReporter()
     producer = FakeProducer()
     test_channel_1 = Channel(
@@ -674,5 +670,13 @@ def test_periodic_parameter_updates_sets_pv_update_period(
 
     handle_configuration_change(config_update, 20000, 5000, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
     assert len(update_handlers) == 2
-    assert update_handlers[test_channel_1].serialiser_tracker_list[0]._repeating_timer is None
-    assert update_handlers[test_channel_2].serialiser_tracker_list[0]._repeating_timer.interval == 5.0
+    assert (
+        update_handlers[test_channel_1].serialiser_tracker_list[0]._repeating_timer
+        is None
+    )
+    assert (
+        update_handlers[test_channel_2]
+        .serialiser_tracker_list[0]
+        ._repeating_timer.interval
+        == 5.0
+    )

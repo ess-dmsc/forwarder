@@ -59,7 +59,7 @@ def test_parses_periodic_false_stream():
     )
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.ADD
-    assert config_update.channels[0].periodic == 0
+    assert config_update.channels[0].periodic == 0  # type: ignore
 
 
 def test_parses_periodic_true_stream():
@@ -71,7 +71,7 @@ def test_parses_periodic_true_stream():
     )
     config_update = parse_config_update(message)
     assert config_update.command_type == CommandType.ADD
-    assert config_update.channels[0].periodic == 1
+    assert config_update.channels[0].periodic == 1  # type: ignore
 
 
 def test_parse_streams_skips_stream_info_if_add_config_and_channel_not_specified():
