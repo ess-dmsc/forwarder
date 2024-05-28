@@ -41,6 +41,39 @@ def test_add_config_type_with_no_streams_is_invalid():
     assert config_update.command_type == CommandType.INVALID
 
 
+def test_parses_replace_config_type():
+    message = serialise_fc00(
+        UpdateType.REPLACE,
+        [StreamInfo("test_channel", "f142", "output_topic", Protocol.PVA, 0)],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.REPLACE
+
+
+def test_parses_periodic_false_stream():
+    message = serialise_fc00(
+        UpdateType.ADD,
+        [
+            StreamInfo("test_channel_1", "f142", "output_topic", Protocol.PVA, 0),
+        ],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.ADD
+    assert config_update.channels[0].periodic == 0
+
+
+def test_parses_periodic_true_stream():
+    message = serialise_fc00(
+        UpdateType.ADD,
+        [
+            StreamInfo("test_channel_1", "f142", "output_topic", Protocol.PVA, 1),
+        ],
+    )
+    config_update = parse_config_update(message)
+    assert config_update.command_type == CommandType.ADD
+    assert config_update.channels[0].periodic == 1
+
+
 def test_parse_streams_skips_stream_info_if_add_config_and_channel_not_specified():
     empty_channel = ""
     message = serialise_fc00(

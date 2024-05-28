@@ -144,9 +144,16 @@ def handle_configuration_change(
     elif configuration_change.command_type == CommandType.INVALID:
         return
     else:
+        if configuration_change.command_type == CommandType.REPLACE:
+            _unsubscribe_from_all(
+                update_handlers, logger, pvs_subscribed_metric=pvs_subscribed_metric
+            )
         if configuration_change.channels is not None:
             for channel in configuration_change.channels:
-                if configuration_change.command_type == CommandType.ADD:
+                if (
+                    configuration_change.command_type == CommandType.ADD
+                    or configuration_change.command_type == CommandType.REPLACE
+                ):
                     _subscribe_to_pv(
                         channel,
                         update_handlers,

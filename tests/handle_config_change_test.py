@@ -621,3 +621,58 @@ def test_subscribed_pvs_metric_is_decreased_when_remove_ALL_config_update_is_han
     handle_configuration_change(add_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
     handle_configuration_change(remove_config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter, pvs_subscribed_metric=pvs_subscribed_metric)  # type: ignore
     assert pvs_subscribed_metric.value == 0
+
+
+def test_replace_removes_all_and_adds_new_streams(
+        update_handlers
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+
+    # Existing channels
+    channel_1_name = "test_channel_1"
+    channel_2_name = "test_channel_2"
+    channel_1 = Channel(channel_1_name, EpicsProtocol.FAKE, "output_topic", "f142", 0)
+    channel_2 = Channel(channel_2_name, EpicsProtocol.FAKE, "output_topic", "f142", 1)
+
+    # New channels
+    channel_3_name = "test_channel_3"
+    channel_4_name = "test_channel_4"
+    channel_3 = Channel(channel_3_name, EpicsProtocol.FAKE, "output_topic", "f142", 0)
+    channel_4 = Channel(channel_4_name, EpicsProtocol.FAKE, "output_topic", "f142", 1)
+
+    config_update = ConfigUpdate(CommandType.REPLACE, (channel_3, channel_4))
+
+    update_handlers[channel_1] = StubUpdateHandler()  # type: ignore
+    update_handlers[channel_2] = StubUpdateHandler()  # type: ignore
+    handle_configuration_change(config_update, 20000, None, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
+    assert len(update_handlers) == 2
+    assert channel_1_name not in _get_channel_names(update_handlers)
+    assert channel_2_name not in _get_channel_names(update_handlers)
+    assert channel_3_name in _get_channel_names(update_handlers)
+    assert channel_4_name in _get_channel_names(update_handlers)
+
+
+def test_periodic_parameter_updates_sets_pv_update_period(
+    update_handlers
+):
+    status_reporter = StubStatusReporter()
+    producer = FakeProducer()
+    test_channel_1 = Channel(
+        "test_channel_1", EpicsProtocol.FAKE, "output_topic", "f142", 0
+    )
+    test_channel_2 = Channel(
+        "test_channel_2", EpicsProtocol.FAKE, "output_topic", "f142", 1
+    )
+    config_update = ConfigUpdate(
+        CommandType.ADD,
+        (
+            test_channel_1,
+            test_channel_2,
+        ),
+    )
+
+    handle_configuration_change(config_update, 20000, 5000, update_handlers, producer, None, None, _logger, status_reporter)  # type: ignore
+    assert len(update_handlers) == 2
+    assert update_handlers[test_channel_1].serialiser_tracker_list[0]._repeating_timer is None
+    assert update_handlers[test_channel_2].serialiser_tracker_list[0]._repeating_timer.interval == 5.0
