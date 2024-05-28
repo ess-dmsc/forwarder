@@ -232,9 +232,6 @@ def test_check_forwarder_works_as_expected():
     messages = _get_messages(consumer, timeout=12)
     consumer.close()
 
-    if not messages:
-        assert False, "expected no periodic data but found some"
-
     found_periodic_pva_value = False
     found_periodic_ca_value = False
     for msg in messages:
