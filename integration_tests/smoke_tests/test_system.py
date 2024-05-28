@@ -192,3 +192,104 @@ def test_check_forwarder_works_as_expected():
 
     assert found_pva_value, "didn't find periodic value for PVA"
     assert found_ca_value, "didn't find periodic value for CA"
+
+    # Check that we can configure new PVs with REPLACE and without periodic updates
+    streams = [
+        StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA, 0),
+        StreamInfo("SIMPLE:DOUBLE2", "f142", DATA_TOPIC, Protocol.Protocol.CA, 0),
+    ]
+    producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REPLACE, streams))
+    producer.flush(timeout=5)
+
+    # Check forwarder status message contains new configuration
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, STATUS_TOPIC)
+    messages = _get_messages(consumer)
+    consumer.close()
+
+    if not messages:
+        assert False, "status timed out"
+
+    msg = deserialise_x5f2(messages[~0])
+    status = json.loads(msg.status_json)
+
+    assert {
+        "channel_name": "SIMPLE:DOUBLE2",
+        "protocol": "CA",
+        "output_topic": DATA_TOPIC,
+        "schema": "f142",
+    } in status["streams"]
+    assert {
+        "channel_name": "SIMPLE:DOUBLE",
+        "protocol": "PVA",
+        "output_topic": DATA_TOPIC,
+        "schema": "f142",
+    } in status["streams"]
+
+    # Ensure no periodic updates are received
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, DATA_TOPIC)
+    messages = _get_messages(consumer, timeout=12)
+    consumer.close()
+
+    if not messages:
+        assert False, "expected no periodic data but found some"
+
+    found_periodic_pva_value = False
+    found_periodic_ca_value = False
+    for msg in messages:
+        if msg[4:8].decode("utf-8") == "f142":
+            m = deserialise_f142(msg)
+            if m.source_name == "SIMPLE:DOUBLE":
+                found_periodic_pva_value = True
+            if m.source_name == "SIMPLE:DOUBLE2":
+                found_periodic_ca_value = True
+
+    assert (
+        not found_periodic_pva_value
+    ), "found periodic value for PVA when not expected"
+    assert not found_periodic_ca_value, "found periodic value for CA when not expected"
+
+    # Check forwards PVA value change after REPLACE
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, DATA_TOPIC)
+
+    new_pva_value = random.randrange(1000)
+    ctx.put("SIMPLE:DOUBLE", new_pva_value, wait=True)
+
+    messages = _get_messages(consumer)
+    consumer.close()
+
+    if not messages:
+        assert False, "pva data timed out"
+
+    found_value = False
+    for msg in messages:
+        if msg[4:8].decode("utf-8") == "f142":
+            m = deserialise_f142(msg)
+            if m.source_name == "SIMPLE:DOUBLE" and m.value == new_pva_value:
+                found_value = True
+
+    assert found_value, "didn't find value that was set via PVA after REPLACE"
+
+    # Check forwards CA value change after REPLACE
+    consumer = create_consumer(KAFKA_HOST)
+    assign_topic(consumer, DATA_TOPIC)
+
+    new_ca_value = random.randrange(1000)
+    write("SIMPLE:DOUBLE2", new_ca_value, notify=True)
+
+    messages = _get_messages(consumer)
+    consumer.close()
+
+    if not messages:
+        assert False, "ca data timed out"
+
+    found_value = False
+    for msg in messages:
+        if msg[4:8].decode("utf-8") == "f142":
+            m = deserialise_f142(msg)
+            if m.source_name == "SIMPLE:DOUBLE2" and m.value == new_ca_value:
+                found_value = True
+
+    assert found_value, "didn't find value that was set via CA after REPLACE"
