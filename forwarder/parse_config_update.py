@@ -42,10 +42,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 
     parsed_streams = tuple(_parse_streams(command_type, config_update.streams))
     if (
-        command_type == CommandType.ADD
-        or command_type == CommandType.REMOVE
-        or command_type == CommandType.REPLACE
-    ) and not parsed_streams:
+        command_type in [CommandType.ADD, CommandType.REMOVE, CommandType.REPLACE]
+        and not parsed_streams
+    ):
         logger.warning(
             "Configuration update message requests adding or removing streams "
             "but does not contain valid details of streams"

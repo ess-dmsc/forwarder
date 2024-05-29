@@ -35,7 +35,6 @@ def create_storage_item():
     streams = [
         StreamInfo("SIMPLE:DOUBLE", "f142", DATA_TOPIC, Protocol.Protocol.PVA, 1),
     ]
-    print(streams[0])
     producer_config = {
         "bootstrap.servers": f"{KAFKA_HOST}:9092",
         "message.max.bytes": "20000000",

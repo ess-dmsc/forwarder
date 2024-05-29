@@ -150,10 +150,10 @@ def handle_configuration_change(
             )
         if configuration_change.channels is not None:
             for channel in configuration_change.channels:
-                if (
-                    configuration_change.command_type == CommandType.ADD
-                    or configuration_change.command_type == CommandType.REPLACE
-                ):
+                if configuration_change.command_type in [
+                    CommandType.ADD,
+                    CommandType.REPLACE,
+                ]:
                     _subscribe_to_pv(
                         channel,
                         update_handlers,
