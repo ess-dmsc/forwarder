@@ -16,33 +16,33 @@ _logger.addHandler(logging.NullHandler())
 
 def test_create_update_handler_throws_if_channel_has_no_name():
     producer = FakeProducer()
-    channel_with_no_name = Channel(None, EpicsProtocol.PVA, "output_topic", "f142")
+    channel_with_no_name = Channel(None, EpicsProtocol.PVA, "output_topic", "f142", 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_no_name, 20000)  # type: ignore
 
-    channel_with_empty_name = Channel("", EpicsProtocol.PVA, "output_topic", "f142")
+    channel_with_empty_name = Channel("", EpicsProtocol.PVA, "output_topic", "f142", 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_empty_name, 20000)  # type: ignore
 
 
 def test_create_update_handler_throws_if_channel_has_no_topic():
     producer = FakeProducer()
-    channel_with_no_topic = Channel("name", EpicsProtocol.PVA, None, "f142")
+    channel_with_no_topic = Channel("name", EpicsProtocol.PVA, None, "f142", 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_no_topic, 20000)  # type: ignore
 
-    channel_with_empty_topic = Channel("name", EpicsProtocol.PVA, "", "f142")
+    channel_with_empty_topic = Channel("name", EpicsProtocol.PVA, "", "f142", 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_empty_topic, 20000)  # type: ignore
 
 
 def test_create_update_handler_throws_if_channel_has_no_schema():
     producer = FakeProducer()
-    channel_with_no_topic = Channel("name", EpicsProtocol.PVA, "output_topic", None)
+    channel_with_no_topic = Channel("name", EpicsProtocol.PVA, "output_topic", None, 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_no_topic, 20000)  # type: ignore
 
-    channel_with_empty_topic = Channel("name", EpicsProtocol.PVA, "output_topic", "")
+    channel_with_empty_topic = Channel("name", EpicsProtocol.PVA, "output_topic", "", 0)
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_empty_topic, 20000)  # type: ignore
 
@@ -50,17 +50,26 @@ def test_create_update_handler_throws_if_channel_has_no_schema():
 def test_create_update_handler_throws_if_protocol_not_specified():
     producer = FakeProducer()
     channel_with_no_protocol = Channel(
-        "name", EpicsProtocol.NONE, "output_topic", "f142"
+        "name", EpicsProtocol.NONE, "output_topic", "f142", 0
     )
     with pytest.raises(RuntimeError):
         create_update_handler(producer, None, None, channel_with_no_protocol, 20000)  # type: ignore
+
+
+def test_create_update_handler_throws_if_periodic_not_specified():
+    producer = FakeProducer()
+    channel_with_no_periodic = Channel(
+        "name", EpicsProtocol.PVA, "output_topic", "f142", None
+    )
+    with pytest.raises(RuntimeError):
+        create_update_handler(producer, None, None, channel_with_no_periodic, 20000)  # type: ignore
 
 
 def test_pva_handler_created_when_pva_protocol_specified():
     producer = FakeProducer()
     context = FakePVAContext()
     channel_with_pva_protocol = Channel(
-        "name", EpicsProtocol.PVA, "output_topic", "f142"
+        "name", EpicsProtocol.PVA, "output_topic", "f142", 0
     )
     handler = create_update_handler(producer, None, context, channel_with_pva_protocol, 20000)  # type: ignore
     assert isinstance(handler, PVAUpdateHandler)
@@ -70,7 +79,9 @@ def test_pva_handler_created_when_pva_protocol_specified():
 def test_ca_handler_created_when_ca_protocol_specified():
     producer = FakeProducer()
     context = FakeCAContext()
-    channel_with_ca_protocol = Channel("name", EpicsProtocol.CA, "output_topic", "f142")
+    channel_with_ca_protocol = Channel(
+        "name", EpicsProtocol.CA, "output_topic", "f142", 0
+    )
     handler = create_update_handler(producer, context, None, channel_with_ca_protocol, 20000)  # type: ignore
     assert isinstance(handler, CAUpdateHandler)
     handler.stop()

@@ -2,13 +2,13 @@ from unittest import mock
 
 import pytest
 from confluent_kafka import Consumer
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType import (
     UpdateType,
 )
-from streaming_data_types.forwarder_config_update_rf5k import (
+from streaming_data_types.forwarder_config_update_fc00 import (
     Protocol,
     StreamInfo,
-    serialise_rf5k,
+    serialise_fc00,
 )
 
 from forwarder.common import Channel, EpicsProtocol, config_change_to_command_type
@@ -19,8 +19,8 @@ from tests.kafka.fake_producer import FakeProducer
 DUMMY_UPDATE_HANDLER = None
 
 CHANNELS_TO_STORE = {
-    Channel("channel1", EpicsProtocol.PVA, "topic1", "f142"): DUMMY_UPDATE_HANDLER,
-    Channel("channel2", EpicsProtocol.CA, "topic2", "tdct"): DUMMY_UPDATE_HANDLER,
+    Channel("channel1", EpicsProtocol.PVA, "topic1", "f142", 0): DUMMY_UPDATE_HANDLER,
+    Channel("channel2", EpicsProtocol.CA, "topic2", "tdct", 0): DUMMY_UPDATE_HANDLER,
 }
 
 STREAMS_TO_RETRIEVE = [
@@ -33,6 +33,7 @@ STREAMS_TO_RETRIEVE = [
             if channel.protocol == EpicsProtocol.PVA
             else Protocol.Protocol.CA
         ),
+        channel.periodic,
     )
     for channel in CHANNELS_TO_STORE.keys()
 ]
@@ -83,7 +84,7 @@ def test_when_no_pvs_stored_message_type_is_remove_all():
 def test_retrieving_stored_info_with_no_pvs_gets_message_without_streams():
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (0, 100)
-    message = serialise_rf5k(UpdateType.REMOVEALL, [])
+    message = serialise_fc00(UpdateType.REMOVEALL, [])
     mock_consumer.consume.return_value = [FakeKafkaMessage(message)]
     store = ConfigurationStore(
         producer=None, consumer=mock_consumer, topic="store_topic"
@@ -96,7 +97,7 @@ def test_retrieving_stored_info_with_no_pvs_gets_message_without_streams():
 def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
     mock_consumer = mock.create_autospec(Consumer)
     mock_consumer.get_watermark_offsets.return_value = (0, 100)
-    message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
+    message = serialise_fc00(UpdateType.ADD, STREAMS_TO_RETRIEVE)
     mock_consumer.consume.return_value = [FakeKafkaMessage(message)]
     store = ConfigurationStore(
         producer=None, consumer=mock_consumer, topic="store_topic"
@@ -110,7 +111,7 @@ def test_retrieving_stored_info_with_multiple_pvs_gets_streams():
 
 
 def test_retrieve_config_find_valid_message_amongst_junk():
-    message = serialise_rf5k(UpdateType.ADD, STREAMS_TO_RETRIEVE)
+    message = serialise_fc00(UpdateType.ADD, STREAMS_TO_RETRIEVE)
     messages_in_storage_topic = [
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 1 ::")],
         [FakeKafkaMessage(":: SOME JUNK MESSAGE 2 ::")],
