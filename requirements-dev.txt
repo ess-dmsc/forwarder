@@ -36,7 +36,7 @@ epicscorelibs==7.0.7.99.0.2
     # via
     #   p4p
     #   pvxslibs
-ess-streaming-data-types==0.23.1
+ess-streaming-data-types==0.26.1
     # via forwarder (pyproject.toml)
 exceptiongroup==1.2.0
     # via pytest

@@ -40,6 +40,10 @@ def create_update_handler(
         raise RuntimeError(
             f"Protocol not specified when adding handler for channel {channel.name}"
         )
+    if channel.periodic is None:
+        raise RuntimeError(
+            f"Periodic not specified when adding handler for channel {channel.name}"
+        )
     serialiser_list = create_serialiser_list(
         producer,
         channel.name,

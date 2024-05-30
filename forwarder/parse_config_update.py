@@ -1,9 +1,9 @@
 from typing import Generator, List
 
 from streaming_data_types.exceptions import WrongSchemaException
-from streaming_data_types.forwarder_config_update_rf5k import (
+from streaming_data_types.forwarder_config_update_fc00 import (
     StreamInfo,
-    deserialise_rf5k,
+    deserialise_fc00,
 )
 
 from forwarder.application_logger import get_logger
@@ -21,7 +21,7 @@ logger = get_logger()
 
 def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
     try:
-        config_update = deserialise_rf5k(config_update_payload)
+        config_update = deserialise_fc00(config_update_payload)
         command_type = config_change_to_command_type[config_update.config_change]
     except WrongSchemaException:
         logger.warning("Ignoring received message as it had the wrong schema")
@@ -42,8 +42,9 @@ def parse_config_update(config_update_payload: bytes) -> ConfigUpdate:
 
     parsed_streams = tuple(_parse_streams(command_type, config_update.streams))
     if (
-        command_type == CommandType.ADD or command_type == CommandType.REMOVE
-    ) and not parsed_streams:
+        command_type in [CommandType.ADD, CommandType.REMOVE, CommandType.REPLACE]
+        and not parsed_streams
+    ):
         logger.warning(
             "Configuration update message requests adding or removing streams "
             "but does not contain valid details of streams"
@@ -97,4 +98,6 @@ def _parse_streams(
             )
             continue
 
-        yield Channel(stream.channel, epics_protocol, stream.topic, stream.schema)
+        yield Channel(
+            stream.channel, epics_protocol, stream.topic, stream.schema, stream.periodic
+        )
