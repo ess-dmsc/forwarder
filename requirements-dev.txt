@@ -151,7 +151,7 @@ typing-extensions==4.9.0
     # via
     #   black
     #   mypy
-virtualenv==20.25.0
+virtualenv==20.26.2
     # via
     #   pre-commit
     #   tox
