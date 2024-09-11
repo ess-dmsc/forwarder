@@ -13,7 +13,6 @@ dependencies = [
     "caproto",
     "p4p",
     "confluent_kafka",
-    "graypy",
     "graphyte",
     "numpy >= 1.21",
     "ConfigArgParse",
@@ -107,10 +106,6 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = "numpy.*"
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = "graypy.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
