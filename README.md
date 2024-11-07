@@ -71,7 +71,7 @@ Example: `SCRAM-SHA-256\alice@10.123.123.1:9092/topic`.
 
 Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration
 topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
-the rf5k schema which can be found [here](https://github.com/ess-dmsc/streaming-data-types/blob/master/schemas/rf5k_forwarder_config.fbs).
+the fc00 schema which can be found [here](https://github.com/ess-dmsc/streaming-data-types/blob/master/schemas/fc00_forwarder_config.fbs).
 Support for serialising and deserialising these messages in Python in available in the
 [ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
 
@@ -86,10 +86,11 @@ A stream contains:
  * The name of the PV to be forwarded.
  * The EPICS protocol for reading the PV.
  * The Kafka topic to write to.
- * The FlatBuffers schema to encode the PV value with. See the supported schemas [here](forwarder/update_handlers/schema_serialiser_factory.py#L24).
+ * The FlatBuffers schema to encode the PV value with. See the supported schemas [here](forwarder/update_handlers/schema_serialiser_factory.py#L34).
    * Note that additional messages with different schemas may be configured by the forwarder 
      automatically. In particular, every PV will also generate `ep01` messages, and PVs 
      configured for `f144` will forward alarm information as `al00` messages.
+ * The period to send data if it hasn't changed. 0 does not send on an interval and instead only sends an update when the value has changed. 
 
 
 Note that when removing (using REMOVE) configured streams, not all fields in the `Stream` table of the schema need to be populated.
@@ -110,12 +111,12 @@ To use for real, replace CONFIG_BROKER, CONFIG_TOPIC and STREAMS with values cor
 
 ```python
 from confluent_kafka import Producer
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
+from streaming_data_types.forwarder_config_update_fc00 import (
+    serialise_fc00,
     StreamInfo,
     Protocol,
 )
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
+from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType import (
     UpdateType,
 )
 
@@ -124,22 +125,22 @@ CONFIG_BROKER = "some_kafka_broker:9092"
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 STREAMS = [
-    StreamInfo("IOC:PV1", "f142", "some_topic", Protocol.Protocol.PVA),
-    StreamInfo("IOC:PV2", "f142", "some_other_topic", Protocol.Protocol.CA),
-    StreamInfo("IOC:PV3", "f142", "some_other_topic", Protocol.Protocol.PVA),
+    StreamInfo("IOC:PV1", "f142", "some_topic", Protocol.Protocol.PVA, 0),
+    StreamInfo("IOC:PV2", "f142", "some_other_topic", Protocol.Protocol.CA, 1000),
+    StreamInfo("IOC:PV3", "f142", "some_other_topic", Protocol.Protocol.PVA, 30000),
 ]
 
 producer = Producer({"bootstrap.servers": CONFIG_BROKER})
 
 # Add new streams
-producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, STREAMS))
+producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.ADD, STREAMS))
 
 # Remove one stream (note that you need to pass the argument as a list)
-# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, [STREAMS[0]]))
+# producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REMOVE, [STREAMS[0]]))
 
 # Remove all the streams at once
 #   USE WITH CAUTION!!
-# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+# producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REMOVEALL, []))
 
 producer.flush()
 ```
