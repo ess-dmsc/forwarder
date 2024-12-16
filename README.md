@@ -71,7 +71,7 @@ Example: `SCRAM-SHA-256\alice@10.123.123.1:9092/topic`.
 
 Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration
 topic specified in the command line arguments. Such messages must be serialised as FlatBuffers using
-the rf5k schema which can be found [here](https://github.com/ess-dmsc/streaming-data-types/blob/master/schemas/rf5k_forwarder_config.fbs).
+the fc00 schema which can be found [here](https://github.com/ess-dmsc/streaming-data-types/blob/master/schemas/fc00_forwarder_config.fbs).
 Support for serialising and deserialising these messages in Python in available in the
 [ess-streaming-data-types](https://pypi.org/project/ess-streaming-data-types/) library.
 
@@ -138,11 +138,11 @@ producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.ADD, STREAMS))
 # producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REPLACE, STREAMS))
 
 # Remove one stream (note that you need to pass the argument as a list)
-# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, [STREAMS[0]]))
+# producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REMOVE, [STREAMS[0]]))
 
 # Remove all the streams at once
 #   USE WITH CAUTION!!
-# producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVEALL, []))
+# producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REMOVEALL, []))
 
 producer.flush()
 ```
