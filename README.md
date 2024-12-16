@@ -81,6 +81,7 @@ There are three choices for the UpdateType of the configuration message:
  * ADD - add the specified streams to the existing set of streams
  * REMOVE - remove the specified streams from the set of streams
  * REMOVEALL - remove all streams
+ * REPLACE - remove all streams and add the specified streams
 
 A stream contains:
  * The name of the PV to be forwarded.
@@ -90,6 +91,9 @@ A stream contains:
    * Note that additional messages with different schemas may be configured by the forwarder 
      automatically. In particular, every PV will also generate `ep01` messages, and PVs 
      configured for `f144` will forward alarm information as `al00` messages.
+ * The last argument is a boolean indicating whether the PV should be periodically forwarded even if the value hasn't changed.
+   The periodic update is useful for signals like motor positions which might not change often, but the periodic update should be
+   turned off for signals like viscosity in a rheometer which is measured at a specific time and we don't want to send the same value again.
 
 
 Note that when removing (using REMOVE) configured streams, not all fields in the `Stream` table of the schema need to be populated.
@@ -110,29 +114,28 @@ To use for real, replace CONFIG_BROKER, CONFIG_TOPIC and STREAMS with values cor
 
 ```python
 from confluent_kafka import Producer
-from streaming_data_types.forwarder_config_update_rf5k import (
-    serialise_rf5k,
-    StreamInfo,
-    Protocol,
-)
-from streaming_data_types.fbschemas.forwarder_config_update_rf5k.UpdateType import (
-    UpdateType,
-)
+from streaming_data_types.forwarder_config_update_fc00 import (Protocol,
+                                                               StreamInfo,
+                                                               serialise_fc00)
+from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType import UpdateType
 
 CONFIG_BROKER = "some_kafka_broker:9092"
 
 CONFIG_TOPIC = "TEST_forwarderConfig"
 
 STREAMS = [
-    StreamInfo("IOC:PV1", "f142", "some_topic", Protocol.Protocol.PVA),
-    StreamInfo("IOC:PV2", "f142", "some_other_topic", Protocol.Protocol.CA),
-    StreamInfo("IOC:PV3", "f142", "some_other_topic", Protocol.Protocol.PVA),
+    StreamInfo("IOC:PV1", "f144", "some_topic", Protocol.Protocol.PVA, 1),
+    StreamInfo("IOC:PV2", "f144", "some_other_topic", Protocol.Protocol.CA, 1),
+    StreamInfo("IOC:PV3", "f144", "some_other_topic", Protocol.Protocol.PVA, 0),
 ]
 
 producer = Producer({"bootstrap.servers": CONFIG_BROKER})
 
 # Add new streams
-producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.ADD, STREAMS))
+producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.ADD, STREAMS))
+
+# Replace all streams (note that this will remove all the existing streams)
+# producer.produce(CONFIG_TOPIC, serialise_fc00(UpdateType.REPLACE, STREAMS))
 
 # Remove one stream (note that you need to pass the argument as a list)
 # producer.produce(CONFIG_TOPIC, serialise_rf5k(UpdateType.REMOVE, [STREAMS[0]]))
