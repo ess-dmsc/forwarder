@@ -24,7 +24,7 @@ graypy==2.1.0
     # via forwarder (pyproject.toml)
 nose2==0.14.1
     # via p4p
-numpy==1.24.4
+numpy==1.26.4
     # via
     #   epicscorelibs
     #   ess-streaming-data-types
