@@ -67,6 +67,12 @@ Only non-TLS channels (`SASL_PLAINTEXT`) are currently supported.
 The SASL mechanism can be specified as part of the username/broker string as follows: `sasl_mechanism\username@broker:port/topic`.
 Example: `SCRAM-SHA-256\alice@10.123.123.1:9092/topic`.
 
+### Running in container
+To build the forwarder for use within a container, use `docker build . --tag forwarder:latest`.
+
+To use the container run `docker run -it forwarder:latest` followed by your options ie. 
+`docker run -it forwarder:latest --config-topic mybroker:9092/configTopic . . . `
+
 ## Configuring EPICS PVs to be forwarded
 
 Adding or removing PVs to be forwarded is done by publishing configuration change messages to the configuration

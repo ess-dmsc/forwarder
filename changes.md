@@ -6,6 +6,7 @@
 * Adopt pip-tools to manage requirements.txt files
 * Refactor statistics reporter to support dynamically added metrics
 * Add latency and per-PV graphite metrics
+* Add containerfile
 
 ## v2.1.0
 
