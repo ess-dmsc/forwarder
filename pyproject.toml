@@ -8,13 +8,13 @@ version = "2.1.dev0"
 urls = {homepage="https://github.com/ess-dmsc/forwarder", repository="https://github.com/ess-dmsc/forwarder"}
 license = { file="LICENSE" }
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "caproto",
     "p4p",
     "confluent_kafka",
     "graphyte",
-    "numpy >= 1.21",
+    "numpy < 2",
     "ConfigArgParse",
     "ess-streaming-data-types",
     "tomli",
@@ -92,7 +92,7 @@ commands =
 """
 
 [tool.mypy]
-python_version = 3.8
+python_version = 3.9
 check_untyped_defs = true
 plugins = ["numpy.typing.mypy_plugin"]
 
