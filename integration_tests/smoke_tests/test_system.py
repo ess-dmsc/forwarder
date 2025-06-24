@@ -1,6 +1,8 @@
 import json
 import random
 import time
+import pytest
+import subprocess
 
 from caproto.sync.client import write
 from confluent_kafka import Producer
@@ -17,7 +19,43 @@ from streaming_data_types.fbschemas.forwarder_config_update_fc00.UpdateType impo
 from streaming_data_types.forwarder_config_update_fc00 import Protocol, StreamInfo
 
 from ..contract_tests.test_kafka_contract import assign_topic, create_consumer
-from .prepare import CONFIG_TOPIC, DATA_TOPIC, KAFKA_HOST, STATUS_TOPIC, STORAGE_TOPIC
+from .prepare import (
+    CONFIG_TOPIC,
+    DATA_TOPIC,
+    KAFKA_HOST,
+    STATUS_TOPIC,
+    STORAGE_TOPIC,
+    create_topics,
+    create_storage_item,
+)
+
+
+@pytest.fixture(scope="session", autouse=True)
+def setup_environment():
+    create_topics()
+    create_storage_item()
+
+    # Start background forwarder process
+    process = subprocess.Popen(
+        [
+            "python",
+            "forwarder_launch.py",
+            "--config-topic=kafka1:9092/forwarder_commands",
+            "--status-topic=kafka1:9092/forwarder_status",
+            "--storage-topic=kafka1:9092/forwarder_storage",
+            "--output-broker=kafka1:9092",
+            "--pv-update-period=10000",
+        ]
+    )
+
+    # Give it time to initialize
+    time.sleep(2)
+
+    yield  # give control to the test suite
+
+    # Teardown: terminate background process after all tests
+    process.terminate()
+    process.wait()
 
 
 def _get_messages(consumer, timeout=10):
