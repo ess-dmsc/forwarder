@@ -1,13 +1,12 @@
 default:
   tags:
     - docker
-  image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
-  before_script:
-    - scl enable rh-python38 -- python --version
-    - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
 
 workflow:
   rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: '$CI_PIPELINE_SOURCE == "push"'
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
 
@@ -17,26 +16,31 @@ stages:
   - integration
 
 black:
+  image: python:3.9-slim
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m black --check .
+    - pip install -r requirements-dev.txt --no-cache-dir
+    - python -m black --check .
 
 flake8:
+  image: python:3.9-slim
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m flake8
+    - pip install -r requirements-dev.txt --no-cache-dir
+    - python -m flake8
 
 mypy:
+  image: python:3.9-slim
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m mypy .
+    - pip install -r requirements-dev.txt --no-cache-dir
+    - python -m mypy .
 
 test:
+  image: python:3.9-slim
   stage: test
   script:
-    - scl enable rh-python38 -- pyenv global 3.8 3.9 3.10
-    - pyenv versions
-    - export PATH="/home/jenkins/.pyenv/shims:$PATH"
+    - pip install -r requirements-dev.txt --no-cache-dir
     - python -m tox -- --cov=forwarder --cov-report=term --cov-report=xml --junitxml=test-output.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
