@@ -41,7 +41,7 @@ mypy:
     - pip install -r requirements-dev.txt --no-cache-dir
     - python -m mypy .
 
-test:
+unit-tests:
   image: python:3.9-slim
   stage: test
   script:
@@ -58,44 +58,27 @@ test:
         coverage_format: cobertura
         path: coverage.xml
 
-.integration-tests:
+integration-tests:
+  image: docker:28.3
   stage: integration
-  image: docker:latest
-  before_script:
+  script:
     - cd integration_tests
-    - ./setup.sh
+    - docker compose build
+    - docker compose up -d
+    - docker compose --profile manual up --abort-on-container-exit forwarder-tests
   after_script:
     - cd integration_tests
-    - ./teardown.sh
+    - docker cp forwarder-tests:/shared_source/TestOutput.xml ./TestOutput.xml
+    - docker compose down
+    - docker rm -f forwarder-tests || true
   rules:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
-  variables:
-    FORWARDER_ZOOKEEPER_CONTAINER_NAME: zookeeper-$CI_JOB_ID
-    FORWARDER_KAFKA_CONTAINER_NAME: kafka1-$CI_JOB_ID
-    FORWARDER_SIMPLEIOC_CONTAINER_NAME: simpleioc-$CI_JOB_ID
-    FORWARDER_FORWARDER_CONTAINER_NAME: forwarder-$CI_JOB_ID
-    HTTP_PROXY: $ESS_HTTP_PROXY
-    HTTPS_PROXY: $ESS_HTTP_PROXY
-
-contract-tests:
-  extends: .integration-tests
-  script:
-    - ./run-contract-tests.sh
   artifacts:
+    when: always
     paths:
-      - integration_tests/ContractTestsOutput.xml
+      - integration_tests/
     reports:
-      junit: integration_tests/ContractTestsOutput.xml
-
-smoke-tests:
-  extends: .integration-tests
-  script:
-    - ./run-smoke-tests.sh
-  artifacts:
-    paths:
-      - integration_tests/SmokeTestsOutput.xml
-    reports:
-      junit: integration_tests/SmokeTestsOutput.xml
+      junit: integration_tests/TestOutput.xml
 
 publish-docker-image:
   stage: publish
