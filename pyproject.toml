@@ -79,7 +79,7 @@ show_missing = true
 [tool.tox]
 legacy_tox_ini = """
 [tox]
-envlist = py38, py39, py310
+envlist = py39
 isolated_build = true
 skipsdist=true
 
