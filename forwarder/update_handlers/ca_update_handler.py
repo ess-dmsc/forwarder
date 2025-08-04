@@ -60,7 +60,7 @@ class CAUpdateHandler:
         )
         # This is needed for the case when the PV doesn't exist before it has been added
         # ie. if a gateway has not yet been configured.
-        # None means no timeout - it will eventually connect. 
+        # None means no timeout - it will eventually connect.
         self._pv.timeout = None
         # Subscribe with "data_type='time'" to get timestamp and alarm fields
         sub = self._pv.subscribe(data_type="time")
