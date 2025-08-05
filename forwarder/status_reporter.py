@@ -22,7 +22,7 @@ class StatusReporter:
         service_id: str,
         version: str,
         logger: Logger,
-        interval_ms: int = 4000,
+        interval_ms: int,
     ):
         self._repeating_timer = RepeatTimer(
             milliseconds_to_seconds(interval_ms), self.report_status

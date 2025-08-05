@@ -81,6 +81,7 @@ def create_status_reporter(
     service_id,
     version,
     logger,
+    status_interval,
 ):
     (
         broker,
@@ -107,6 +108,7 @@ def create_status_reporter(
         service_id,
         version,
         logger,
+        status_interval,
     )
     return status_reporter
 
@@ -249,6 +251,7 @@ def main():
             args.service_id,
             version,
             get_logger(),
+            args.status_interval,
         )
         exit_stack.callback(status_reporter.stop)
         status_reporter.start()

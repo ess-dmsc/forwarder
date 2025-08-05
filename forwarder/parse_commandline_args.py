@@ -183,6 +183,14 @@ def parse_args():
         type=int,
         default=1000,
     )
+    parser.add_argument(
+        "--status-interval",
+        help="Period for status updates (units=milliseconds)",
+        required=False,
+        env_var="STATUS_INTERVAL",
+        type=int,
+        default=4000,
+    )
     log_choice_to_enum = {
         "Trace": logging.DEBUG,
         "Debug": logging.DEBUG,
