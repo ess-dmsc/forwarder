@@ -1,7 +1,6 @@
 import logging
 from typing import Optional
 
-
 logger_name = "python-forwarder"
 
 
