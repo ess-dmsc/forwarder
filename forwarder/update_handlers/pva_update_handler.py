@@ -8,6 +8,7 @@ from forwarder.application_logger import get_logger
 from forwarder.metrics import Counter, Summary, sanitise_metric_name
 from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
+from forwarder.update_handlers.un00_serialiser import un00_PVASerialiser
 
 
 class PVAUpdateHandler:
@@ -54,7 +55,7 @@ class PVAUpdateHandler:
             except Exception as e:
                 self._logger.warning(f"Could not initialise metric for {pv_name}: {e}")
 
-        request = context.makeRequest("field()")
+        request = PVAContext.makeRequest("field()")
         self._sub = context.monitor(
             pv_name,
             self._monitor_callback,
@@ -63,17 +64,19 @@ class PVAUpdateHandler:
         )
 
     def _monitor_callback(self, response: Union[Value, Exception]):
+        self._logger.debug("PVA monitor callback called for %s", self._pv_name)
         old_unit = self._unit
         try:
             self._unit = response.display.units  # type: ignore
         except AttributeError:
             pass
-        if old_unit is not None and old_unit != self._unit:
-            self._logger.error(
+
+        units_changed = old_unit != self._unit
+        if units_changed:
+            self._logger.info(
                 f'Display unit of (pva) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._unit}".'
             )
-            if self._processing_errors_metric:
-                self._processing_errors_metric.inc()
+
         if self._receive_latency_metric and isinstance(response, Value):
             try:
                 response_timestamp = response.timeStamp.secondsPastEpoch + (
@@ -86,9 +89,15 @@ class PVAUpdateHandler:
             if self._processing_latency_metric:
                 with self._processing_latency_metric.time():
                     for serialiser_tracker in self.serialiser_tracker_list:
+                        if isinstance(serialiser_tracker.serialiser, un00_PVASerialiser) and not units_changed:
+                            # If units haven't changed, don't publish a unit update
+                            continue
                         serialiser_tracker.process_pva_message(response)
             else:
                 for serialiser_tracker in self.serialiser_tracker_list:
+                    if isinstance(serialiser_tracker.serialiser, un00_PVASerialiser) and not units_changed:
+                        # If units haven't changed, don't publish a unit update
+                        continue
                     serialiser_tracker.process_pva_message(response)
         except (RuntimeError, ValueError) as e:
             self._logger.error(

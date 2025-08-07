@@ -99,18 +99,18 @@ class SerialiserTracker:
         message_datetime = datetime.fromtimestamp(timestamp_ns / 1e9, tz=timezone.utc)
         if message_datetime < self._last_timestamp:
             self._logger.error(
-                f"Rejecting update on {self._pv_name} as its timestamp is older than the previous message timestamp from that PV ({message_datetime} vs {self._last_timestamp})."
+                f"Rejecting update on {self._pv_name} as its timestamp({message_datetime}) is older than the previous message timestamp from that PV ({message_datetime} vs {self._last_timestamp})."
             )
             return
         current_datetime = datetime.now(tz=timezone.utc)
         if message_datetime < current_datetime - LOWER_AGE_LIMIT:
             self._logger.error(
-                f"Rejecting update on {self._pv_name} as its timestamp is older than allowed ({LOWER_AGE_LIMIT})."
+                f"Rejecting update on {self._pv_name} as its timestamp({message_datetime}) is older than allowed ({LOWER_AGE_LIMIT})."
             )
             return
         if message_datetime > current_datetime + UPPER_AGE_LIMIT:
             self._logger.error(
-                f"Rejecting update on {self._pv_name} as its timestamp is from further into the future than allowed ({UPPER_AGE_LIMIT})."
+                f"Rejecting update on {self._pv_name} as its timestamp({message_datetime}) is from further into the future than allowed ({UPPER_AGE_LIMIT})."
             )
             return
         self._last_timestamp = message_datetime
@@ -176,6 +176,16 @@ def create_serialiser_list(
     return_list.append(
         SerialiserTracker(
             SerialiserFactory.create_serialiser(protocol, "ep01", pv_name),
+            producer,
+            pv_name,
+            output_topic,
+            periodic_update_ms,
+        )
+    )
+    # Units serialiser
+    return_list.append(
+        SerialiserTracker(
+            SerialiserFactory.create_serialiser(protocol, "un00", pv_name),
             producer,
             pv_name,
             output_topic,
