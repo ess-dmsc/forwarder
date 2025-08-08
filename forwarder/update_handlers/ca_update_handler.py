@@ -1,7 +1,8 @@
 import time
 from typing import List, Optional
+from dataclasses import dataclass
 
-from caproto import ReadNotifyResponse
+from caproto import ReadNotifyResponse, timestamp_to_epics
 from caproto.threading.client import PV
 from caproto.threading.client import Context as CAContext
 
@@ -9,6 +10,7 @@ from forwarder.application_logger import get_logger
 from forwarder.metrics import Counter, Summary, sanitise_metric_name
 from forwarder.metrics.statistics_reporter import StatisticsReporter
 from forwarder.update_handlers.serialiser_tracker import SerialiserTracker
+from forwarder.update_handlers.un00_serialiser import un00_CASerialiser
 
 
 class CAUpdateHandler:
@@ -34,6 +36,7 @@ class CAUpdateHandler:
         self._processing_errors_metric = processing_errors_metric
         self._processing_latency_metric = None
         self._receive_latency_metric = None
+        self._last_update = 0
         if self._statistics_reporter:
             try:
                 self._processing_latency_metric = Summary(
@@ -70,19 +73,59 @@ class CAUpdateHandler:
         ctrl_sub.add_callback(self._unit_callback)
 
     def _unit_callback(self, sub, response: ReadNotifyResponse):
+        # sometimes caproto gives us a unit callback before a monitor callback.
+        # in this case, to avoid just dropping the unit update, approximate
+        # by using the current time.
+        fallback_timestamp = time.time()
+
+        self._logger.debug("CA Unit callback called for %s", self._pv_name)
+
         old_unit = self._current_unit
         try:
-            self._current_unit = response.metadata.units.decode("utf-8")
+            new_unit = response.metadata.units.decode("utf-8")
+            if new_unit is not None:
+                # we get a unit callback with blank units if the value has updated but the EGU field
+                # has not.
+                self._current_unit = new_unit
         except AttributeError:
-            return
-        if old_unit is not None and old_unit != self._current_unit:
-            self._logger.error(
+            self._current_unit = None
+
+        if old_unit != self._current_unit:
+            self._logger.info(
                 f'Display unit of (ca) PV with name "{self._pv_name}" changed from "{old_unit}" to "{self._current_unit}".'
             )
-            if self._processing_errors_metric:
-                self._processing_errors_metric.inc()
+            for serialiser_tracker in self.serialiser_tracker_list:
+                # Only let the unit serialiser deal with this update - as it has no value the other
+                # serialisers will fall over.
+                if isinstance(serialiser_tracker.serialiser, un00_CASerialiser):
+
+                    # The next bit is pretty hacky. We are mocking the ReadNotifyResponse
+                    # as by default its metadata is immutable/read-only, but we need to append the
+                    # timestamp here.
+                    @dataclass
+                    class StupidMetaData:
+                        timestamp: float
+                        units: str
+
+                    @dataclass
+                    class StupidResponse:
+                        metadata: StupidMetaData
+
+
+                    update_time = self._last_update if self._last_update > 0 else fallback_timestamp
+                    self._logger.debug(f"about to publish update. units: {self._current_unit}, timestamp: {update_time}")
+                    meta = StupidMetaData(timestamp=update_time, units=self._current_unit)
+                    response = StupidResponse(metadata=meta)
+                    serialiser_tracker.process_ca_message(response)  # type: ignore
+
 
     def _monitor_callback(self, sub, response: ReadNotifyResponse):
+        self._logger.debug("CA Monitor callback called for %s", self._pv_name)
+        try:
+            self._last_update = response.metadata.timestamp
+        except Exception:
+            self._logger.warning("Error getting timestamp for %s", sub.pv.name)
+
         if self._receive_latency_metric:
             try:
                 response_timestamp = response.metadata.timestamp.seconds + (

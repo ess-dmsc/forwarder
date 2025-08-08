@@ -28,6 +28,7 @@ from forwarder.update_handlers.tdct_serialiser import (
     tdct_CASerialiser,
     tdct_PVASerialiser,
 )
+from forwarder.update_handlers.un00_serialiser import un00_PVASerialiser, un00_CASerialiser
 
 
 class SerialiserFactory:
@@ -39,6 +40,7 @@ class SerialiserFactory:
             "f144": f144_CASerialiser,
             "no_op": no_op_CASerialiser,
             "tdct": tdct_CASerialiser,
+            "un00": un00_CASerialiser,
         },
         EpicsProtocol.FAKE: {
             "al00": al00_PVASerialiser,
@@ -49,6 +51,7 @@ class SerialiserFactory:
             "nttable_se00": nttable_se00_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "tdct": tdct_PVASerialiser,
+            "un00": un00_PVASerialiser,
         },
         EpicsProtocol.PVA: {
             "al00": al00_PVASerialiser,
@@ -59,6 +62,7 @@ class SerialiserFactory:
             "nttable_se00": nttable_se00_PVASerialiser,
             "nttable_senv": nttable_senv_PVASerialiser,
             "tdct": tdct_PVASerialiser,
+            "un00": un00_PVASerialiser,
         },
     }
 

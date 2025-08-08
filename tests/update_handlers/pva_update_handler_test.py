@@ -16,6 +16,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import (
 )
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.logdata_f144 import deserialise_f144
+from streaming_data_types.units_un00 import deserialise_un00
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 from streaming_data_types.utils import get_schema
 
@@ -86,6 +87,11 @@ def test_update_handler_publishes_enum_update_f144(context, producer, pv_source_
     pv_update_output = deserialise_f144(producer.published_payloads[-3])
     assert np.allclose(pv_update_output.value, pv_index)
     assert pv_update_output.source_name == pv_source_name
+    # EGU does not exist on an enum so make sure we havent sent a unit update
+    un00_messages = [
+        msg for msg in producer.published_payloads if "un00" == get_schema(msg)
+    ]
+    assert len(un00_messages) == 0
 
 
 @pytest.mark.schema("f142")
@@ -462,3 +468,23 @@ def test_handler_does_not_publish_if_never_connected(
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert len(producer.published_payloads) == 0
+
+@pytest.mark.schema("f144")
+def test_handler_publishes_update_with_changed_unit(context, producer, pv_source_name):
+    expected_unit = 'mm'
+    t = NTScalar("i", valueAlarm=True, display=True, control=True).wrap(123, timestamp=time(), )
+    t.display.units = expected_unit
+
+    context.call_monitor_callback_with_fake_pv_update(t)
+    assert len(producer.published_payloads) == 4
+    assert deserialise_un00(producer.published_payloads[-1]).units == expected_unit
+
+@pytest.mark.schema("f144")
+def test_handler_publishes_blank_update_initially(context, producer, pv_source_name):
+    t = NTScalar("i", valueAlarm=True, display=True, control=True).wrap(123, timestamp=time(), )
+    assert t.display.units == ''
+
+    context.call_monitor_callback_with_fake_pv_update(t)
+    assert len(producer.published_payloads) == 4
+    assert deserialise_un00(producer.published_payloads[-1]).units == ''
+

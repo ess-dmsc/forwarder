@@ -11,6 +11,7 @@ from caproto import (
     TimeStamp,
     timestamp_to_epics,
 )
+from caproto._dbr import DBR_CTRL_INT
 from streaming_data_types.alarm_al00 import Severity as al00_Severity
 from streaming_data_types.alarm_al00 import deserialise_al00
 from streaming_data_types.epics_connection_ep01 import ConnectionInfo, deserialise_ep01
@@ -22,6 +23,7 @@ from streaming_data_types.fbschemas.logdata_f142.AlarmStatus import (
 )
 from streaming_data_types.logdata_f142 import deserialise_f142
 from streaming_data_types.logdata_f144 import deserialise_f144
+from streaming_data_types.units_un00 import deserialise_un00
 from streaming_data_types.timestamps_tdct import deserialise_tdct
 from streaming_data_types.utils import get_schema
 
@@ -508,3 +510,119 @@ def test_handler_publishes_connection_state_change(
     connect_state_output = deserialise_ep01(producer.published_payloads[-1])
     assert connect_state_output.status == state_enum
     assert connect_state_output.source_name == pv_source_name
+
+@pytest.mark.schema("f144")
+def test_handler_does_not_publish_unit_update_if_egu_does_not_exist(context, producer, pv_source_name):
+    metadata = (0, 0, TimeStamp(*epics_timestamp()))
+
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int64),
+            ChannelType.TIME_ENUM,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+    # f144 and al00, NOT un00
+    assert len(producer.published_payloads) == 2
+    un00_messages = [
+        msg for msg in producer.published_payloads if "un00" == get_schema(msg)
+    ]
+    assert len(un00_messages) == 0
+
+@pytest.mark.schema("f144")
+def test_handler_publishes_update_with_changed_unit(context, producer, pv_source_name):
+    # initial monitor update
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int32),
+            ChannelType.TIME_INT,
+            1,
+            1,
+            1,
+            metadata=(0, 0, TimeStamp(*epics_timestamp())),
+        )
+    )
+    # This is to stop the monitor callback getting called - in real life
+    # only the unit callback is called.
+    del context.subscription.callback[0]
+
+    initial_units = b""
+    initial_metadata = (0, 0, initial_units)
+
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int32),
+            ChannelType.CTRL_INT,
+            1,
+            1,
+            1,
+            metadata=initial_metadata,
+        )
+    )
+
+    updated_units = b"mm"
+    updated_metadata = (0, 0, updated_units)
+
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int32),
+            ChannelType.CTRL_INT,
+            1,
+            1,
+            1,
+            metadata=updated_metadata,
+        )
+    )
+    assert len(producer.published_payloads) == 4
+    un00_messages = [
+        msg for msg in producer.published_payloads if "un00" == get_schema(msg)
+    ]
+    assert len(un00_messages) == 2
+    initial_un00_message = deserialise_un00(un00_messages[0])
+    assert initial_un00_message.units == initial_units.decode()
+    update_un00_message = deserialise_un00(un00_messages[1])
+    assert update_un00_message.units == updated_units.decode()
+
+@pytest.mark.schema("f144")
+def test_handler_publishes_blank_update_initially(context, producer, pv_source_name):
+    units = b""
+
+    # initial monitor update
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int32),
+            ChannelType.TIME_INT,
+            1,
+            1,
+            1,
+            metadata=(0, 0, TimeStamp(*epics_timestamp())),
+        )
+    )
+
+
+    metadata = (0, 0, units)
+
+    # This is to stop the monitor callback getting called - in real life
+    # only the unit callback is called.
+    del context.subscription.callback[0]
+
+    context.call_monitor_callback_with_fake_pv_update(
+        ReadNotifyResponse(
+            np.array([1]).astype(np.int32),
+            ChannelType.CTRL_INT,
+            1,
+            1,
+            1,
+            metadata=metadata,
+        )
+    )
+    assert len(producer.published_payloads) == 3
+    un00_messages = [
+        msg for msg in producer.published_payloads if "un00" == get_schema(msg)
+    ]
+    assert len(un00_messages) == 1
+    un00_message = deserialise_un00(un00_messages[0])
+    assert un00_message.units == units.decode()

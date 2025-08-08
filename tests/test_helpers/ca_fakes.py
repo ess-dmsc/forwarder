@@ -45,6 +45,7 @@ class FakeContext:
         return [FakePV(pv_name, self.subscription) for pv_name in pv_names]
 
     def call_monitor_callback_with_fake_pv_update(self, pv_update: ReadNotifyResponse):
+        # This actually calls both the monitor and unit callbacks.
         for c in self.subscription.callback:
             c(self.subscription, pv_update)
 
