@@ -4,21 +4,22 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "forwarder"
-version = "2.1.dev0"
+version = "2.2.1-rc.1"
 urls = {homepage="https://github.com/ess-dmsc/forwarder", repository="https://github.com/ess-dmsc/forwarder"}
 license = { file="LICENSE" }
 readme = "README.md"
-requires-python = ">=3.8"
+requires-python = ">=3.9"
 dependencies = [
     "caproto",
     "p4p",
     "confluent_kafka",
     "graphyte",
-    "numpy >= 1.21",
+    "numpy<2",
     "ConfigArgParse",
     "ess-streaming-data-types",
     "tomli",
     "prometheus-client",
+    "kafka-python>=2.3.0",
 ]
 
 [project.optional-dependencies]
@@ -151,3 +152,9 @@ ignore_errors = true
 [[tool.mypy.overrides]]
 module = "attr.*"
 ignore_errors = true
+
+[[tool.uv.index]]
+name = "artifactory-pypi"
+url = "https://artifactory.esss.lu.se/artifactory/pypi-virtual/"
+publish-url = "https://artifactory.esss.lu.se/artifactory/pypi-virtual/"
+explicit = true
