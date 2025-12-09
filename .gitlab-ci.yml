@@ -1,15 +1,20 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
+variables:
+  UV_VERSION: "0.9"
+  PYTHON_VERSION: "3.14"
+  BASE_LAYER: trixie-slim
+  # GitLab CI creates a separate mountpoint for the build directory,
+  # so we need to copy instead of using hard links.
+  UV_LINK_MODE: copy
+
 default:
   tags:
     - docker
-  image: registry.esss.lu.se/ecdc/ess-dmsc/docker-centos7-build-node:latest
-  before_script:
-    - scl enable rh-python38 -- python --version
-    - scl enable rh-python38 -- pip install --user -r requirements-dev.txt
-
-workflow:
-  rules:
-    - if: '$CI_PIPELINE_SOURCE == "push"'
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+  image: ghcr.io/astral-sh/uv:$UV_VERSION-python$PYTHON_VERSION-$BASE_LAYER
 
 stages:
   - checks
@@ -19,25 +24,22 @@ stages:
 black:
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m black --check .
+    - uvx black --check .
 
 flake8:
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m flake8
+    - uvx ruff check
 
 mypy:
   stage: checks
   script:
-    - scl enable rh-python38 -- python -m mypy .
+    - uv run mypy .
 
 test:
   stage: test
   script:
-    - scl enable rh-python38 -- pyenv global 3.8 3.9 3.10
-    - pyenv versions
-    - export PATH="/home/jenkins/.pyenv/shims:$PATH"
-    - python -m tox -- --cov=forwarder --cov-report=term --cov-report=xml --junitxml=test-output.xml
+    - uv run pytest --cov=forwarder --cov-report=term --cov-report=xml --junitxml=test-output.xml
   coverage: '/(?i)total.*? (100(?:\.0+)?\%|[1-9]?\d(?:\.\d+)?\%)$/'
   artifacts:
     paths:
@@ -51,7 +53,7 @@ test:
 
 .integration-tests:
   stage: integration
-  image: docker:latest
+  image: docker:28
   before_script:
     - cd integration_tests
     - ./setup.sh
