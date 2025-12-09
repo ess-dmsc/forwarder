@@ -2,7 +2,7 @@
 
 echo "Running contract tests..."
 
-docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c 'cd forwarder/integration_tests/contract_tests; scl enable rh-python38 -- ~/.local/bin/pytest --junitxml=ContractTestsOutput.xml'
+docker exec ${FORWARDER_FORWARDER_CONTAINER_NAME:-forwarder} bash -c 'cd forwarder/integration_tests/contract_tests; uv run pytest --junitxml=ContractTestsOutput.xml'
 
 result=$?
 
