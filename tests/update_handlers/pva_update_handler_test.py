@@ -30,6 +30,10 @@ from tests.test_helpers.p4p_fakes import FakeContext
 pytestmark = pytest.mark.epics_protocol(EpicsProtocol.PVA)
 
 
+def _ep01_messages(producer):
+    return [msg for msg in producer.published_payloads if "ep01" == get_schema(msg)]
+
+
 def test_update_handler_throws_if_schema_not_recognised():
     producer = FakeProducer()
     context = FakeContext()
@@ -462,3 +466,53 @@ def test_handler_does_not_publish_if_never_connected(
     context.call_monitor_callback_with_fake_pv_update(exception)
 
     assert len(producer.published_payloads) == 0
+
+
+@pytest.mark.schema("f144")
+def test_handler_publishes_connected_after_disconnect_with_older_value_timestamp(
+    context, producer, pv_source_name
+):
+    initial_timestamp_s = int(time()) - 5
+    reconnect_timestamp_s = initial_timestamp_s + 1
+
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar("i", valueAlarm=True).wrap(1, timestamp=initial_timestamp_s)
+    )
+    context.call_monitor_callback_with_fake_pv_update(Disconnected())
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar("i", valueAlarm=True).wrap(2, timestamp=reconnect_timestamp_s)
+    )
+
+    ep01_messages = _ep01_messages(producer)
+    assert len(ep01_messages) == 3
+
+    connection_updates = [deserialise_ep01(message) for message in ep01_messages]
+    assert [update.status for update in connection_updates] == [
+        ConnectionInfo.CONNECTED,
+        ConnectionInfo.DISCONNECTED,
+        ConnectionInfo.CONNECTED,
+    ]
+    assert connection_updates[-1].source_name == pv_source_name
+    assert (
+        connection_updates[-1].timestamp == reconnect_timestamp_s * 1_000_000_000
+    )
+
+
+@pytest.mark.schema("f144")
+def test_handler_disconnect_before_first_value_does_not_block_connected(
+    context, producer, pv_source_name
+):
+    connected_timestamp_s = int(time()) - 1
+
+    context.call_monitor_callback_with_fake_pv_update(Disconnected())
+    context.call_monitor_callback_with_fake_pv_update(
+        NTScalar("i", valueAlarm=True).wrap(1, timestamp=connected_timestamp_s)
+    )
+
+    ep01_messages = _ep01_messages(producer)
+    assert len(ep01_messages) == 1
+
+    connection_update = deserialise_ep01(ep01_messages[0])
+    assert connection_update.status == ConnectionInfo.CONNECTED
+    assert connection_update.source_name == pv_source_name
+    assert connection_update.timestamp == connected_timestamp_s * 1_000_000_000

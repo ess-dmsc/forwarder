@@ -18,6 +18,9 @@ class CASerialiser(Protocol):
     ) -> Tuple[Optional[bytes], Optional[int]]:
         raise NotImplementedError
 
+    def reject_older_timestamps(self) -> bool:
+        return True
+
 
 class PVASerialiser(Protocol):
     @abstractmethod
@@ -25,3 +28,6 @@ class PVASerialiser(Protocol):
         self, update: Union[Value, RuntimeError]
     ) -> Union[Tuple[bytes, int], Tuple[None, None]]:
         raise NotImplementedError
+
+    def reject_older_timestamps(self) -> bool:
+        return True

@@ -63,6 +63,12 @@ def test_serialise_pva_value():
     assert fb_update.status == ConnectionInfo.CONNECTED
 
 
+def test_pva_conn_status_does_not_reject_older_timestamps():
+    serialiser = ep01_PVASerialiser("some_pv")
+
+    assert not serialiser.reject_older_timestamps()
+
+
 def test_if_state_unchanged_then_message_is_none():
     reference_timestamp = 10
     update = _create_value_update(reference_timestamp)

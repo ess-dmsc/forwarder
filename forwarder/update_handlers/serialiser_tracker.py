@@ -97,7 +97,10 @@ class SerialiserTracker:
         if message is None:
             return
         message_datetime = datetime.fromtimestamp(timestamp_ns / 1e9, tz=timezone.utc)
-        if message_datetime < self._last_timestamp:
+        if (
+            message_datetime < self._last_timestamp
+            and self.serialiser.reject_older_timestamps()
+        ):
             self._logger.error(
                 f"Rejecting update on {self._pv_name} as its timestamp is older than the previous message timestamp from that PV ({message_datetime} vs {self._last_timestamp})."
             )
