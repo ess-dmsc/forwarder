@@ -493,9 +493,7 @@ def test_handler_publishes_connected_after_disconnect_with_older_value_timestamp
         ConnectionInfo.CONNECTED,
     ]
     assert connection_updates[-1].source_name == pv_source_name
-    assert (
-        connection_updates[-1].timestamp == reconnect_timestamp_s * 1_000_000_000
-    )
+    assert connection_updates[-1].timestamp == reconnect_timestamp_s * 1_000_000_000
 
 
 @pytest.mark.schema("f144")

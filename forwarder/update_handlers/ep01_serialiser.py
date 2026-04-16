@@ -103,7 +103,7 @@ class ep01_PVASerialiser(PVASerialiser):
         )
 
     def reject_older_timestamps(self) -> bool:
-        # ep01 has a mixed timestamp source (wallclock for connection updates, 
-        # EPICS timestamp for value updates), so we cannot reject older 
+        # ep01 has a mixed timestamp source (wallclock for connection updates,
+        # EPICS timestamp for value updates), so we cannot reject older
         # timestamps as this could lead to valid updates being rejected.
-        return False 
+        return False
