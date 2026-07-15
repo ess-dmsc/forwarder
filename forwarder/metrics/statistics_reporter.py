@@ -38,8 +38,9 @@ class StatisticsReporter:
 
     def send_statistics(self):
         try:
+            timestamp = time.time()
+            self._sender.send("metrics_registered", len(self._metrics), timestamp)
             for metric_name, metric in self._metrics.items():
-                timestamp = time.time()
                 if isinstance(metric, (Counter, Gauge)):
                     self._sender.send(metric_name, metric.value, timestamp)
                 elif isinstance(metric, Summary):
