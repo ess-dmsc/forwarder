@@ -194,7 +194,7 @@ def main():
         f"Forwarder version '{version}' started, service Id: {args.service_id}"
     )
     # EPICS
-    ca_ctx = CaContext()
+    ca_ctx = CaContext(client_name="forwarder")
     pva_ctx = PvaContext("pva", nt=False)
     # Using dictionary with Channel as key to ensure we avoid having multiple
     # handlers active for identical configurations: serialising updates from
