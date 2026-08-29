@@ -24,7 +24,7 @@ def test_when_update_handlers_exist_their_channel_names_are_reported_in_status()
     }
 
     fake_producer = FakeProducer()
-    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", "", "version", logger)  # type: ignore
+    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", "", "version", logger, 4000)  # type: ignore
     status_reporter.report_status()
 
     if fake_producer.published_payloads:
@@ -43,7 +43,7 @@ def test_when_no_update_handlers_exist_no_streams_are_present_in_reported_status
     update_handlers: Dict = {}
 
     fake_producer = FakeProducer()
-    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", "", "version", logger)  # type: ignore
+    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", "", "version", logger, 4000)  # type: ignore
     status_reporter.report_status()
 
     if fake_producer.published_payloads:
@@ -59,7 +59,7 @@ def test_status_message_contains_service_id():
     update_handlers: Dict = {}
 
     fake_producer = FakeProducer()
-    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", service_id, "version", logger)  # type: ignore
+    status_reporter = StatusReporter(update_handlers, fake_producer, "status_topic", service_id, "version", logger, 4000)  # type: ignore
     status_reporter.report_status()
 
     if fake_producer.published_payloads:
