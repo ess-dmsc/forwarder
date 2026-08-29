@@ -14,7 +14,7 @@ dependencies = [
     "p4p",
     "confluent_kafka",
     "graphyte",
-    "numpy >= 1.21",
+    "numpy >= 1.21, <2.0",
     "ConfigArgParse",
     "ess-streaming-data-types",
     "tomli",
